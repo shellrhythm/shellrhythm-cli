@@ -80,12 +80,13 @@ Type: `String` (obviously)
 Each note needs to be put in `"notes"` (Type: `Array`), inside of another `Dict`. Here's what you can change:
 
 ### - Note type
-- The type of object this note is. Currently, only one object type is available, and it's `"hit_object"`. Here's a sheet displaying all currently available types:
+- The type of object this note is. There are two different note types with different values to type in.<br/>
+Here's a sheet displaying all currently available types:
 
 |Note's `"type"`|Version|Description|
 |--|--|--|
 |`"hit_object"`|0.1|The average note. Displays a key, and all the junk around it.|
-|`"end"`|Planned, not available|Will allow you to end the level here.|
+|`"end"`|0.1|Allows you to end the level at the defined position.|
 
 ### Hit objects
 Hit objects are very cool! Here's what they look like in-game:
@@ -147,3 +148,26 @@ Type `Int` (between `0` and... I think `6`)
 |    4    |<span style="color:blue">Blue</span>         |
 |    5    |<span style="color:magenta">Magenta</span>   |
 |    6    |<span style="color:cyan">Cyan</span>         |
+
+### - End level object
+
+An end level object allows you to tell the game "Hey, here's the end of my chart, there's nothing past that point" and the game will say "alright sure", without actually knowing if you're telling the truth or no.
+#### - `"beatpos"`
+Type: `Array` of two items: an `Int` (`0`) and a `Float` (`1`)
+- The position at which the chart will stop.
+- It's in the format `[Measure (Int), Beat (Float)]`
+- The song starts at `[0, 1]`, and each measure is `4` beats long (this will be changed in a future update, but 4 will stay the default)
+
+## Ascii Icon
+
+Once your chart is over, you can add a little Ascii art of your choice (don't make it too big!) in a file named `icon.txt`.<br/>
+Here's an example:
+```
+PLACEHOLDER
+ERPLACEHOLD
+LDERPLACEHO
+HOLDERPLACE
+CEHOLDERPLA
+```
+That is quite literally the placeholder icon. :D<br/>
+~~colors coming soon~~

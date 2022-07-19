@@ -1,28 +1,30 @@
 import curses
-import vlc
 import math
-from time import time
+from time import time_ns
 import sys
 import keyboard
 import json
 
+from pybass3 import Song
 from curses import wrapper
 
-import os
-if os.name == 'posix':    
-    from subprocess import check_output
-elif os.name == 'nt':
-    import win32api, win32con, win32process
-    from ctypes import windll
-    user32 = windll.user32
-
 def get_locale():
-    if os.name == 'nt':
-        w = user32.GetForegroundWindow() 
-        tid = user32.GetWindowThreadProcessId(w, 0) 
-        return hex(user32.GetKeyboardLayout(tid) & (2**16 - 1))
-    elif os.name == 'posix':
-        return check_output(["xkblayout-state", "print", "%s"])
+    f = open("options.json")
+    localestuff = json.load(f)
+    f2 = open("layout/" + localestuff["layout"])
+    rawstring = f2.read()
+
+    f.close()
+    f2.close()
+
+    rows = rawstring.split("\n")
+    layout = [ [], [], []]
+    for i in range(len(rows)):
+        layout[i] = [char for char in rows[i]]
+
+    print(layout)
+    return layout
+
 
 possible_key_presses = [ #                                    [AZERTY LAYOUT]           |           [QWERTY LAYOUT]
     [16, 17, 18, 19, 20, 21, 22, 23, 24, 25], #         a  z  e  r  t  y  u  i  o  p    |     q  w  e  r  t  y  u  i  o  p
@@ -30,57 +32,81 @@ possible_key_presses = [ #                                    [AZERTY LAYOUT]   
     [44, 45, 46, 47, 48, 49, 50, 51, 52, 53]  #         w  x  c  v  b  n  ,  ;  :  !    |     z  x  c  v  b  n  m  ,  .  /
 ]
 
-layouts = {
-    "us": [
-        ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
-        ["a", "s", "d", "f", "g", "h", "j", "k", "l", ";"],
-        ["z", "x", "c", "v", "b", "n", "m", ",", ".", "/"]
-    ],
-    "0x40c": [
-        ["a", "z", "e", "r", "t", "y", "u", "i", "o", "p"],
-        ["q", "s", "d", "f", "g", "h", "j", "k", "l", "m"],
-        ["w", "x", "c", "v", "b", "n", ",", ";", ":", "!"]
-    ]
-}
-
 judgements = ["MARVELOUS"," PERFECT ", "  GREAT  ", "  GOOD   ", "  OKAY   ", "  MISS   "]
 
-frame_window = 2 #in beats, until i find out how to change it
+accu_judgements = [100, 95, 50, 25, 0, 0]
+
+frame_window = [30, 50, 80, 100, 120, 160] #in ms
 
 metronome_enabled = False
+
+maxscore = 1000000
 
 auto = False
 
 
 class Game:
+    def playsound(self, sound):
+        song = Song(sound)
+        song.play()
+        print("Playing: ", sound)
+        return song
+
+    def get_judgement(self, ms):
+        for i in range(len(frame_window)):
+            if frame_window[i] < ms:
+                i += 1
+            else:
+                return i
+
     def input_check(self, obj, key):
         if auto is False:
-            if obj["beatpos"]*4 < self.float_ts+frame_window and obj["key"] == key and obj["judgement"]["offset"] is None:
-                obj["judgement"]["offset"] = self.curTime - self.startTime
-                obj["judgement"]["rating"] = int(abs(obj["beatpos"]*4 - self.float_ts))
+            print(obj["secondPos"],self.totalElapsed)
+
+            # the thing
+            if obj["secondPos"] > (self.totalElapsed - 0.160) and obj["key"] == key and obj["judgement"]["offset"] is None:
+                obj["judgement"]["offset"] = round(((self.curTime - self.startTime) - obj["secondPos"]) * 1000, 2)
+                obj["judgement"]["rating"] = self.get_judgement(abs(obj["judgement"]["offset"]))
+
+                if obj["judgement"]["rating"] == None:
+                    obj["judgement"]["rating"] = 5
 
                 message_after = "[=]"
-                if obj["beatpos"]*4 - self.float_ts > 1:
+                if obj["judgement"]["offset"] > 0.05:
                     message_after = "[-]"
-                if obj["beatpos"]*4 - self.float_ts < -1:
+                if obj["judgement"]["offset"] < -0.05:
                     message_after = "[+]"
 
                 print(obj["keyname"] + ": " + str(obj["judgement"]) + " " + message_after)
                 self.screen.addstr(0, 20, judgements[obj["judgement"]["rating"]])
+                self.screen.addstr(1, 20, str(obj["judgement"]["offset"]) + "        ")
+                
+                self.playsound('assets/clap.wav')
 
-                self.hitsound.stop()
-                self.hitsound.play()
+                self.totalHits += 1
+                self.totalAccu += accu_judgements[obj["judgement"]["rating"]]
+                self.accuracy = self.totalAccu / self.totalHits
+
+                self.score += (maxscore/self.totalObjects)*(accu_judgements[obj["judgement"]["rating"]]/100)
                 return True
-            if obj["beatpos"]*4 < self.float_ts-frame_window and obj["judgement"]["offset"] is None:
-                obj["judgement"]["offset"] = self.curTime - self.startTime
+
+            # the miss thing
+            if obj["secondPos"] < (self.totalElapsed + 0.160) and obj["judgement"]["offset"] is None:
+                obj["judgement"]["offset"] = round(((self.curTime - self.startTime) - obj["secondPos"]) * 1000, 2)
                 obj["judgement"]["rating"] = 5
                 print(obj["keyname"] + ": " + str(obj["judgement"]) + " [MISSED!!!]")
                 self.screen.addstr(0, 20, judgements[obj["judgement"]["rating"]])
 
+                self.totalHits += 1
+                self.totalAccu += accu_judgements[obj["judgement"]["rating"]]
+                self.accuracy = self.totalAccu / self.totalHits
+
             return False
+
+
         else:
-            if obj["beatpos"]*4 <= self.float_ts and obj["judgement"]["offset"] is None:
-                obj["judgement"]["offset"] = self.ts/4 - obj["beatpos"]
+            if obj["beatpos"] <= self.float_ts/4 and obj["judgement"]["offset"] is None:
+                obj["judgement"]["offset"] = round(((self.curTime - self.startTime) - obj["secondPos"]) * 1000, 2)
                 obj["judgement"]["rating"] = -2
 
                 message_after = "[AUTO]"
@@ -88,16 +114,31 @@ class Game:
                 print(obj["keyname"] + ": " + str(obj["judgement"]) + " " + message_after)
                 self.screen.addstr(0, 20, "AUTO")
 
-                self.hitsound.stop()
-                self.hitsound.play()
-                return True
+                self.playsound('assets/clap.wav')
 
+                self.totalHits += 1
+                self.totalAccu += accu_judgements[0]
+                self.accuracy = self.totalAccu / self.totalHits
+
+                self.score += maxscore/self.totalObjects*(accu_judgements[0]/100)
+                
+                return True
 
 
     def handle_pressed_keys(self, e):
       # print(e.name)
         if e.event_type == keyboard.KEY_DOWN:
             if e.scan_code != 1:
+                if e.scan_code == 4:
+                    global metronome_enabled
+                    metronome_enabled = not metronome_enabled
+                if e.scan_code == 72:
+                    self.offset += 0.01
+                    self.screen.addstr(1, 7, "New offset :" + str(round(self.offset, 2)))
+                if e.scan_code == 80:
+                    self.offset -= 0.01
+                    self.screen.addstr(1, 7, "New offset :" + str(round(self.offset, 2)))
+
                 processedKey = False
                 for obj in self.hit_objects:
                     if processedKey is False:
@@ -112,41 +153,30 @@ class Game:
               # self.screen.keypad(False)
               # curses.echo()
               # curses.endwin()
-        if self is not None:
-            self.keys = [keyboard._pressed_events[name].scan_code for name in keyboard._pressed_events]
-            if self.screen is not None:
-                global offset
-                global totalElapsed
-                self.screen.addstr(0,7, str(self.keys) + "        ")
-      #   # if 72 in keys:
-      #   #     if 42 in keys:
-      #   #         offset += 0.01
-      #   #     else:
-      #   #         offset += 0.1
-      #   #     screen.addstr(1, 7, "New offset :" + str(offset))
-      #   # if 80 in keys:
-      #   #     offset -= 0.1
-      #   #     screen.addstr(1, 7, "New offset :" + str(offset))
 
     def setup_hit_objects(self, data):
         self.hit_objects = []
         for i in data['notes']:
-            if i['type'] != "hit_object":
-                pass
-            obj = {
-                "beatpos": (int(i["beatpos"][0]) * 4) + (i["beatpos"][1] - 1),
-                "key": possible_key_presses[int(i["key"]/10)][i["key"]%10],
-                "keyname": self.curlayout[int(i["key"]/10)][i["key"]%10].upper(),
-                "screenpos": [i["screenpos"][0],i["screenpos"][1]],
-                "judgement": {
-                    "offset": None,
-                    "rating": -1
-                },
-                "color": i["color"]
-            }
-            self.hit_objects.append(obj)
-            if i["beatpos"][1] != int(i["beatpos"][1]):
-                print(obj["beatpos"])
+            if i['type'] == "hit_object":
+                self.totalObjects += 1
+                obj = {
+                    "beatpos": (int(i["beatpos"][0]) * 4) + (i["beatpos"][1] - 1),
+                    "secondPos": ((int(i["beatpos"][0]) * 4) + (i["beatpos"][1] - 1))*max(0, 60 / self.bpm),
+                    "key": possible_key_presses[int(i["key"]/10)][i["key"]%10],
+                    "keyname": self.curlayout[int(i["key"]/10)][i["key"]%10].upper(),
+                    "screenpos": [i["screenpos"][0],i["screenpos"][1]],
+                    "judgement": {
+                        "offset": None,
+                        "rating": -1
+                    },
+                    "color": i["color"]
+                }
+                self.hit_objects.append(obj)
+                if i["beatpos"][1] != int(i["beatpos"][1]):
+                    print(obj["beatpos"])
+            if i['type'] == "end":
+                self.stopPosition = (int(i["beatpos"][0]) * 4) + (i["beatpos"][1] - 1)
+            
 
     def update(self):
         y, x = self.screen.getmaxyx()
@@ -163,19 +193,24 @@ class Game:
             self.screen.addstr(3+i, 6,  "│")
             self.screen.addstr(3+i, x-4,  "│")
         for obj in self.hit_objects:
-            if obj["beatpos"]*4 > self.float_ts-frame_window and obj["judgement"]["offset"] is None:
+            
+            earliest_point = obj["secondPos"] - 0.700
+            latest_point = obj["secondPos"] + 0.160
 
-                self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+3,int(obj["screenpos"][0]*(x - 14))+7, "╔═╗", curses.color_pair(obj["color"]))
-                self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+4,int(obj["screenpos"][0]*(x - 14))+7, "║ ║", curses.color_pair(obj["color"]))
-                self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+5,int(obj["screenpos"][0]*(x - 14))+7, "╚ ╝", curses.color_pair(obj["color"]))
+            if (self.curTime - self.startTime) > earliest_point:
+                if (self.curTime - self.startTime) < latest_point and obj["judgement"]["offset"] is None:
+                  
+                    self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+3,int(obj["screenpos"][0]*(x - 14))+7, "╔═╗", curses.color_pair(obj["color"]))
+                    self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+4,int(obj["screenpos"][0]*(x - 14))+7, "║ ║", curses.color_pair(obj["color"]))
+                    self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+5,int(obj["screenpos"][0]*(x - 14))+7, "╚ ╝", curses.color_pair(obj["color"]))
 
-                self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+4,int(obj["screenpos"][0]*(x - 14))+8, str(obj["keyname"]), curses.color_pair(obj["color"]))
-                self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+5,int(obj["screenpos"][0]*(x - 14))+8, str(math.floor(obj["beatpos"]*2 - self.float_ts/2) + 1))
+                    self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+4,int(obj["screenpos"][0]*(x - 14))+8, str(obj["keyname"]), curses.color_pair(obj["color"]))
+                    self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+5,int(obj["screenpos"][0]*(x - 14))+8, str(math.floor(obj["beatpos"]*2 - self.float_ts/2)))
 
-            else:
-                self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+3,int(obj["screenpos"][0]*(x - 14))+7, "   ")
-                self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+4,int(obj["screenpos"][0]*(x - 14))+7, "   ")
-                self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+5,int(obj["screenpos"][0]*(x - 14))+7, "   ")
+                else:
+                    self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+3,int(obj["screenpos"][0]*(x - 14))+7, "   ")
+                    self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+4,int(obj["screenpos"][0]*(x - 14))+7, "   ")
+                    self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+5,int(obj["screenpos"][0]*(x - 14))+7, "   ")
 
         if auto:
             for obj in self.hit_objects:
@@ -184,13 +219,23 @@ class Game:
                 #Also, 69 is the scan code of "Verr Num". the_more_you_know, I guess.
 
 
+        self.screen.addstr(0, int((x-len(str(round(self.accuracy,2)))-2)/2), str(round(self.accuracy,2)) + "%")
+        self.screen.addstr(1, int((x-len(str(int(self.score)))-2)/2),str(int(self.score))+" ")
+
+
 
     def __init__(self, stdscr, onQuit, map = "bpm-offset-test"):
-        f = open('charts/' + map + '/data.json')
+        self.data = {}
+        print(type(map))
+        if isinstance(map, str):
+            print("The map is apparently a string.")
+            f = open('charts/' + map + '/data.json')
 
-        self.data = json.load(f)
+            self.data = json.load(f)
 
-        f.close()
+            f.close()
+        elif isinstance(map, dict):
+            self.data = map
 
         #Important variables
         self.bpm = self.data['bpm']
@@ -205,24 +250,19 @@ class Game:
         self.position = (0,0)
         self.hit_objects = []
         self.keys = []
+        self.stopPosition = 2**32 #in measures
+        self.totalObjects = 0
+        self.totalHits = 0
+        self.totalAccu = 0
+        self.accuracy = 0.0
+        self.score = 0
 
-        print("Keyboard layout: " + str(get_locale()))
-        self.curlayout = layouts[get_locale()]
+      # print("Keyboard layout: " + str(get_locale()))
+        self.curlayout = get_locale()
         
         self.screen = stdscr
         self.killThing = True #If set to false, terminates the program.
         
-        #Sound loading stuff
-        self.vlc_instance = vlc.Instance()
-        self.music_file = self.vlc_instance.media_new("charts/" + map + "/" + self.data['sound'])
-        self.music = self.vlc_instance.media_player_new()
-        self.music.set_media(self.music_file)
-        self.metronome_file = self.vlc_instance.media_new('assets/metronome.wav')
-        self.metronome = self.vlc_instance.media_player_new()
-        self.metronome.set_media(self.metronome_file)
-        self.hitsound_file = self.vlc_instance.media_new('assets/clap.wav')
-        self.hitsound = self.vlc_instance.media_player_new()
-        self.hitsound.set_media(self.hitsound_file)
 
         self.setup_hit_objects(self.data)
         #keyboard.hook(self.handle_pressed_keys)
@@ -237,10 +277,10 @@ class Game:
         curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
         curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
-        self.music.play()
+        self.music = self.playsound("charts/" + self.data["filename"] + "/" + self.data['sound'])
         # Clear screen
         stdscr.clear()
-        self.curTime = time()
+        self.curTime = time_ns()/10**9
         self.startTime = self.curTime
         # Check if screen was re-sized (True or False)
         self.resize = curses.is_term_resized(y, x)
@@ -249,27 +289,29 @@ class Game:
 
     def loop(self, stdscr):
         if self.killThing:
+            if self.totalElapsed < 0.01:
+                stdscr.clear()
             duration_of_step = max(0, (60 / self.bpm / self.steps)) #length of 1/4 beat
             #update stuff
-            self.elapsed = time() - self.curTime
-            self.newTime = time()
+            self.elapsed = time_ns()/10**9 - self.curTime
+            self.newTime = time_ns()/10**9
             self.totalElapsed+=self.elapsed
             self.float_ts = ((self.newTime-self.startTime)-self.offset)/duration_of_step
-            stdscr.addstr(1,0, str(self.float_ts))
+          # stdscr.addstr(1,0, str(round(self.float_ts, 2)))
+            if self.float_ts > self.stopPosition * 4:
+                self.killThing = False
             # this is where the funny happens
             if math.floor(((self.newTime-self.startTime)-self.offset)/duration_of_step) > math.floor(((self.curTime-self.startTime)-self.offset)/duration_of_step): #OnStepPassed
                 self.ts = math.floor(((self.newTime-self.startTime)-self.offset)/duration_of_step)
                 position = (int(self.ts/(4*self.steps)), (int(self.ts/4)%self.steps + 1))
                 if self.ts%self.steps == 0: #OnBeatPassed
                     if metronome_enabled is True:
-                        self.metronome.stop()
-                        self.metronome.play()
+                        self.playsound('assets/metronome.wav')
                     stdscr.addstr(0,0, "○○○○")
                     stdscr.addstr(0,int(self.ts/4)%self.steps, "●")
                     stdscr.addstr(5,0, str(position))
 
-                  # if self.ts > 32:
-                  #    self.killThing = False
+                
             # calc offset
             self.curTime = self.newTime# Action in loop if resize is True:
             if self.resize is True:
@@ -292,3 +334,11 @@ class Game:
 # self.screen.keypad(False)
 # curses.echo()
 # curses.endwin()
+
+if __name__ == "__main__":
+    print("------------------------------[OH NO]------------------------------")
+    print("Whoops! It looks like you were trying to launch game.py by itself! This is currently not possible.")
+    print("Instead, write \"python ./index.py\" to launch the actual game!")
+
+    print("\n- #Guigui")
+    print("-------------------------------------------------------------------")
