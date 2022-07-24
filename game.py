@@ -1,12 +1,10 @@
 import curses
 import math
 from time import time_ns
-import sys
 import keyboard
 import json
 
 from pybass3 import Song
-from curses import wrapper
 
 def get_locale():
     f = open("options.json")
@@ -46,11 +44,6 @@ auto = False
 
 
 class Game:
-    def playsound(self, sound):
-        song = Song(sound)
-        song.play()
-        print("Playing: ", sound)
-        return song
 
     def get_judgement(self, ms):
         for i in range(len(frame_window)):
@@ -81,7 +74,7 @@ class Game:
                 self.screen.addstr(0, 20, judgements[obj["judgement"]["rating"]])
                 self.screen.addstr(1, 20, str(obj["judgement"]["offset"]) + "        ")
                 
-                self.playsound('assets/clap.wav')
+                self.clap.play()
 
                 self.totalHits += 1
                 self.totalAccu += accu_judgements[obj["judgement"]["rating"]]
@@ -113,8 +106,8 @@ class Game:
 
                 print(obj["keyname"] + ": " + str(obj["judgement"]) + " " + message_after)
                 self.screen.addstr(0, 20, "AUTO")
-
-                self.playsound('assets/clap.wav')
+                
+                self.clap.play()
 
                 self.totalHits += 1
                 self.totalAccu += accu_judgements[0]
@@ -262,6 +255,8 @@ class Game:
         
         self.screen = stdscr
         self.killThing = True #If set to false, terminates the program.
+        self.clap = Song('assets/clap.wav')
+        self.metronome = Song('assets/metronome.wav')
         
 
         self.setup_hit_objects(self.data)
@@ -277,7 +272,8 @@ class Game:
         curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
         curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
-        self.music = self.playsound("charts/" + self.data["filename"] + "/" + self.data['sound'])
+        self.music = Song("charts/" + self.data["filename"] + "/" + self.data['sound'])
+        self.music.play()
         # Clear screen
         stdscr.clear()
         self.curTime = time_ns()/10**9
@@ -306,7 +302,7 @@ class Game:
                 position = (int(self.ts/(4*self.steps)), (int(self.ts/4)%self.steps + 1))
                 if self.ts%self.steps == 0: #OnBeatPassed
                     if metronome_enabled is True:
-                        self.playsound('assets/metronome.wav')
+                        self.metronome.play()
                     stdscr.addstr(0,0, "○○○○")
                     stdscr.addstr(0,int(self.ts/4)%self.steps, "●")
                     stdscr.addstr(5,0, str(position))
