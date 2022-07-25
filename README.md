@@ -14,7 +14,10 @@ At the moment, the only way to play this game is through the source code. So, ho
 
 - First, make sure you have [Python 3](https://www.python.org/downloads/) and [git](https://git-scm.com/downloads) installed (If you're using Linux, you probably have these installed, but hey I haven't tested it on Linux yet, so stuff *may* not work)
 
-- After that, with `pip` installed, simply do `pip install requirements.txt`
+- After that, with `pip` installed, simply do the following command:
+```
+pip install -r requirements.txt
+```
 
 - Then, `git clone` the project (after having `cd`'d into the folder you want). 
 ```
