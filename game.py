@@ -40,7 +40,7 @@ metronome_enabled = False
 
 maxscore = 1000000
 
-auto = False
+auto = True
 
 
 class Game:
@@ -74,7 +74,9 @@ class Game:
                 self.screen.addstr(0, 20, judgements[obj["judgement"]["rating"]])
                 self.screen.addstr(1, 20, str(obj["judgement"]["offset"]) + "        ")
                 
-                self.clap.play()
+                if obj["judgement"]["rating"] < 5: #If not a miss, play sound
+                    self.clap.move2position_bytes(0) #If there's still a clap ongoing, puts it back to the beginning
+                    self.clap.play()
 
                 self.totalHits += 1
                 self.totalAccu += accu_judgements[obj["judgement"]["rating"]]
@@ -107,6 +109,7 @@ class Game:
                 print(obj["keyname"] + ": " + str(obj["judgement"]) + " " + message_after)
                 self.screen.addstr(0, 20, "AUTO")
                 
+                self.clap.move2position_bytes(0) #If there's still a clap ongoing, puts it back to the beginning
                 self.clap.play()
 
                 self.totalHits += 1
@@ -201,12 +204,14 @@ class Game:
                     self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+5,int(obj["screenpos"][0]*(x - 14))+8, str(math.floor(obj["beatpos"]*2 - self.float_ts/2)))
 
                 else:
+                    if obj["judgement"]["offset"] is None:
+                        #Here, we're forcing a miss, because it's far from the hit window, yet has no judgement
+                        self.input_check(obj, 69)
                     self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+3,int(obj["screenpos"][0]*(x - 14))+7, "   ")
                     self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+4,int(obj["screenpos"][0]*(x - 14))+7, "   ")
                     self.screen.addstr(int(obj["screenpos"][1]*(y - 7))+5,int(obj["screenpos"][0]*(x - 14))+7, "   ")
 
-        if auto:
-            for obj in self.hit_objects:
+            if auto:
                 self.input_check(obj, 69) 
                 #Any key would work in this case, as key is not checked in this context.
                 #Also, 69 is the scan code of "Verr Num". the_more_you_know, I guess.
@@ -302,6 +307,7 @@ class Game:
                 position = (int(self.ts/(4*self.steps)), (int(self.ts/4)%self.steps + 1))
                 if self.ts%self.steps == 0: #OnBeatPassed
                     if metronome_enabled is True:
+                        self.metronome.move2position_bytes(0)
                         self.metronome.play()
                     stdscr.addstr(0,0, "○○○○")
                     stdscr.addstr(0,int(self.ts/4)%self.steps, "●")

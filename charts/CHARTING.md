@@ -4,8 +4,14 @@ Right now, there is no editor (even though I could very much add one) so everyth
 
 ------
 
-First up, you need to create a folder (*named literally whatever you want*), then create a file called `data.json` in that folder.<br/>
-You can then add the sound file in that folder! (Can be any sound file format, mp3, ogg, etc...)
+First up, you need to create a folder (*named literally whatever you want*), then follow the directory structure below.<br/>
+```
+charts/
+  - MyChart/
+      - sound.ogg (any sound file works, just reference it in the json)
+      - data.json
+      - icon.txt (optional, see "Ascii Icon")
+```
 
 And then, here's what your `data.json` file should look like:
 ```json
