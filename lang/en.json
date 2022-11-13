@@ -1,0 +1,21 @@
+{
+    "titlescreen":{
+        "play": "Play",
+        "edit": "Edit",
+        "options": "Options",
+        "quit": "Quit",
+        "version": "Version"
+    },
+    "chartSelect":{
+        "backTitle": "Back to Title",
+        "play": "Play",
+        "mods": "Modifiers",
+        "metadata": {
+            "author": "Author",
+            "song": "Song",
+            "artist": "Artist",
+            "difficulty": "Difficulty",
+            "objs": "Hit objects"
+        }
+    }
+}

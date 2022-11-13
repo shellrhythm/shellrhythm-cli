@@ -1,3 +1,17 @@
+# IMPORTANT WARNING TO ANYONE CHECKING OUT THIS BRANCH
+
+This is a very early version of a rewrite done using the [blessed](https://github.com/jquast/blessed/) package!
+(Yes, I know, rewrite of a beta, [I'm used to it at this point](https://twitter.com/_GuiguiYT/status/1591835268595720192).)
+
+Every script that comes from the `master` branch has now `old_` added to it. It may be removed at any time once I'm done with rewriting it.
+
+## Status
+
+Title screen: `90%` (need to implement the links to the other menus)
+Chart selector: `1%` (set up the class)
+Gameplay: `0%` (soon lmao)
+Options: `0%`
+
 # shellrhythm
 ![](./shellrhythm.png)
 
