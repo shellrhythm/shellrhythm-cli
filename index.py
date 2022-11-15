@@ -1,6 +1,7 @@
 from blessed import Terminal
 import os, sys
 import json
+from pybass3 import Song
 
 term = Terminal()
 turnOff = False
@@ -11,6 +12,7 @@ loadedMenus = {
 	"ChartSelect": None,
 	"Options": None
 }
+menuMusic = Song("./charts/wavetapper/wavetapper.ogg")
 locales = {}
 selectedLocale = "en"
 
@@ -31,6 +33,9 @@ def print_column(x, y, size, char):
 	for i in range(size):
 		print_at(x, y + i, char)
 
+def print_cropped(x, y, maxsize, text, offset, color):
+	print_at(x, y, color + (text*3)[(offset%len(text))+len(text):maxsize+(offset%len(text))+len(text)])
+
 def load_locales():
 	global locales
 	localeFiles = [f.name.split(".", 1)[0] for f in os.scandir("./lang") if f.is_file()]
@@ -44,23 +49,38 @@ def load_charts():
 	global chartData
 	charts = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts") if f.is_dir()]
 	for i in range(len(charts)):
+		print(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})")
 		f = open("./charts/" + charts[i] + "/data.json")
 		chartData.append(json.load(f))
 		f.close()
+	print("All charts loaded successfully!")
 
 # ========================= [MENU CLASSES] =========================
 
 # Chart selection menu
 class ChartSelect:
+	turnOff = False
 	selectedItem = 0
+	chartsize = 0
+	selectedTab = 0
+	funniSpeen = 0
 	
 	def draw(self):
 		print_column(20, 0, term.height - 2, "|")
+		for i in range(len(chartData)):
+			text = chartData[i]["metadata"]["artist"] + " - " + chartData[i]["metadata"]["title"] + " // "
+			if self.selectedTab == 0:
+				if i == self.selectedItem:
+					print_cropped(0, i, 20, text, self.funniSpeen, term.reverse)
+				else:
+					print_cropped(0, i, 20, text, 0, term.normal)
+			print_at(20,i,f"{term.normal}")
+			
 		
 	def handle_input(self):
 		"""
 		This function is called every update cycle to get keyboard input.
-		(Note: it is called *after* the `draw()` function.)
+		(Note: it is called *after* the `draw()` function, and takes the entire frame to run.)
 		"""
 		val = ''
 		val = term.inkey(timeout=1/60)
@@ -72,16 +92,41 @@ class ChartSelect:
 			print_at(0,term.height-2,"got {0}.".format(val.capitalize()) + term.clear_eol)
 
 		if val.name == "KEY_LEFT" or val == "h":
-			self.moveBy(-1, 0)
+			self.selectedTab = max(self.selectedTab - 1, -2**3)
 		if val.name == "KEY_DOWN" or val == "j":
-			self.moveBy(0, 1)
+			if self.selectedTab == 0:
+				self.selectedItem = (self.selectedItem + 1)%self.chartsize
 		if val.name == "KEY_UP" or val == "k":
-			self.moveBy(0, -1)
+			if self.selectedTab == 0:
+				self.selectedItem = (self.selectedItem - 1)%self.chartsize
 		if val.name == "KEY_RIGHT" or val == "l":
-			self.moveBy(1, 0)
+			self.selectedTab = min(self.selectedTab + 1, 2**32)
 
 		if val.name == "KEY_ENTER":
 			self.enterPressed()
+
+		if val.name == "KEY_ESCAPE":
+			self.turnOff = True
+			loadedMenus["Titlescreen"].turnOff = False
+			loadedMenus["Titlescreen"].loop()
+			menu = "Titlescreen"
+			print(term.clear)
+
+	def loop(self):
+		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
+			print(term.clear)
+			while not self.turnOff:
+				self.draw()
+
+				self.handle_input()
+
+	def __init__(self, boot = True):
+		"""
+		The base function, where everything happens. Call it to start the loop. It's never gonna stop. (unless you can somehow set `turnOff` to false)
+		"""
+		self.chartsize = len(chartData)
+		if boot:
+			self.loop()
 
 # Title screen
 class TitleScreen:
@@ -95,8 +140,14 @@ class TitleScreen:
 		self.selectedItem = (self.selectedItem + x)%self.maxItem
 
 	def enterPressed(self):
+		global loadedMenus
+		global menu
 		if self.selectedItem == 0:
 			# Play
+			self.turnOff = True
+			loadedMenus["ChartSelect"].turnOff = False
+			loadedMenus["ChartSelect"].loop()
+			menu = "ChartSelect"
 			print(term.clear)
 
 		if self.selectedItem == 1:
@@ -165,7 +216,7 @@ class TitleScreen:
 			self.enterPressed()
 
 	def loop(self):
-		with term.fullscreen(), term.cbreak():
+		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
 			print(term.clear)
 			print_lines_at(0,1,self.logo,True)
 			while not self.turnOff:
@@ -173,7 +224,7 @@ class TitleScreen:
 
 				self.handle_input()
 
-	def __init__(self):
+	def __init__(self, boot = True):
 		"""
 		The base function, where everything happens. Call it to start the loop. It's never gonna stop. (unless you can somehow set `turnOff` to false)
 		"""
@@ -181,14 +232,21 @@ class TitleScreen:
 		self.logo = f.read()
 		f.close()
 
-		self.loop()
+		if boot:
+			self.loop()
 
 if __name__ == "__main__":
 	load_charts()
 	load_locales()
 	try:
 		print("Everything loaded successfully!\n=====================")
-		menu = TitleScreen()
+		menu = "Titlescreen"
+		menuMusic.play()
+		loadedMenus["ChartSelect"] = ChartSelect(False)
+		loadedMenus["Titlescreen"] = TitleScreen(False)
+
+		loadedMenus[menu].loop()
 	except KeyboardInterrupt:
-		print('Keyboard Interrupt')
+		print('Keyboard Interrupt detected! Shutting down...')
 		sys.exit(0)
+	print(f"Huh...? It's not supposed to just {term.italic}end{term.normal} like that.")
