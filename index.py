@@ -4,6 +4,8 @@ import json
 from pybass3 import Song
 import time
 from term_image.image import *
+import random
+import game
 
 term = Terminal()
 turnOff = False
@@ -14,6 +16,7 @@ loadedMenus = {
 	"ChartSelect": None,
 	"Options": None
 }
+loadedGame = None
 locales = {}
 selectedLocale = "en"
 
@@ -24,8 +27,11 @@ class Conductor:
 	currentTimeSec = 0
 	prevTimeSec = 0
 	currentBeat = 0
-	song = Song("./charts/wavetapper/wavetapper.ogg")
+	prevBeat = 0
+	song = Song("./assets/clap.wav")
 	previewChart = {}
+	metronome = False
+	metroSound = Song("./assets/clap.wav")
 
 	def loadsong(self, chart = {}):
 		self.bpm = chart["bpm"]
@@ -33,11 +39,20 @@ class Conductor:
 		self.song = chart["actualSong"]
 		self.previewChart = chart
 
+	def onBeat(self):
+		if self.metronome:
+			self.metroSound.play()
+
 	def update(self):
 		self.currentTimeSec = (time.time_ns() / 10**9) - self.startTime
 		self.deltatime = self.currentTimeSec - self.prevTimeSec
 		self.currentBeat = (self.currentTimeSec + self.offset) * (self.bpm/60)
 		self.prevTimeSec = self.currentTimeSec
+
+		if int(self.currentBeat) > int(self.prevBeat):
+			self.onBeat()
+
+		self.prevBeat = self.currentBeat
 
 		return self.deltatime
 
@@ -58,13 +73,16 @@ def debug_val(val):
 		elif val:
 			print_at(0,term.height-2,"got {0}.".format(val.capitalize()) + term.clear_eol)
 
-def print_lines_at(x, y, text, center = False):
+def print_lines_at(x, y, text, center = False, eol = False):
 	lines = text.split("\n")
 	for i in range(len(lines)):
 		if center:
 			print_at(x, y + i, term.center(lines[i]))
 		else:
-			print_at(x, y + i, lines[i])
+			if eol:
+				print_at(x, y + i, lines[i] + term.clear_eol)
+			else:
+				print_at(x, y + i, lines[i])
 
 def print_image(x,y,imagePath,scale):
 	image = from_file(imagePath, width=scale)
@@ -89,6 +107,47 @@ def load_locales():
 		f = open("./lang/" + localeFiles[i] + ".json")
 		locales[localeFiles[i]] = json.loads(f.read())
 		f.close()
+
+def check_chart(chart = {}, folder = ""):
+	output = {}
+	if "formatVersion" not in chart.keys():
+		chart["formatVersion"] = 0
+
+	if chart["formatVersion"] == 0:
+		#Format 0 docs:
+		#no foldername
+		#no icon, defaults to a TXT 
+		#author/charter instead of artist/author
+		output = {
+			"formatVersion": 0,
+			"sound": chart["sound"],
+			"foldername": folder,
+			"icon": {
+				"img": None,
+				"txt": "icon.txt"
+			},
+			"bpm": chart["bpm"],
+			"offset": chart["offset"],
+			"metadata": {
+				"title": chart["metadata"]["title"],
+				"artist": chart["metadata"]["author"],
+				"author": chart["metadata"]["charter"],
+				"description": chart["metadata"]["description"]
+			},
+			"difficulty": 0,
+			"notes": chart["notes"]
+		}
+	else:
+		output = chart
+
+	# fixing errors
+	if type(output["sound"]) != type(str) or output["sound"] == "":
+		print("[WARN] " + folder + "has no song!")
+		output["sound"] = None
+	
+	if output["foldername"] != folder: output["foldername"] = folder
+
+	return output
 
 def load_charts():
 	global chartData
@@ -127,10 +186,14 @@ class ChartSelect:
 		if self.selectedItem > len(chartData):
 			print_at(25,5, locales[selectedLocale]["chartSelect"]["no_charts"])
 		else:
-			print_image(22, 2, 
-				"./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["img"], 
-				int(term.width * 0.2)
-			)
+			if chartData[self.selectedItem]["icon"]["img"] != None:
+				print_image(23, 1, 
+					"./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["img"], 
+					int(term.width * 0.2)
+				)
+			else:
+				txt = open("./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["txt"])
+				print_lines_at(23, 1, txt.read())
 			print_column(25 + int(term.width * 0.2), 0, 8, "┃")
 			#region metadata
 			print_at(27 + int(term.width * 0.2), 2, term.blue 
@@ -167,7 +230,10 @@ class ChartSelect:
 			print_column(25 + int(term.width * 0.2), 9, 7, "┃")
 			print_lines_at(26 + int(term.width * 0.2), 11, chartData[self.selectedItem]["metadata"]["description"])
 
-
+	def enterPressed(self):
+		self.turnOff = True
+		conduc.song.stop()
+		loadedGame.play(chartData[self.selectedItem])
 		
 	def handle_input(self):
 		"""
@@ -301,6 +367,9 @@ class TitleScreen:
 		if val.name == "KEY_ENTER":
 			self.enterPressed()
 
+		if val == "t":
+			conduc.metronome = not conduc.metronome
+
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
 			print(term.clear)
@@ -331,12 +400,18 @@ if __name__ == "__main__":
 	# print("ITerm2Image: " + str(ITerm2Image.is_supported()))
 	time.sleep(.5) # This is here to be able to see these values above. Everything goes so fast lmao
 	try:
-		conduc.loadsong(chartData[0])
+		songLoaded = random.randint(0, len(chartData)-1)
+		if chartData[songLoaded] != None:
+			conduc.loadsong(chartData[songLoaded])
 		conduc.startTime = (time.time_ns() / 10**9)
 		conduc.song.play()
 		menu = "Titlescreen"
 		loadedMenus["ChartSelect"] = ChartSelect(False)
 		loadedMenus["Titlescreen"] = TitleScreen(False)
+
+		loadedGame = game.Game()
+
+		loadedMenus["Titlescreen"].selectedItem = songLoaded
 
 		loadedMenus[menu].loop()
 	except KeyboardInterrupt:
