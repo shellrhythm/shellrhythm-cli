@@ -10,12 +10,14 @@
         "backTitle": "Back to Title",
         "play": "Play",
         "mods": "Modifiers",
+        "difficulty": "Difficulty",
+        "objs": "Hit objects",
         "metadata": {
-            "author": "Author",
+            "author": "Chart author",
             "song": "Song",
             "artist": "Artist",
-            "difficulty": "Difficulty",
-            "objs": "Hit objects"
-        }
+            "description": "Description"
+        },
+        "no_charts": "Whoops, looks like you don't have any charts loaded!"
     }
 }
