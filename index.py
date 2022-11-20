@@ -43,6 +43,13 @@ class Conductor:
 		if self.metronome:
 			self.metroSound.play()
 
+	def debugSound(self):
+		print_at(0, term.height-6, f"beat: {self.currentBeat} | time: {self.currentTimeSec} | start time: {self.startTime}")
+
+	def play(self):
+		self.startTime = (time.time_ns() / 10**9)
+		self.song.play()
+
 	def update(self):
 		self.currentTimeSec = (time.time_ns() / 10**9) - self.startTime
 		self.deltatime = self.currentTimeSec - self.prevTimeSec
@@ -403,15 +410,14 @@ if __name__ == "__main__":
 		songLoaded = random.randint(0, len(chartData)-1)
 		if chartData[songLoaded] != None:
 			conduc.loadsong(chartData[songLoaded])
-		conduc.startTime = (time.time_ns() / 10**9)
-		conduc.song.play()
+		conduc.play()
 		menu = "Titlescreen"
 		loadedMenus["ChartSelect"] = ChartSelect(False)
 		loadedMenus["Titlescreen"] = TitleScreen(False)
 
 		loadedGame = game.Game()
 
-		loadedMenus["Titlescreen"].selectedItem = songLoaded
+		loadedMenus["ChartSelect"].selectedItem = songLoaded
 
 		loadedMenus[menu].loop()
 	except KeyboardInterrupt:

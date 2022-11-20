@@ -7,9 +7,9 @@ Every script that comes from the `master` branch has now `old_` added to it. It 
 
 ## Status
 
-Title screen: `90%` (need to implement the links to the other menus)
-Chart selector: `1%` (set up the class)
-Gameplay: `0%` (soon lmao)
+Title screen: `95%` (only needs a bit of polish)
+Chart selector: `50%` (needs to add more information)
+Gameplay: `2%` (i have something alright)
 Options: `0%`
 
 # shellrhythm
