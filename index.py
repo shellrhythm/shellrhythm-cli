@@ -63,6 +63,10 @@ class Conductor:
 
 		return self.deltatime
 
+	def stop(self):
+		self.song.pause()
+		self.song.stop()
+
 	def __init__(self) -> None:
 		pass
 
@@ -142,6 +146,7 @@ def check_chart(chart = {}, folder = ""):
 				"description": chart["metadata"]["description"]
 			},
 			"difficulty": 0,
+			"approachRate": 1,
 			"notes": chart["notes"]
 		}
 	else:
@@ -151,6 +156,9 @@ def check_chart(chart = {}, folder = ""):
 	if type(output["sound"]) != type(str) or output["sound"] == "":
 		print("[WARN] " + folder + "has no song!")
 		output["sound"] = None
+
+	if output["approachRate"] == None:
+		output["approachRate"] = 1
 	
 	if output["foldername"] != folder: output["foldername"] = folder
 
@@ -239,7 +247,7 @@ class ChartSelect:
 
 	def enterPressed(self):
 		self.turnOff = True
-		conduc.song.stop()
+		conduc.stop()
 		loadedGame.play(chartData[self.selectedItem])
 		
 	def handle_input(self):
