@@ -1,15 +1,16 @@
 # IMPORTANT WARNING TO ANYONE CHECKING OUT THIS BRANCH
 
-This is a very early version of a rewrite done using the [blessed](https://github.com/jquast/blessed/) package!
+This is a rewrite done using the [blessed](https://github.com/jquast/blessed/) package!
 (Yes, I know, rewrite of a beta, [I'm used to it at this point](https://twitter.com/_GuiguiYT/status/1591835268595720192).)
 
-Every script that comes from the `master` branch has now `old_` added to it. It may be removed at any time once I'm done with rewriting it.
+Every script that comes from the `master` branch has been removed. We've been starting up fresh, and now we don't need them anymore!
 
 ## Status
 
-Title screen: `95%` (only needs a bit of polish)
-Chart selector: `50%` (needs to add more information)
-Gameplay: `2%` (i have something alright)
+Title screen: `98%` (only needs a bit of polish and access to more options)
+Chart selector: `55%` (needs to add more information)
+Gameplay: `80%` (Missing the pause menu and results screen)
+Editor: `0%`
 Options: `0%`
 
 # shellrhythm
@@ -20,13 +21,13 @@ Options: `0%`
 ## Gameplay
 
 shellrhythm plays with **your entire keyboard**. (more precisely just the letter keys and aditional punctuation keys, so call that a 30k rhythm game!)<br/>
-Simply press the displayed key when the corresponding hit object's number writes 0!
+Simply press the displayed key when the corresponding hit object finishes drawing!
 
 ## How to install
 
-At the moment, the only way to play this game is through the source code. So, how do you play?
+At the moment, the only way to play this game is through the source code. **So, how do you play?**
 
-- First, make sure you have [Python 3](https://www.python.org/downloads/) and [git](https://git-scm.com/downloads) installed (If you're using Linux, you probably have these installed, but hey I haven't tested it on Linux yet, so stuff *may* not work)
+- First, make sure you have [Python 3](https://www.python.org/downloads/) and [git](https://git-scm.com/downloads) installed (If you're using Linux, you probably have these installed)
 
 - Then, `git clone` the project (after having `cd`'d into the folder you want). 
 ```
