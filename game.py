@@ -38,8 +38,25 @@ class Game:
 	score = 0
 	judgements = {}
 	outOfHere = []
+	endTime = 2**32
+
+	def checkJudgement(self):
+		print_at(10, 2, "idk man figure it out yourself")
+
+	def getSongEndTime(self):
+		out = self.localConduc.getLength()
+		for note in self.chart["notes"]:
+			if note["type"] == "end":
+				atBeat = (note["beatpos"][0] * 4 + note["beatpos"][1])
+				out = atBeat * (60/self.localConduc.bpm)
+				break
+
+		return out
 
 	def draw(self):
+		timerText = str(format_time(int(self.localConduc.currentTimeSec))) + " / " + str(format_time(int(self.endTime)))
+		print_at(0,0, f"{term.normal}{term.center(timerText)}")
+		print_at(0,0,term.normal + self.chart["metadata"]["artist"] + " - " + self.chart["metadata"]["title"])
 		if playfield_mode == "scale":
 			print_at(5,2,"-"* (term.width - 9))
 			print_at(5,term.height - 3,"-"* (term.width - 9))
@@ -61,8 +78,8 @@ class Game:
 						int(note["screenpos"][1]*(defaultSize[1]))+4]
 				else:
 					calc_pos = [
-						int(note["screenpos"][0]*(term.width-10))+5,
-						int(note["screenpos"][1]*(term.height-8))+3]
+						int(note["screenpos"][0]*(term.width-12))+6,
+						int(note["screenpos"][1]*(term.height-9))+4]
 				color = colors[note["color"]]
 				key = keys[note["key"]]
 				remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
@@ -94,7 +111,6 @@ class Game:
 					print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}   ")
 
 
-		print_at(0,0,term.normal + self.chart["metadata"]["artist"] + " - " + self.chart["metadata"]["title"])
 		# self.localConduc.debugSound()
 
 	def handle_input(self):
@@ -103,10 +119,26 @@ class Game:
 		# debug_val(val)
 
 		if val.name == "KEY_ESCAPE":
-			sys.exit(0)
+			raise NotImplementedError("Pause menu missing!")
+
+		if self.localConduc.currentTimeSec > self.endTime:
+			raise NotImplementedError("Results screen missing!")
 		
 		if val in keys:
-			debug_val(val)
+			print_at(0, term.height - 2, term.clear_eol)
+			pos = [-1, -1]
+			for y in range(len(keys)):
+				for x in range(len(keys[y])):
+					if keys[y][x] == val:
+						pos = [x, y]
+			for i in range(len(self.chart["notes"])):
+				note = self.chart["notes"][i]
+				if note["type"] == "hit_object":
+					if self.chart["notes"][i]["key"] == pos[0] * 10 + pos[1] and self.chart["notes"][i] not in self.outOfHere:
+						print_at(i*2, term.height - 2, str(i))
+						self.checkJudgement(self.chart["notes"][i])
+						break;
+
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
@@ -118,13 +150,15 @@ class Game:
 				self.handle_input()
 
 	def play(self, chart = {}):
-		print(chart)
+		# print(chart)
 		conduc.song.stop()
 		self.chart = chart
 		self.localConduc.loadsong(self.chart)
 		self.localConduc.play()
 		self.localConduc.song.move2position_seconds(0)
+		self.endTime = self.getSongEndTime()
 		self.loop()
+
 
 	def __init__(self) -> None:
 		print("Wow, look, nothing!")

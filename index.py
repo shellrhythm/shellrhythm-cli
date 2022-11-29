@@ -20,6 +20,17 @@ loadedGame = None
 locales = {}
 selectedLocale = "en"
 
+def format_time(seconds):
+	hour = seconds // 3600
+	seconds %= 3600
+	minutes = seconds // 60
+	seconds %= 60
+
+	if hour != 0:
+		return "%d:%02d:%02d" % (hour, minutes, seconds)
+	else:
+		return "%d:%02d" % (minutes, seconds)
+
 class Conductor:
 	bpm = 120
 	offset = 0
@@ -66,6 +77,9 @@ class Conductor:
 	def stop(self):
 		self.song.pause()
 		self.song.stop()
+
+	def getLength(self):
+		return self.song._length_seconds
 
 	def __init__(self) -> None:
 		pass
