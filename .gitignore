@@ -2,3 +2,4 @@
 /charts/*/
 /.vscode/
 *.so
+/logs

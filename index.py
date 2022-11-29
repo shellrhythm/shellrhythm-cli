@@ -58,13 +58,13 @@ class Conductor:
 		print_at(0, term.height-6, f"beat: {self.currentBeat} | time: {self.currentTimeSec} | start time: {self.startTime}")
 
 	def play(self):
-		self.startTime = (time.time_ns() / 10**9)
+		self.startTime = (time.time_ns() / 10**9) + self.offset
 		self.song.play()
 
 	def update(self):
 		self.currentTimeSec = (time.time_ns() / 10**9) - self.startTime
 		self.deltatime = self.currentTimeSec - self.prevTimeSec
-		self.currentBeat = (self.currentTimeSec + self.offset) * (self.bpm/60)
+		self.currentBeat = self.currentTimeSec * (self.bpm/60)
 		self.prevTimeSec = self.currentTimeSec
 
 		if int(self.currentBeat) > int(self.prevBeat):
