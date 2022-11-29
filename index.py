@@ -5,7 +5,6 @@ from pybass3 import Song
 import time
 from term_image.image import *
 import random
-import game
 
 term = Terminal()
 turnOff = False
@@ -19,6 +18,8 @@ loadedMenus = {
 loadedGame = None
 locales = {}
 selectedLocale = "en"
+
+currentLoadedSong = 0
 
 def format_time(seconds):
 	hour = seconds // 3600
@@ -43,6 +44,7 @@ class Conductor:
 	previewChart = {}
 	metronome = False
 	metroSound = Song("./assets/clap.wav")
+	startTimeNoOffset = 0
 
 	def loadsong(self, chart = {}):
 		self.bpm = chart["bpm"]
@@ -58,7 +60,8 @@ class Conductor:
 		print_at(0, term.height-6, f"beat: {self.currentBeat} | time: {self.currentTimeSec} | start time: {self.startTime}")
 
 	def play(self):
-		self.startTime = (time.time_ns() / 10**9) + self.offset
+		self.startTimeNoOffset = (time.time_ns() / 10**9)
+		self.startTime = self.startTimeNoOffset + self.offset
 		self.song.play()
 
 	def update(self):
@@ -75,7 +78,7 @@ class Conductor:
 		return self.deltatime
 
 	def stop(self):
-		self.song.pause()
+		# self.song.pause()
 		self.song.stop()
 
 	def getLength(self):
@@ -83,6 +86,8 @@ class Conductor:
 
 	def __init__(self) -> None:
 		pass
+
+import game
 
 conduc = Conductor()
 chartData = []
@@ -138,6 +143,9 @@ def check_chart(chart = {}, folder = ""):
 	if "formatVersion" not in chart.keys():
 		chart["formatVersion"] = 0
 
+	if "approachRate" not in chart.keys():
+		chart["approachRate"] = 1
+
 	if chart["formatVersion"] == 0:
 		#Format 0 docs:
 		#no foldername
@@ -167,12 +175,8 @@ def check_chart(chart = {}, folder = ""):
 		output = chart
 
 	# fixing errors
-	if type(output["sound"]) != type(str) or output["sound"] == "":
-		print("[WARN] " + folder + "has no song!")
-		output["sound"] = None
-
-	if output["approachRate"] == None:
-		output["approachRate"] = 1
+	if output["sound"] == "" or output["sound"] == None:
+		print("[WARN] " + folder + " has no song!")
 	
 	if output["foldername"] != folder: output["foldername"] = folder
 
@@ -183,11 +187,12 @@ def load_charts():
 	charts = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts") if f.is_dir()]
 	for i in range(len(charts)):
 		print(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})")
-		f = open("./charts/" + charts[i] + "/data.json")
-		jsonThing = json.load(f)
+		f = open("./charts/" + charts[i] + "/data.json").read()
+		jsonThing = json.loads(f)
+		jsonThing = check_chart(jsonThing, charts[i])
 		jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
 		chartData.append(jsonThing)
-		f.close()
+
 	print("All charts loaded successfully!")
 
 # ========================= [MENU CLASSES] =========================
@@ -372,7 +377,12 @@ class TitleScreen:
 		else:
 			print_at(0, term.height * 0.5 + 3, f"  {text_quit}   ")
 
-		print_at(0, 0, term.center(f"{(int(conduc.currentBeat)%4) + 1}{term.clear_eol}"))
+		text_beat = "○ ○ ○ ○"
+		text_beat = text_beat[:int(conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(conduc.currentBeat)%4 * 2) + 1:]
+
+		print_at(0, 0, term.center(f"{text_beat}{term.clear_eol}"))
+		text_songTitle = chartData[currentLoadedSong]["metadata"]["artist"] + " - " + chartData[currentLoadedSong]["metadata"]["title"] + " // "
+		print_cropped(term.width - 31, 0, 30, text_songTitle, int(conduc.currentBeat), term.normal)
 
 	
 	def handle_input(self):
@@ -440,6 +450,8 @@ if __name__ == "__main__":
 		loadedGame = game.Game()
 
 		loadedMenus["ChartSelect"].selectedItem = songLoaded
+
+		currentLoadedSong = songLoaded
 
 		loadedMenus[menu].loop()
 	except KeyboardInterrupt:

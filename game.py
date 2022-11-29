@@ -262,6 +262,7 @@ class Game:
 		if self.localConduc.currentTimeSec > self.endTime:
 			f = open("./logs/results.json", "w")
 			f.write(json.dumps(self.resultsFile(),indent=4))
+			f.close()
 			raise NotImplementedError("Results screen missing!")
 		
 		if val in keys and not self.auto:
