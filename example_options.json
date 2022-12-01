@@ -1,1 +1,8 @@
-{"layout": "azerty", "globalOffset": 0}
+{
+    "layout": "qwerty",
+    "globalOffset": 0,
+    "lang": "en",
+    "nerdFont": false,
+    "textImages": true,
+    "displayName": "Player"
+}

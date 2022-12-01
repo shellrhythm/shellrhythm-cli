@@ -36,7 +36,7 @@ def draw():
 
 def init():
 	load_charts()
-	conduc.loadsong(chartData[2])
+	conduc.loadsong(chartData[0])
 	conduc.play()
 	with term.fullscreen(), term.cbreak(), term.hidden_cursor():
 		print(term.clear)

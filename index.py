@@ -19,6 +19,18 @@ loadedGame = None
 locales = {}
 selectedLocale = "en"
 
+options = {
+    "layout": "qwerty",
+    "globalOffset": 0,
+    "lang": "en",
+    "nerdFont": False,
+    "textImages": True,
+    "displayName": "Player"
+}
+
+bottom_txt = open("./assets/bottom.txt")
+bottomTextLines = bottom_txt.readlines()
+
 currentLoadedSong = 0
 
 def format_time(seconds):
@@ -92,6 +104,8 @@ import game
 conduc = Conductor()
 chartData = []
 
+# ========================= [UTIL FONCTIONS] =========================
+
 def print_at(x, y, toPrint):
 	print(f"{term.move_xy(x=int(x), y=int(y))}" + toPrint)
 
@@ -128,6 +142,19 @@ def print_cropped(x, y, maxsize, text, offset, color, isWrapAround = True):
 	else:
 		actualText = text[offset%len(text):maxsize+(offset%len(text))]
 		print_at(x, y, color + actualText + term.normal + (" "*(maxsize - len(actualText))))
+		
+def load_options():
+	if os.path.exists("./options.json"):
+		global options
+		f = open("./options.json")
+		options_string = f.read()
+		options = json.loads(options_string)
+		f.close()
+		print(options)
+	else:
+		f = open("./options.json", "x")
+		f.write(json.dumps({"layout": "qwerty", "globalOffset": 0}, indent=4))
+		f.close()
 
 def load_locales():
 	global locales
@@ -197,6 +224,74 @@ def load_charts():
 
 # ========================= [MENU CLASSES] =========================
 
+# Options menu
+class Options:
+	turnOff = False
+	deltatime = 0
+	selectedItem = 0
+	maxItem = 4
+	menuOptions = [
+		{"var": "globalOffset", "type":"intField", "displayName": "Global offset"},
+		{"var": "lang", "type":"enum", "displayName": "Language", "populatedValues": chartData},
+		{"var": "nerdFont", "type":"bool", "displayName": "Enable Nerd Font display"},
+		{"var": "textImages", "type":"bool", "displayName": "Use images as thumbnails"}
+	]
+
+	def moveBy(self, x):
+		self.selectedItem = (self.selectedItem + x)%self.maxItem
+		
+	def interactBool(self, boolOption):
+		global options
+		options[boolOption["var"]] = not options[boolOption["var"]]
+
+	def draw(self):
+		for i in range(len(self.menuOptions)):
+			print_at(0,i*2 + 3, self.menuOptions[i]["displayName"])
+
+	def enterPressed(self):
+		if self.menuOptions[self.selectedItem]["type"] == "bool":
+			self.interactBool(self.menuOptions[self.selectedItem])
+
+	def handle_input(self):
+		"""
+		This function is called every update cycle to get keyboard input.
+		(Note: it is called *after* the `draw()` function, and takes the entire frame to run.)
+		"""
+		val = ''
+		val = term.inkey(timeout=1/60)
+		# debug_val(val)
+
+		if val.name == "KEY_LEFT" or val == "h":
+			self.moveBy(0)
+		if val.name == "KEY_DOWN" or val == "j":
+			self.moveBy(1)
+		if val.name == "KEY_UP" or val == "k":
+			self.moveBy(-1)
+		if val.name == "KEY_RIGHT" or val == "l":
+			self.moveBy(0)
+		if val.name == "KEY_ENTER":
+			self.enterPressed()
+
+		if val == "t":
+			conduc.metronome = not conduc.metronome
+
+	def loop(self):
+		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
+			print(term.clear)
+			while not self.turnOff:
+				self.deltatime = conduc.update()
+				self.draw()
+
+				self.handle_input()
+
+	def __init__(self, boot = True):
+		"""
+		The base function, where everything happens. Call it to start the loop. It's never gonna stop. (unless you can somehow set `turnOff` to false)
+		"""
+		if boot:
+			self.loop()
+
+
 # Chart selection menu
 class ChartSelect:
 	turnOff = False
@@ -263,11 +358,13 @@ class ChartSelect:
 			print_at(28 + int(term.width * 0.2), 8, locales[selectedLocale]["chartSelect"]["metadata"]["description"])
 			print_column(25 + int(term.width * 0.2), 9, 7, "┃")
 			print_lines_at(26 + int(term.width * 0.2), 11, chartData[self.selectedItem]["metadata"]["description"])
+		# Controls
+		print_at(1,term.height - 2, f"{term.reverse}[ENTER] Play level {term.normal} {term.reverse}[J/↓] Scroll down {term.normal} {term.reverse}[K/↑] Scroll up {term.normal} ")
 
 	def enterPressed(self):
 		self.turnOff = True
 		conduc.stop()
-		loadedGame.play(chartData[self.selectedItem])
+		loadedGame.play(chartData[self.selectedItem], options["layout"])
 		
 	def handle_input(self):
 		"""
@@ -276,7 +373,7 @@ class ChartSelect:
 		"""
 		val = ''
 		val = term.inkey(timeout=1/60)
-		debug_val(val)
+		# debug_val(val)
 
 		if val.name == "KEY_LEFT" or val == "h":
 			self.selectedTab = max(self.selectedTab - 1, 0)
@@ -325,6 +422,8 @@ class TitleScreen:
 	selectedItem = 0
 	maxItem = 4
 
+	curBottomText = 0
+
 	def moveBy(self, x):
 		self.selectedItem = (self.selectedItem + x)%self.maxItem
 
@@ -358,22 +457,34 @@ class TitleScreen:
 		text_options = locales[selectedLocale]["titlescreen"]["options"] #python be wack
 		text_quit = locales[selectedLocale]["titlescreen"]["quit"] #python be wack
 		if self.selectedItem == 0:
-			print_at(0, term.height * 0.5 - 3, f"{term.reverse}   {text_play} {term.normal}\ue0b0")
+			if options["nerdFont"]:
+				print_at(0, term.height * 0.5 - 3, f"{term.reverse}   {text_play} {term.normal}\ue0b0")
+			else:
+				print_at(0, term.height * 0.5 - 3, f"{term.reverse}   {text_play} >{term.normal}")
 		else:
 			print_at(0, term.height * 0.5 - 3, f"  {text_play}   ")
 
 		if self.selectedItem == 1:
-			print_at(0, term.height * 0.5 - 1, f"{term.reverse}   {text_edit} {term.normal}\ue0b0")
+			if options["nerdFont"]:
+				print_at(0, term.height * 0.5 - 1, f"{term.reverse}   {text_edit} {term.normal}\ue0b0")
+			else:
+				print_at(0, term.height * 0.5 - 1, f"{term.reverse}   {text_edit} >{term.normal}")
 		else:
 			print_at(0, term.height * 0.5 - 1, f"  {text_edit}   ")
 
 		if self.selectedItem == 2:
-			print_at(0, term.height * 0.5 + 1, f"{term.reverse}   {text_options} {term.normal}\ue0b0")
+			if options["nerdFont"]:
+				print_at(0, term.height * 0.5 + 1, f"{term.reverse}   {text_options} {term.normal}\ue0b0")
+			else:
+				print_at(0, term.height * 0.5 + 1, f"{term.reverse}   {text_options} >{term.normal}")
 		else:
 			print_at(0, term.height * 0.5 + 1, f"  {text_options}   ")
 
 		if self.selectedItem == 3:
-			print_at(0, term.height * 0.5 + 3, f"{term.reverse}   {text_quit} {term.normal}\ue0b0")
+			if options["nerdFont"]:
+				print_at(0, term.height * 0.5 + 3, f"{term.reverse}   {text_quit} {term.normal}\ue0b0")
+			else:
+				print_at(0, term.height * 0.5 + 3, f"{term.reverse}   {text_quit} >{term.normal}")
 		else:
 			print_at(0, term.height * 0.5 + 3, f"  {text_quit}   ")
 
@@ -383,6 +494,8 @@ class TitleScreen:
 		print_at(0, 0, term.center(f"{text_beat}{term.clear_eol}"))
 		text_songTitle = chartData[currentLoadedSong]["metadata"]["artist"] + " - " + chartData[currentLoadedSong]["metadata"]["title"] + " // "
 		print_cropped(term.width - 31, 0, 30, text_songTitle, int(conduc.currentBeat), term.normal)
+
+		print_at(term.width-(len("© #Guigui, 2022") + 1), term.height-2, "© #Guigui, 2022")
 
 	
 	def handle_input(self):
@@ -410,9 +523,12 @@ class TitleScreen:
 			conduc.metronome = not conduc.metronome
 
 	def loop(self):
+		self.curBottomText = bottomTextLines[random.randint(0, len(bottomTextLines)-1)]
+		# self.curBottomText = bottomTextLines[0]
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
 			print(term.clear)
 			print_lines_at(0,1,self.logo,True)
+			print_at(int((term.width - len(self.curBottomText)) / 2), len(self.logo.splitlines()) + 2, self.curBottomText)
 			while not self.turnOff:
 				self.deltatime = conduc.update()
 				self.draw()
@@ -433,6 +549,7 @@ class TitleScreen:
 if __name__ == "__main__":
 	load_charts()
 	load_locales()
+	load_options()
 	print("Everything loaded successfully!\n=====================")
 	# print("Testing image rendering...")
 	# print("KittyImage: " + str(KittyImage.is_supported()))

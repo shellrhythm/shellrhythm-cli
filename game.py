@@ -26,10 +26,10 @@ keys = [
 	"w","x","c","v","b","n",",",";",":","!"
 ]
 
-hitWindows = [0.05, 0.1, 0.2, 0.35, 0.6]
+hitWindows = [0.05, 0.075, 0.1, 0.15, 0.2]
 judgementNames = ["MARV", "PERF", "EPIC", "GOOD", " EH ", "MISS"]
 judgementShort = [f"{term.purple}@", f"{term.aqua}#", f"{term.springgreen}$", f"{term.green}*", f"{term.orange};", f"{term.red}/"]
-accMultiplier = [1, 0.95, 0.75, 0.50, 0.25, 0]
+accMultiplier = [1, 1, 0.85, 0.75, 0.5, 0]
 
 # You can either use "setSize" or "scale"
 # setSize will use a set terminal size as playfield (By default, 80x24)
@@ -52,6 +52,19 @@ class Game:
 	auto = False
 	missesCount = 0
 
+	def setupKeys(self, layout):
+		global keys
+		if os.path.exists("./layout/" + layout):
+			output = []
+			f = open("./layout/" + layout)
+			rows = f.readlines()
+
+			for row in range(len(rows)):
+				for char in range(10):
+					output.append(rows[row][char])
+
+			keys = output
+
 	def scoreCalc(self):
 		filteredJudgementCount = 0
 		for i in self.judgements:
@@ -64,11 +77,13 @@ class Game:
 		return ((self.accuracy/100) * (maxScore*0.8) + ((1/(self.missesCount+1)) * (maxScore*0.2))) * (filteredJudgementCount/totalNotes)
 
 	def resultsFile(self):
+		global keys
 		self.score = self.scoreCalc()
 		output = {
 			"accuracy": self.accuracy,
 			"score": self.score,
 			"judgements": self.judgements,
+			"keys": keys
 		}
 		return output
 
@@ -101,6 +116,7 @@ class Game:
 					"judgement": judgement
 				}
 				self.accuracyUpdate()
+				self.score = int(self.scoreCalc())
 				calc_pos = []
 				if playfield_mode == "setSize":
 					calc_pos = [
@@ -114,7 +130,7 @@ class Game:
 				print_at(10, 1, judgementNames[judgement])
 
 				if judgement == 5:
-					missesCount += 1
+					self.missesCount += 1
 				return True
 			else:
 				if remTime <= -0.6 and notHit:
@@ -135,7 +151,7 @@ class Game:
 							int(note["screenpos"][1]*(term.height-9))+4]
 					print_at(calc_pos[0], calc_pos[1], judgementShort[judgement])
 					print_at(10, 1, judgementNames[judgement])
-					missesCount += 1
+					self.missesCount += 1
 				return False
 		else:
 			if remTime <= 0:
@@ -180,6 +196,7 @@ class Game:
 		print_at(0,0, f"{term.normal}{term.center(timerText)}")
 		print_at(0,0,term.normal + self.chart["metadata"]["artist"] + " - " + self.chart["metadata"]["title"])
 		print_at(term.width - (len(str(self.accuracy)) + 2), 0, str(self.accuracy) + "%")
+		print_at(term.width - (len(str(self.score)) + 1), 1, str(self.score))
 		if playfield_mode == "scale":
 			print_at(5,2,"-"* (term.width - 9))
 			print_at(5,term.height - 3,"-"* (term.width - 9))
@@ -299,8 +316,9 @@ class Game:
 
 				self.handle_input()
 
-	def play(self, chart = {}):
+	def play(self, chart = {}, layout = "qwerty"):
 		# print(chart)
+		self.setupKeys(layout)
 		conduc.song.stop()
 		self.chart = chart
 		self.localConduc.loadsong(self.chart)
