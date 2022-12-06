@@ -17,6 +17,7 @@ loadedMenus = {
 }
 loadedGame = None
 locales = {}
+localeNames = []
 selectedLocale = "en"
 
 options = {
@@ -106,6 +107,7 @@ chartData = []
 
 # ========================= [UTIL FONCTIONS] =========================
 
+#region [Util Functions]
 def print_at(x, y, toPrint):
 	print(f"{term.move_xy(x=int(x), y=int(y))}" + toPrint)
 
@@ -163,6 +165,7 @@ def load_locales():
 		print(f"Loading locale \"{localeFiles[i]}\"... ({i+1}/{len(localeFiles)})")
 		f = open("./lang/" + localeFiles[i] + ".json")
 		locales[localeFiles[i]] = json.loads(f.read())
+		localeNames.append(localeFiles[i])
 		f.close()
 
 def check_chart(chart = {}, folder = ""):
@@ -222,6 +225,8 @@ def load_charts():
 
 	print("All charts loaded successfully!")
 
+#endregion
+
 # ========================= [MENU CLASSES] =========================
 
 # Options menu
@@ -231,26 +236,58 @@ class Options:
 	selectedItem = 0
 	maxItem = 4
 	menuOptions = [
-		{"var": "globalOffset", "type":"intField", "displayName": "Global offset"},
-		{"var": "lang", "type":"enum", "displayName": "Language", "populatedValues": chartData},
+		{"var": "globalOffset", "type":"intField", "displayName": "Global offset (ms)"},
+		{"var": "lang", "type":"enum", "displayName": "Language", "populatedValues": localeNames},
 		{"var": "nerdFont", "type":"bool", "displayName": "Enable Nerd Font display"},
 		{"var": "textImages", "type":"bool", "displayName": "Use images as thumbnails"}
 	]
+	enumInteracted = -1
+	curEnumValue = -1
 
 	def moveBy(self, x):
 		self.selectedItem = (self.selectedItem + x)%self.maxItem
-		
 	def interactBool(self, boolOption):
 		global options
 		options[boolOption["var"]] = not options[boolOption["var"]]
-
+	def interactEnum(self, enum, curChoice):
+		'''curChoice is an integer.'''
+		global options
+		options[enum["var"]] = enum["populatedValues"][curChoice]
+		
 	def draw(self):
+		maxLength = 0
+
+		for option in self.menuOptions:
+			if len(option["displayName"]) > maxLength:
+				maxLength = len(option["displayName"])
+
 		for i in range(len(self.menuOptions)):
-			print_at(0,i*2 + 3, self.menuOptions[i]["displayName"])
+			titleLen = len(self.menuOptions[i]['displayName'])
+			leType = self.menuOptions[i]["type"]
+			leVar = self.menuOptions[i]["var"]
+			#DisplayName
+			if self.selectedItem == i:
+				print_at(0,i*2 + 3, term.reverse + f"- {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}>" + term.normal)
+			else:
+				print_at(0,i*2 + 3, term.normal + f" {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}  ")
+			if leType == "intField":
+				print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000))
+			if leType == "enum":
+				print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄")
+				print_at(maxLength + 32, 0, str(self.menuOptions[i]["populatedValues"]))
+			if leType == "bool":
+				if options[leVar] == True:
+					print_at(maxLength + 6, i*2+3, "☑")
+				else:
+					print_at(maxLength + 6, i*2+3, "☐")
 
 	def enterPressed(self):
-		if self.menuOptions[self.selectedItem]["type"] == "bool":
-			self.interactBool(self.menuOptions[self.selectedItem])
+		selectedOption = self.menuOptions[self.selectedItem]
+		if selectedOption["type"] == "bool":
+			self.interactBool(selectedOption)
+		if selectedOption["type"] == "enum":
+			self.enumInteracted = self.selectedItem
+			self.curEnumValue = selectedOption["populatedValues"].index(options[selectedOption["var"]])
 
 	def handle_input(self):
 		"""
@@ -261,19 +298,20 @@ class Options:
 		val = term.inkey(timeout=1/60)
 		# debug_val(val)
 
-		if val.name == "KEY_LEFT" or val == "h":
-			self.moveBy(0)
-		if val.name == "KEY_DOWN" or val == "j":
-			self.moveBy(1)
-		if val.name == "KEY_UP" or val == "k":
-			self.moveBy(-1)
-		if val.name == "KEY_RIGHT" or val == "l":
-			self.moveBy(0)
-		if val.name == "KEY_ENTER":
-			self.enterPressed()
-
-		if val == "t":
-			conduc.metronome = not conduc.metronome
+		if self.enumInteracted == -1:
+			if val.name == "KEY_DOWN" or val == "j":
+				self.moveBy(1)
+			if val.name == "KEY_UP" or val == "k":
+				self.moveBy(-1)
+			if val.name == "KEY_RIGHT" or val == "l" or val.name == "KEY_ENTER":
+				self.enterPressed()
+		else:
+			if val.name == "KEY_DOWN" or val == "j":
+				self.curEnumValue = (self.curEnumValue-1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
+				self.interactEnum(self.menuOptions[self.enumInteracted], self.curEnumValue)
+			if val.name == "KEY_UP" or val == "k":
+				self.curEnumValue = (self.curEnumValue+1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
+				self.interactEnum(self.menuOptions[self.enumInteracted], self.curEnumValue)
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
@@ -444,6 +482,10 @@ class TitleScreen:
 
 		if self.selectedItem == 2:
 			# Options
+			self.turnOff = True
+			loadedMenus["Options"].turnOff = False
+			loadedMenus["Options"].loop()
+			menu = "Options"
 			print(term.clear)
 		
 		if self.selectedItem == 3:
@@ -554,7 +596,7 @@ if __name__ == "__main__":
 	# print("Testing image rendering...")
 	# print("KittyImage: " + str(KittyImage.is_supported()))
 	# print("ITerm2Image: " + str(ITerm2Image.is_supported()))
-	time.sleep(.5) # This is here to be able to see these values above. Everything goes so fast lmao
+	# time.sleep(.5) # This is here to be able to see these values above. Everything goes so fast lmao
 	try:
 		songLoaded = random.randint(0, len(chartData)-1)
 		if chartData[songLoaded] != None:
@@ -563,6 +605,7 @@ if __name__ == "__main__":
 		menu = "Titlescreen"
 		loadedMenus["ChartSelect"] = ChartSelect(False)
 		loadedMenus["Titlescreen"] = TitleScreen(False)
+		loadedMenus["Options"] = Options(False) # Sixty-sixteen megabytes- by-bytes 
 
 		loadedGame = game.Game()
 
