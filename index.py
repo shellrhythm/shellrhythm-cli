@@ -90,6 +90,7 @@ class Conductor:
 		self.isPaused = False
 		self.bpm = self.previewChart["bpm"]
 		self.skippedTimeWithPause = (time.time_ns() / 10**9) - self.pauseStartTime
+		self.song.move2position_seconds((time.time_ns() / 10**9) - (self.startTime + self.skippedTimeWithPause))
 		self.song.resume()
 
 	def update(self):
@@ -425,6 +426,8 @@ class ChartSelect:
 		self.turnOff = True
 		conduc.stop()
 		loadedGame.play(chartData[self.selectedItem], options["layout"])
+		print(term.clear)
+		self.turnOff = False
 		
 	def handle_input(self):
 		"""
@@ -513,7 +516,7 @@ class TitleScreen:
 		if self.selectedItem == 3:
 			# Quit
 			self.turnOff = True
-			sys.exit(0)
+			# sys.exit(0)
 	
 	def draw(self):
 		text_play = locales[selectedLocale]["titlescreen"]["play"] #python be wack
@@ -639,4 +642,5 @@ if __name__ == "__main__":
 	except KeyboardInterrupt:
 		print('Keyboard Interrupt detected! Shutting down...')
 		sys.exit(0)
+	print(term.clear)
 	print(f"Huh...? It's not supposed to just {term.italic}end{term.normal} like that.")

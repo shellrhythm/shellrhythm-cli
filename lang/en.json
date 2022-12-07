@@ -19,5 +19,20 @@
             "description": "Description"
         },
         "no_charts": "Whoops, looks like you don't have any charts loaded!"
+    },
+    "options":{
+        "globalOffset": "Global offset (ms)",
+        "lang": "Language",
+        "nerdFont": "Enable Nerd Font display",
+        "textImages": "Use images as thumbnails"
+    },
+    "gameplay":{
+        "pause": {
+            "title": "PAUSED",
+            "subtitle": "this is the pause menu, i guess",
+            "resume": "Resume",
+            "retry": "Retry",
+            "quit": "Quit to menu"
+        }
     }
 }

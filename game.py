@@ -51,6 +51,7 @@ class Game:
 	accuracy = 100
 	auto = True
 	missesCount = 0
+	pauseOption = 0
 
 	def setupKeys(self, layout):
 		global keys
@@ -265,9 +266,39 @@ class Game:
 						print_at(calc_pos[0]-1, calc_pos[1],   f"{color}   ")
 						print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}   ")
 						self.dontDraw.append(note)
+		else:
+			global locales
+			text_paused = "PAUSED"
+			text_resume = "Resume"
+			text_retry  = "Retry"
+			text_quit	= "Quit"
+			print_at(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) - 4, "*---" + text_paused + "---*")
+			print_at(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) + 2, "*---" + ("-"*len(text_paused)) + "---*")
+			print_column(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) - 3, 5, '|')
+			print_column(int((term.width+len(text_paused)) * 0.5) + 3, int(term.height*0.5) - 3, 5, '|')
+			if self.pauseOption == 0:
+				print_at(int((term.width-len(text_resume)) * 0.5) - 1, int(term.height*0.5) - 2, term.normal+term.reverse+" "+text_resume+" "+term.normal)
+			else:
+				print_at(int((term.width-len(text_resume)) * 0.5) - 1, int(term.height*0.5) - 2, term.normal+" "+text_resume+" "+term.normal)
 
+			if self.pauseOption == 1:
+				print_at(int((term.width-len(text_retry)) * 0.5) - 1, int(term.height*0.5) - 1, term.normal+term.reverse+" "+text_retry+" "+term.normal)
+			else:
+				print_at(int((term.width-len(text_retry)) * 0.5) - 1, int(term.height*0.5) - 1, term.normal+" "+text_retry+" "+term.normal)
+
+			if self.pauseOption == 2:
+				print_at(int((term.width-len(text_quit)) * 0.5) - 1, int(term.height*0.5), term.normal+term.reverse+" "+text_quit+" "+term.normal)
+			else:
+				print_at(int((term.width-len(text_quit)) * 0.5) - 1, int(term.height*0.5), term.normal+" "+text_quit+" "+term.normal)
+			
 
 		# self.localConduc.debugSound()
+
+	def retry(self):
+		print(term.clear)
+		self.localConduc.stop()
+		self.localConduc.song.move2position_seconds(0)
+		self.localConduc.play()
 
 	def handle_input(self):
 		if not self.localConduc.isPaused:
@@ -314,6 +345,18 @@ class Game:
 			
 			if val.name == "KEY_ESCAPE":
 				self.localConduc.resume()
+			if val.name == "KEY_DOWN" or val == "j":
+				self.pauseOption = (self.pauseOption + 4)%3
+			if val.name == "KEY_UP" or val == "k":
+				self.pauseOption = (self.pauseOption + 2)%3
+
+			if val.name == "KEY_ENTER":
+				if self.pauseOption == 0:
+					self.localConduc.resume()
+				if self.pauseOption == 1:
+					self.retry()
+				if self.pauseOption == 2:
+					self.turnOff = True
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
