@@ -58,6 +58,9 @@ class Conductor:
 	metronome = False
 	metroSound = Song("./assets/clap.wav")
 	startTimeNoOffset = 0
+	isPaused = False
+	pauseStartTime = 0
+	skippedTimeWithPause = 0
 
 	def loadsong(self, chart = {}):
 		self.bpm = chart["bpm"]
@@ -77,18 +80,34 @@ class Conductor:
 		self.startTime = self.startTimeNoOffset + self.offset
 		self.song.play()
 
+	def pause(self):
+		self.bpm = 0
+		self.isPaused = True
+		self.pauseStartTime = (time.time_ns() / 10**9)
+		self.song.pause()
+	
+	def resume(self):
+		self.isPaused = False
+		self.bpm = self.previewChart["bpm"]
+		self.skippedTimeWithPause = (time.time_ns() / 10**9) - self.pauseStartTime
+		self.song.resume()
+
 	def update(self):
-		self.currentTimeSec = (time.time_ns() / 10**9) - self.startTime
-		self.deltatime = self.currentTimeSec - self.prevTimeSec
-		self.currentBeat = self.currentTimeSec * (self.bpm/60)
-		self.prevTimeSec = self.currentTimeSec
+		if not self.isPaused and self.bpm > 0:
+			self.currentTimeSec = (time.time_ns() / 10**9) - (self.startTime + self.skippedTimeWithPause)
+			self.deltatime = self.currentTimeSec - self.prevTimeSec
+			self.currentBeat = self.currentTimeSec * (self.bpm/60)
+			self.prevTimeSec = self.currentTimeSec
 
-		if int(self.currentBeat) > int(self.prevBeat):
-			self.onBeat()
+			if int(self.currentBeat) > int(self.prevBeat):
+				self.onBeat()
 
-		self.prevBeat = self.currentBeat
+			self.prevBeat = self.currentBeat
 
-		return self.deltatime
+			return self.deltatime
+		else:
+			self.skippedTimeWithPause = (time.time_ns() / 10**9) - self.pauseStartTime
+			return 1/60
 
 	def stop(self):
 		# self.song.pause()
@@ -267,7 +286,10 @@ class Options:
 			leVar = self.menuOptions[i]["var"]
 			#DisplayName
 			if self.selectedItem == i:
-				print_at(0,i*2 + 3, term.reverse + f"- {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}>" + term.normal)
+				if int(conduc.currentBeat) % 2 == 1:
+					print_at(0,i*2 + 3, term.reverse + f"- {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}>" + term.normal)
+				else:
+					print_at(0,i*2 + 3, term.normal  + f"- {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}>" + term.normal)
 			else:
 				print_at(0,i*2 + 3, term.normal + f" {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}  ")
 			if leType == "intField":
