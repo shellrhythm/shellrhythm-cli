@@ -116,6 +116,11 @@ class Conductor:
 
 	def getLength(self):
 		return self.song._length_seconds
+	
+	def setOffset(self, newOffset):
+		self.offset = newOffset
+		self.startTime = self.startTimeNoOffset + self.offset
+
 
 	def __init__(self) -> None:
 		pass
@@ -168,14 +173,16 @@ def print_cropped(x, y, maxsize, text, offset, color, isWrapAround = True):
 def load_options():
 	if os.path.exists("./options.json"):
 		global options
+		global selectedLocale
 		f = open("./options.json")
 		options_string = f.read()
 		options = json.loads(options_string)
 		f.close()
 		print(options)
+		selectedLocale = options["lang"]
 	else:
 		f = open("./options.json", "x")
-		f.write(json.dumps({"layout": "qwerty", "globalOffset": 0}, indent=4))
+		f.write(json.dumps(options, indent=4))
 		f.close()
 
 def load_locales():
@@ -264,6 +271,10 @@ class Options:
 	enumInteracted = -1
 	curEnumValue = -1
 
+	def translate(self):
+		for optn in self.menuOptions:
+			optn["displayName"] = locales[selectedLocale]["options"][optn["var"]]
+
 	def moveBy(self, x):
 		self.selectedItem = (self.selectedItem + x)%self.maxItem
 	def interactBool(self, boolOption):
@@ -272,7 +283,15 @@ class Options:
 	def interactEnum(self, enum, curChoice):
 		'''curChoice is an integer.'''
 		global options
+		global selectedLocale
 		options[enum["var"]] = enum["populatedValues"][curChoice]
+		selectedLocale = enum["populatedValues"][curChoice]
+		print(term.clear)
+		self.translate()
+
+	def saveOptions(self):
+		f = open("./options.json", "w")
+		f.write(json.dumps(options, indent=4))
 		
 	def draw(self):
 		maxLength = 0
@@ -328,6 +347,14 @@ class Options:
 				self.moveBy(-1)
 			if val.name == "KEY_RIGHT" or val == "l" or val.name == "KEY_ENTER":
 				self.enterPressed()
+			if val.name == "KEY_ESCAPE":
+				global menu
+				self.saveOptions()
+				self.turnOff = True
+				loadedMenus["Titlescreen"].turnOff = False
+				loadedMenus["Titlescreen"].loop()
+				menu = "Titlescreen"
+				print(term.clear)
 		else:
 			if val.name == "KEY_DOWN" or val == "j":
 				self.curEnumValue = (self.curEnumValue-1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
@@ -335,6 +362,9 @@ class Options:
 			if val.name == "KEY_UP" or val == "k":
 				self.curEnumValue = (self.curEnumValue+1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
 				self.interactEnum(self.menuOptions[self.enumInteracted], self.curEnumValue)
+			if val.name == "KEY_ESCAPE":
+				self.enumInteracted = -1
+				
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
@@ -640,7 +670,6 @@ if __name__ == "__main__":
 
 		loadedMenus[menu].loop()
 	except KeyboardInterrupt:
-		print('Keyboard Interrupt detected! Shutting down...')
-		sys.exit(0)
+		print('Keyboard Interrupt detected!')
 	print(term.clear)
-	print(f"Huh...? It's not supposed to just {term.italic}end{term.normal} like that.")
+	print(f"Thanks for playing my game!")

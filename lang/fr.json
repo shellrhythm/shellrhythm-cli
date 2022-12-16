@@ -1,0 +1,38 @@
+{
+    "titlescreen":{
+        "play": "Jouer",
+        "edit": "Éditer",
+        "options": "Options",
+        "quit": "Quitter",
+        "version": "Version"
+    },
+    "chartSelect":{
+        "backTitle": "Retour au Menu",
+        "play": "Jouer",
+        "mods": "Modificateurs",
+        "difficulty": "Difficulté",
+        "objs": "Objets",
+        "metadata": {
+            "author": "Auteur du niveau",
+            "song": "Musique",
+            "artist": "Artiste",
+            "description": "Description"
+        },
+        "no_charts": "Oops, on dirait que tu n'as pas de niveaux chargés!"
+    },
+    "options":{
+        "globalOffset": "Offset global (ms)",
+        "lang": "Langue",
+        "nerdFont": "Activer l'affichage de caractères Nerd Font",
+        "textImages": "Utiliser des images comme miniatures"
+    },
+    "gameplay":{
+        "pause": {
+            "title": "MENU PAUSE",
+            "subtitle": "c'est le menu de pause, je crois",
+            "resume": "Continuer",
+            "retry": "Réessayer",
+            "quit": "Retour au menu"
+        }
+    }
+}

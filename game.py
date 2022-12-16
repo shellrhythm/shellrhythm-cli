@@ -84,7 +84,7 @@ class Game:
 			"accuracy": self.accuracy,
 			"score": self.score,
 			"judgements": self.judgements,
-			"keys": keys
+			# "keys": keys
 		}
 		return output
 
