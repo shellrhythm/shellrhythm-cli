@@ -7,11 +7,11 @@ Every script that comes from the `master` branch has been removed. We've been st
 
 ## Status
 
-Title screen: `98%` (only needs a bit of polish and access to more options)
-Chart selector: `55%` (needs to add more information)
-Gameplay: `80%` (Missing the pause menu and results screen)
-Editor: `0%`
-Options: `0%`
+Title screen: `98%` (only needs a bit of polish and access to the editor)<br/>
+Chart selector: `55%` (needs to add more information)<br/>
+Gameplay: `90%` (Missing the results screen)<br/>
+Editor: `0%`<br/>
+Options: `60%` (Missing link with calibration menu)
 
 # shellrhythm
 ![](./shellrhythm.png)

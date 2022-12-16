@@ -40,12 +40,12 @@ def handle_input():
 			if val.name == "KEY_ESCAPE":
 				turnOff = True
 			if val.name == "KEY_LEFT":
-				totalOffset -= 0.01
-				print_at(0,14, f"{term.center(str(round(totalOffset, 2)))}")
+				totalOffset -= 0.001
+				print_at(0,14, f"{term.center(str(round(totalOffset, 3)))}")
 				conduc.setOffset(totalOffset)
 			if val.name == "KEY_RIGHT":
-				totalOffset -= 0.01
-				print_at(0,14, f"{term.center(str(round(totalOffset, 2)))}")
+				totalOffset -= 0.001
+				print_at(0,14, f"{term.center(str(round(totalOffset, 3)))}")
 				conduc.setOffset(totalOffset)
 
 		if calibrationMenu == "CalibrationSelect":

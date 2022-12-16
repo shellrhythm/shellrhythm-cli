@@ -38,6 +38,42 @@ playfield_mode = "scale"
 
 maxScore = 1000000
 
+class ResultsScreen:
+	resultsData = {}
+	ranks = [
+		["@", 1000000],	# @
+		["S",  950000],	# #
+		["A",  825000],	# $
+		["B",  700000],	# *
+		["C",  600000],	# ;
+		["D",  500000],	# /
+		["F",       0],	# _
+	]
+	rankIMGFile = []
+	rankIMGImages = []
+	isEnabled = False
+
+	def getRank(self, score):
+		for i in range(len(self.ranks)):
+			rank = self.ranks[i]
+			if score >= rank[1]:
+				return [rank[0], i]
+		return ["X", -1]
+
+	def draw(self):
+		if self.resultsData != {}:
+			print_lines_at(5,3,self.rankIMGImages[self.getRank(self.resultsData["score"])[1]])
+			print_at(16, 4, f"SCORE: {self.resultsData['score']}")
+			print_at(16, 6, f"ACCURACY: {self.resultsData['accuracy']}")
+		
+	def __init__(self) -> None:
+		f = open("./assets/ranks.txt")
+		self.rankIMGFile = f.readlines()
+		f.close()
+		for lineIndex in range(0, len(self.rankIMGFile), 10):
+			self.rankIMGImages.append("".join(self.rankIMGFile[lineIndex:lineIndex+10]))
+		pass
+
 class Game:
 	localConduc = Conductor()
 	beatSound = Song("assets/clap.wav")
@@ -52,6 +88,7 @@ class Game:
 	auto = True
 	missesCount = 0
 	pauseOption = 0
+	resultsScreen = ResultsScreen()
 
 	def setupKeys(self, layout):
 		global keys
@@ -266,6 +303,9 @@ class Game:
 						print_at(calc_pos[0]-1, calc_pos[1],   f"{color}   ")
 						print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}   ")
 						self.dontDraw.append(note)
+			text_beat = "○ ○ ○ ○"
+			text_beat = text_beat[:int(self.localConduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.localConduc.currentBeat)%4 * 2) + 1:]
+			print_at(int(term.width * 0.5), 1, term.normal + text_beat)
 		else:
 			global locales
 			text_paused = "PAUSED"
@@ -310,10 +350,12 @@ class Game:
 				self.localConduc.pause()
 
 			if self.localConduc.currentTimeSec > self.endTime:
-				f = open("./logs/results.json", "w")
-				f.write(json.dumps(self.resultsFile(),indent=4))
-				f.close()
-				raise NotImplementedError("Results screen missing!")
+				# f = open("./logs/results.json", "w")
+				# f.write(json.dumps(self.resultsFile(),indent=4))
+				# f.close()
+				# raise NotImplementedError("Results screen missing!")
+				self.resultsScreen.resultsData = self.resultsFile()
+				self.resultsScreen.isEnabled = True
 
 			if val in keys and not self.auto and not self.localConduc.isPaused:
 				pos = [-1, -1]
@@ -363,7 +405,10 @@ class Game:
 			print(term.clear)
 			while not self.turnOff:
 				self.deltatime = self.localConduc.update()
-				self.draw()
+				if not self.resultsScreen.isEnabled:
+					self.draw()
+				else:
+					self.resultsScreen.draw()
 
 				self.handle_input()
 
