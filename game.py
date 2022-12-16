@@ -21,7 +21,7 @@ colors = [
 
 defaultSize = [80, 24]
 
-inputFrequency = 120
+inputFrequency = 200
 
 keys = [
 	"a","z","e","r","t","y","u","i","o","p",
@@ -56,6 +56,7 @@ class ResultsScreen:
 	rankIMGFile = []
 	rankIMGImages = []
 	isEnabled = False
+	gameTurnOff = False
 
 	def getRank(self, score):
 		for i in range(len(self.ranks)):
@@ -66,7 +67,8 @@ class ResultsScreen:
 
 	def setup(self):
 		for i in range(len(self.resultsData["judgements"])):
-			self.judgementCount[self.resultsData["judgements"][i]["judgement"]] += 1
+			if self.resultsData["judgements"][i] != {}:
+				self.judgementCount[self.resultsData["judgements"][i]["judgement"]] += 1
 
 	def draw(self):
 		if self.resultsData != {}:
@@ -80,6 +82,14 @@ class ResultsScreen:
 			print_at(31, 7, f"{self.ranks[3][2]}Good:      {term.on_yellow4}{	self.judgementCount[3]}{term.normal}")
 			print_at(31, 8, f"{self.ranks[4][2]}Eh:        {term.on_goldenrod4}{self.judgementCount[4]}{term.normal}")
 			print_at(31, 9, f"{self.ranks[5][2]}Misses:    {term.on_darkred}{	self.judgementCount[5]}{term.normal}")
+
+	def handle_input(self):
+		val = ''
+		val = term.inkey(timeout=1/inputFrequency)
+		# debug_val(val)
+
+		if val.name == "KEY_ESCAPE":
+			self.gameTurnOff = True
 		
 	def __init__(self) -> None:
 		f = open("./assets/ranks.txt")
@@ -100,7 +110,7 @@ class Game:
 	dontDraw = []
 	endTime = 2**32
 	accuracy = 100
-	auto = True
+	auto = False
 	missesCount = 0
 	pauseOption = 0
 	resultsScreen = ResultsScreen()
@@ -286,19 +296,35 @@ class Game:
 					remTime = ((note["beatpos"][0] * 4 + note["beatpos"][1]) * (60/self.localConduc.bpm)) - self.localConduc.currentTimeSec
 					approachedBeats = (remBeats * self.chart["approachRate"]) + 1
 					if approachedBeats > -0.1 and approachedBeats < 4 and note not in self.dontDraw:
-						if int(approachedBeats) == 3:
+						if int(approachedBeats*2) == 7:
 							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═ ")
 							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}   ")
-							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color} ═ ")
-						elif int(approachedBeats) == 2:
+							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}   ")
+						elif int(approachedBeats*2) == 6:
 							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═╗")
 							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}   ")
-							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}╚═ ")
-						elif int(approachedBeats) == 1:
+							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}   ")
+						elif int(approachedBeats*2) == 5:
+							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═╗")
+							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}  ║")
+							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}   ")
+						elif int(approachedBeats*2) == 4:
+							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═╗")
+							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}  ║")
+							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}  ╝")
+						elif int(approachedBeats*2) == 3:
+							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═╗")
+							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}  ║")
+							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color} ═╝")
+						elif int(approachedBeats*2) == 2:
+							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═╗")
+							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}  ║")
+							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}╚═╝")
+						elif int(approachedBeats*2) == 1:
 							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═╗")
 							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}║ ║")
-							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}╚═ ")
-						elif int(approachedBeats) == 0:
+							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}╚═╝")
+						elif int(approachedBeats*2) == 0:
 							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color}╔═╗")
 							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}║ ║")
 							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}╚═╝")
@@ -372,6 +398,7 @@ class Game:
 				# raise NotImplementedError("Results screen missing!")
 				self.resultsScreen.resultsData = self.resultsFile()
 				self.resultsScreen.isEnabled = True
+				self.resultsScreen.setup()
 
 			if val in keys and not self.auto and not self.localConduc.isPaused:
 				pos = [-1, -1]
@@ -423,10 +450,13 @@ class Game:
 				self.deltatime = self.localConduc.update()
 				if not self.resultsScreen.isEnabled:
 					self.draw()
+					self.handle_input()
 				else:
 					self.resultsScreen.draw()
+					self.resultsScreen.handle_input()
+					self.turnOff = self.resultsScreen.gameTurnOff
 
-				self.handle_input()
+				
 
 	def play(self, chart = {}, layout = "qwerty"):
 		# print(chart)
