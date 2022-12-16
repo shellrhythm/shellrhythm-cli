@@ -144,16 +144,18 @@ def debug_val(val):
 		elif val:
 			print_at(0,term.height-2,"got {0}.".format(val.capitalize()) + term.clear_eol)
 
-def print_lines_at(x, y, text, center = False, eol = False):
+def print_lines_at(x, y, text, center = False, eol = False, color = None):
+	if color is None:
+		color = term.normal
 	lines = text.split("\n")
 	for i in range(len(lines)):
 		if center:
-			print_at(x, y + i, term.center(lines[i]))
+			print_at(x, y + i, color + term.center(lines[i]) + term.normal)
 		else:
 			if eol:
-				print_at(x, y + i, lines[i] + term.clear_eol)
+				print_at(x, y + i, color + lines[i] + term.normal + term.clear_eol)
 			else:
-				print_at(x, y + i, lines[i])
+				print_at(x, y + i, color + lines[i] + term.normal)
 
 def print_image(x,y,imagePath,scale):
 	image = from_file(imagePath, width=scale)

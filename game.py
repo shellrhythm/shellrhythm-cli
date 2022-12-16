@@ -4,6 +4,7 @@ import json
 from pybass3 import Song
 import time
 from index import *
+import hashlib
 
 term = Terminal()
 
@@ -20,6 +21,8 @@ colors = [
 
 defaultSize = [80, 24]
 
+inputFrequency = 120
+
 keys = [
 	"a","z","e","r","t","y","u","i","o","p",
 	"q","s","d","f","g","h","j","k","l","m",
@@ -28,7 +31,7 @@ keys = [
 
 hitWindows = [0.05, 0.075, 0.1, 0.15, 0.2]
 judgementNames = ["MARV", "PERF", "EPIC", "GOOD", " EH ", "MISS"]
-judgementShort = [f"{term.purple}@", f"{term.aqua}#", f"{term.springgreen}$", f"{term.green}*", f"{term.orange};", f"{term.red}/"]
+judgementShort = [f"{term.purple}@", f"{term.aqua}#", f"{term.green}$", f"{term.yellow}*", f"{term.orange};", f"{term.red}/"]
 accMultiplier = [1, 1, 0.85, 0.75, 0.5, 0]
 
 # You can either use "setSize" or "scale"
@@ -41,14 +44,15 @@ maxScore = 1000000
 class ResultsScreen:
 	resultsData = {}
 	ranks = [
-		["@", 1000000],	# @
-		["S",  950000],	# #
-		["A",  825000],	# $
-		["B",  700000],	# *
-		["C",  600000],	# ;
-		["D",  500000],	# /
-		["F",       0],	# _
+		["@", 1000000, term.purple],	# @
+		["S",  950000, term.aqua],		# #
+		["A",  825000, term.green],		# $
+		["B",  700000, term.yellow],	# *
+		["C",  600000, term.orange],	# ;
+		["D",  500000, term.red],		# /
+		["F",       0, term.grey],		# _
 	]
+	judgementCount = [0,0,0,0,0,0]
 	rankIMGFile = []
 	rankIMGImages = []
 	isEnabled = False
@@ -57,14 +61,25 @@ class ResultsScreen:
 		for i in range(len(self.ranks)):
 			rank = self.ranks[i]
 			if score >= rank[1]:
-				return [rank[0], i]
-		return ["X", -1]
+				return [rank[0], i, rank[2]]
+		return ["X", -1, term.darkred]
+
+	def setup(self):
+		for i in range(len(self.resultsData["judgements"])):
+			self.judgementCount[self.resultsData["judgements"][i]["judgement"]] += 1
 
 	def draw(self):
 		if self.resultsData != {}:
-			print_lines_at(5,3,self.rankIMGImages[self.getRank(self.resultsData["score"])[1]])
-			print_at(16, 4, f"SCORE: {self.resultsData['score']}")
-			print_at(16, 6, f"ACCURACY: {self.resultsData['accuracy']}")
+			rank = self.getRank(self.resultsData["score"])
+			print_lines_at(5,3, self.rankIMGImages[rank[1]], False, False, rank[2])
+			print_at(16, 4, f"{rank[2]}SCORE{term.normal}: {int(self.resultsData['score'])}")
+			print_at(16, 6, f"{rank[2]}ACCURACY{term.normal}: {int(self.resultsData['accuracy'])}%")
+			print_at(31, 4, f"{self.ranks[0][2]}Marvelous: {term.on_webpurple}{	self.judgementCount[0]}{term.normal}")
+			print_at(31, 5, f"{self.ranks[1][2]}Perfect:   {term.on_cyan4}{		self.judgementCount[1]}{term.normal}")
+			print_at(31, 6, f"{self.ranks[2][2]}Epic:      {term.on_darkgreen}{	self.judgementCount[2]}{term.normal}")
+			print_at(31, 7, f"{self.ranks[3][2]}Good:      {term.on_yellow4}{	self.judgementCount[3]}{term.normal}")
+			print_at(31, 8, f"{self.ranks[4][2]}Eh:        {term.on_goldenrod4}{self.judgementCount[4]}{term.normal}")
+			print_at(31, 9, f"{self.ranks[5][2]}Misses:    {term.on_darkred}{	self.judgementCount[5]}{term.normal}")
 		
 	def __init__(self) -> None:
 		f = open("./assets/ranks.txt")
@@ -121,6 +136,7 @@ class Game:
 			"accuracy": self.accuracy,
 			"score": self.score,
 			"judgements": self.judgements,
+			"checksum": hashlib.sha256(json.dumps(f"{self.chart['notes']}",skipkeys=True,ensure_ascii=False).encode("utf-8")).hexdigest()
 			# "keys": keys
 		}
 		return output
@@ -343,16 +359,16 @@ class Game:
 	def handle_input(self):
 		if not self.localConduc.isPaused:
 			val = ''
-			val = term.inkey(timeout=1/60)
+			val = term.inkey(timeout=1/inputFrequency)
 			# debug_val(val)
 
 			if val.name == "KEY_ESCAPE":
 				self.localConduc.pause()
 
 			if self.localConduc.currentTimeSec > self.endTime:
-				# f = open("./logs/results.json", "w")
-				# f.write(json.dumps(self.resultsFile(),indent=4))
-				# f.close()
+				f = open("./logs/results.json", "w")
+				f.write(json.dumps(self.resultsFile(),indent=4))
+				f.close()
 				# raise NotImplementedError("Results screen missing!")
 				self.resultsScreen.resultsData = self.resultsFile()
 				self.resultsScreen.isEnabled = True
