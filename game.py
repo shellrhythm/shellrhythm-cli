@@ -110,7 +110,7 @@ class Game:
 	dontDraw = []
 	endTime = 2**32
 	accuracy = 100
-	auto = False
+	auto = True
 	missesCount = 0
 	pauseOption = 0
 	resultsScreen = ResultsScreen()
@@ -255,6 +255,110 @@ class Game:
 
 		return out
 
+	def renderNote(self, atPos, color, key, approachedBeats, notes, i, print_at):
+		if int(approachedBeats*2) == 7:
+			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═ ")
+			print_at(atPos[0]-1, atPos[1],   f"{color}   ")
+			print_at(atPos[0]-1, atPos[1]+1, f"{color}   ")
+		elif int(approachedBeats*2) == 6:
+			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═╗")
+			print_at(atPos[0]-1, atPos[1],   f"{color}   ")
+			print_at(atPos[0]-1, atPos[1]+1, f"{color}   ")
+		elif int(approachedBeats*2) == 5:
+			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═╗")
+			print_at(atPos[0]-1, atPos[1],   f"{color}  ║")
+			print_at(atPos[0]-1, atPos[1]+1, f"{color}   ")
+		elif int(approachedBeats*2) == 4:
+			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═╗")
+			print_at(atPos[0]-1, atPos[1],   f"{color}  ║")
+			print_at(atPos[0]-1, atPos[1]+1, f"{color}  ╝")
+		elif int(approachedBeats*2) == 3:
+			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═╗")
+			print_at(atPos[0]-1, atPos[1],   f"{color}  ║")
+			print_at(atPos[0]-1, atPos[1]+1, f"{color} ═╝")
+		elif int(approachedBeats*2) == 2:
+			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═╗")
+			print_at(atPos[0]-1, atPos[1],   f"{color}  ║")
+			print_at(atPos[0]-1, atPos[1]+1, f"{color}╚═╝")
+		elif int(approachedBeats*2) == 1:
+			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═╗")
+			print_at(atPos[0]-1, atPos[1],   f"{color}║ ║")
+			print_at(atPos[0]-1, atPos[1]+1, f"{color}╚═╝")
+		elif int(approachedBeats*2) == 0:
+			print_at(atPos[0]-1, atPos[1]-1, f"{color}╔═╗")
+			print_at(atPos[0]-1, atPos[1],   f"{color}║ ║")
+			print_at(atPos[0]-1, atPos[1]+1, f"{color}╚═╝")
+		
+		if self is not None:
+			if len(self.judgements) > len(notes) - (i+1):
+				if self.judgements[len(notes) - (i+1)] != {}:
+					print_at(atPos[0], atPos[1], f"{term.bold}{judgementShort[self.judgements[len(self.chart['notes']) - (i+1)]['judgement']]}{term.normal}{color}")
+				else:
+					print_at(atPos[0], atPos[1], f"{term.normal}{term.bold}{key.upper()}{term.normal}{color}")
+			else:
+				print_at(atPos[0], atPos[1], f"{term.normal}{term.bold}{key.upper()}{term.normal}{color}")
+		else:
+			print_at(atPos[0], atPos[1], f"{term.normal}{term.bold}{key.upper()}{term.normal}{color}")
+
+	def calculatePosition(screenPos, x, y, width, height):
+		"""
+		x: (Int) screen x offset
+		y: (Int) screen y offset
+		width: (Int) screen width
+		height: (Int) screen height
+		"""
+		return [int(screenPos[0]*width)+x, int(screenPos[1]*height)+y]
+
+	def actualKeysRendering(self, notes):
+		# if playfield_mode == "scale":
+		# 	print_at(5,2,"-"* (term.width - 9))
+		# 	print_at(5,term.height - 3,"-"* (term.width - 9))
+		# 	print_column(4,3,term.height-6,"|")
+		# 	print_column(term.width-4,3,term.height-6, "|")
+		# elif playfield_mode == "setSize":
+		# 	print_at(5,2,"-"* (defaultSize[0]))
+		# 	print_at(5,defaultSize[1] + 3,"-"* (defaultSize[0]))
+		# 	print_column(4,3,defaultSize[1],"|")
+		# 	print_column(defaultSize[0]+5, 3, defaultSize[1], "|")
+		if len(notes) >= len(self.judgements):
+			while len(notes) >= len(self.judgements):
+				self.judgements.append({})
+		for i in range(len(notes)):
+			note = notes[len(notes) - (i+1)] #It's inverted so that the ones with the lowest remBeats are rendered on top of the others.
+			if note["type"] == "hit_object":
+				# print_at(40, term.height-2, str(note))
+				calc_pos = []
+				if playfield_mode == "setSize":
+					calc_pos = [
+						int(note["screenpos"][0]*(defaultSize[0]))+6,
+						int(note["screenpos"][1]*(defaultSize[1]))+4]
+				else:
+					calc_pos = [
+						int(note["screenpos"][0]*(term.width-12))+6,
+						int(note["screenpos"][1]*(term.height-9))+4]
+				color = colors[note["color"]]
+				key = keys[note["key"]]
+				remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
+				remTime = ((note["beatpos"][0] * 4 + note["beatpos"][1]) * (60/self.localConduc.bpm)) - self.localConduc.currentTimeSec
+				approachedBeats = (remBeats * self.chart["approachRate"]) + 1
+				if approachedBeats > -0.1 and approachedBeats < 4 and note not in self.dontDraw:
+
+					Game.renderNote(self, calc_pos, color, key, approachedBeats, notes, i, print_at) # Say it, you didn't expect a call directly to the Game class. Frankly it's the same shit lmao
+
+					# print_at(calc_pos[0], calc_pos[1]+1, f"{term.normal}{int(remBeats)}{color}")
+				if note not in self.dontDraw and ((remTime <= -0.6) or (self.judgements[len(notes) - (i+1)] != {} and -0.2 > remTime > -0.6 )):
+					if note not in self.outOfHere:
+						self.outOfHere.append(note)
+					if self.judgements[len(notes) - (i+1)] == {}:
+						self.checkJudgement(note, len(notes) - (i+1), True)
+					print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color}   ")
+					print_at(calc_pos[0]-1, calc_pos[1],   f"{color}   ")
+					print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}   ")
+					self.dontDraw.append(note)
+		text_beat = "○ ○ ○ ○"
+		text_beat = text_beat[:int(self.localConduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.localConduc.currentBeat)%4 * 2) + 1:]
+		print_at(int(term.width * 0.5), 1, term.normal + text_beat)
+		
 	def draw(self):
 		if not self.localConduc.isPaused:
 			timerText = str(format_time(int(self.localConduc.currentTimeSec))) + " / " + str(format_time(int(self.endTime)))
@@ -273,81 +377,7 @@ class Game:
 				print_column(4,3,defaultSize[1],"|")
 				print_column(defaultSize[0]+5, 3, defaultSize[1], "|")
 
-
-			if len(self.chart["notes"]) >= len(self.judgements):
-				while len(self.chart["notes"]) >= len(self.judgements):
-					self.judgements.append({})
-			for i in range(len(self.chart["notes"])):
-				note = self.chart["notes"][len(self.chart["notes"]) - (i+1)] #It's inverted so that the ones with the lowest remBeats are rendered on top of the others.
-				if note["type"] == "hit_object":
-					# print_at(40, term.height-2, str(note))
-					calc_pos = []
-					if playfield_mode == "setSize":
-						calc_pos = [
-							int(note["screenpos"][0]*(defaultSize[0]))+6,
-							int(note["screenpos"][1]*(defaultSize[1]))+4]
-					else:
-						calc_pos = [
-							int(note["screenpos"][0]*(term.width-12))+6,
-							int(note["screenpos"][1]*(term.height-9))+4]
-					color = colors[note["color"]]
-					key = keys[note["key"]]
-					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
-					remTime = ((note["beatpos"][0] * 4 + note["beatpos"][1]) * (60/self.localConduc.bpm)) - self.localConduc.currentTimeSec
-					approachedBeats = (remBeats * self.chart["approachRate"]) + 1
-					if approachedBeats > -0.1 and approachedBeats < 4 and note not in self.dontDraw:
-						if int(approachedBeats*2) == 7:
-							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═ ")
-							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}   ")
-							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}   ")
-						elif int(approachedBeats*2) == 6:
-							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═╗")
-							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}   ")
-							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}   ")
-						elif int(approachedBeats*2) == 5:
-							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═╗")
-							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}  ║")
-							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}   ")
-						elif int(approachedBeats*2) == 4:
-							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═╗")
-							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}  ║")
-							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}  ╝")
-						elif int(approachedBeats*2) == 3:
-							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═╗")
-							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}  ║")
-							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color} ═╝")
-						elif int(approachedBeats*2) == 2:
-							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═╗")
-							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}  ║")
-							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}╚═╝")
-						elif int(approachedBeats*2) == 1:
-							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color} ═╗")
-							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}║ ║")
-							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}╚═╝")
-						elif int(approachedBeats*2) == 0:
-							print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color}╔═╗")
-							print_at(calc_pos[0]-1, calc_pos[1],   f"{color}║ ║")
-							print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}╚═╝")
-						if len(self.judgements) > len(self.chart["notes"]) - (i+1):
-							if self.judgements[len(self.chart["notes"]) - (i+1)] != {}:
-								print_at(calc_pos[0], calc_pos[1], f"{term.bold}{judgementShort[self.judgements[len(self.chart['notes']) - (i+1)]['judgement']]}{term.normal}{color}")
-							else:
-								print_at(calc_pos[0], calc_pos[1], f"{term.normal}{term.bold}{key.upper()}{term.normal}{color}")
-						else:
-							print_at(calc_pos[0], calc_pos[1], f"{term.normal}{term.bold}{key.upper()}{term.normal}{color}")
-						# print_at(calc_pos[0], calc_pos[1]+1, f"{term.normal}{int(remBeats)}{color}")
-					if note not in self.dontDraw and ((remTime <= -0.6) or (self.judgements[len(self.chart["notes"]) - (i+1)] != {} and -0.2 > remTime > -0.6 )):
-						if note not in self.outOfHere:
-							self.outOfHere.append(note)
-						if self.judgements[len(self.chart["notes"]) - (i+1)] == {}:
-							self.checkJudgement(note, len(self.chart["notes"]) - (i+1), True)
-						print_at(calc_pos[0]-1, calc_pos[1]-1, f"{color}   ")
-						print_at(calc_pos[0]-1, calc_pos[1],   f"{color}   ")
-						print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}   ")
-						self.dontDraw.append(note)
-			text_beat = "○ ○ ○ ○"
-			text_beat = text_beat[:int(self.localConduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.localConduc.currentBeat)%4 * 2) + 1:]
-			print_at(int(term.width * 0.5), 1, term.normal + text_beat)
+			self.actualKeysRendering(self.chart["notes"])
 		else:
 			global locales
 			text_paused = "PAUSED"
