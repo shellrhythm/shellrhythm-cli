@@ -142,7 +142,7 @@ def debug_val(val):
 		elif val.is_sequence:
 			print_at(0,term.height-2,"got sequence: {0}.".format((str(val), val.name, val.code)) + term.clear_eol)
 		elif val:
-			print_at(0,term.height-2,"got {0}.".format(val.capitalize()) + term.clear_eol)
+			print_at(0,term.height-2,"got {0}.".format(val) + term.clear_eol)
 
 def print_lines_at(x, y, text, center = False, eol = False, color = None):
 	if color is None:

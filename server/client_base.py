@@ -4,6 +4,7 @@ class ServerFeaturesClientSide:
     sock = None
     server_address = ()
     token = ""
+    ip = "localhost"
 
     def connect(_, ip):
         _.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -18,7 +19,7 @@ class ServerFeaturesClientSide:
             print(f"Got token! It's {_.token[:5]}-")
 
     def submitScore(self, results, mapID):
-        self.sock.send(bytes(str(mapID) + ":" + str(results), "UTF-8"))
+        self.sock.send(bytes("submitScore:" + str(mapID) + ":" + str(results), "UTF-8"))
 
     def updateOnline(self, gameState):
         # "So, what should gameState be?"
@@ -32,6 +33,8 @@ class ServerFeaturesClientSide:
                 "score": -1,
                 "accuracy": -1,
             }
+        self.connect(self.ip)
+        self.sock.send(bytes("updateOnline:" + str(gameState), "UTF-8"))
 
     def __init__(self) -> None:
         pass
