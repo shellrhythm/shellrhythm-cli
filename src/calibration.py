@@ -1,5 +1,10 @@
-from index import print_at, print_column, print_cropped, print_lines_at, Conductor, load_charts, chartData
+# from index import print_at, print_column, print_cropped, print_lines_at, Conductor, load_charts, chartData
+from termutil import print_at
+from conductor import Conductor
 from blessed import Terminal
+import json, os
+from loading import check_chart
+from pybass3 import Song
 
 conduc = Conductor()
 
@@ -20,6 +25,21 @@ calibrationMenu = "CalibrationSelect"
 
 calibselec = 0
 selecSong = -1
+
+chartData = []
+
+def load_charts():
+	global chartData
+	charts = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts") if f.is_dir()]
+	for i in range(len(charts)):
+		print(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})")
+		f = open("./charts/" + charts[i] + "/data.json").read()
+		jsonThing = json.loads(f)
+		jsonThing = check_chart(jsonThing, charts[i])
+		jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
+		chartData.append(jsonThing)
+
+	print("All charts loaded successfully!")
 
 def handle_input():
 	val = ''
@@ -44,7 +64,7 @@ def handle_input():
 				print_at(0,14, f"{term.center(str(round(totalOffset, 3)))}")
 				conduc.setOffset(totalOffset)
 			if val.name == "KEY_RIGHT":
-				totalOffset -= 0.001
+				totalOffset += 0.001
 				print_at(0,14, f"{term.center(str(round(totalOffset, 3)))}")
 				conduc.setOffset(totalOffset)
 

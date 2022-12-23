@@ -3,8 +3,11 @@ import os, sys
 import json
 from pybass3 import Song
 import time
-from index import *
+# from index import *
 import hashlib
+from src.termutil import *
+from src.conductor import *
+from src.results import ResultsScreen
 
 term = Terminal()
 
@@ -41,64 +44,6 @@ playfield_mode = "scale"
 
 maxScore = 1000000
 
-class ResultsScreen:
-	resultsData = {}
-	ranks = [
-		["@", 1000000, term.purple],	# @
-		["S",  950000, term.aqua],		# #
-		["A",  825000, term.green],		# $
-		["B",  700000, term.yellow],	# *
-		["C",  600000, term.orange],	# ;
-		["D",  500000, term.red],		# /
-		["F",       0, term.grey],		# _
-	]
-	judgementCount = [0,0,0,0,0,0]
-	rankIMGFile = []
-	rankIMGImages = []
-	isEnabled = False
-	gameTurnOff = False
-
-	def getRank(self, score):
-		for i in range(len(self.ranks)):
-			rank = self.ranks[i]
-			if score >= rank[1]:
-				return [rank[0], i, rank[2]]
-		return ["X", -1, term.darkred]
-
-	def setup(self):
-		for i in range(len(self.resultsData["judgements"])):
-			if self.resultsData["judgements"][i] != {}:
-				self.judgementCount[self.resultsData["judgements"][i]["judgement"]] += 1
-
-	def draw(self):
-		if self.resultsData != {}:
-			rank = self.getRank(self.resultsData["score"])
-			print_lines_at(5,3, self.rankIMGImages[rank[1]], False, False, rank[2])
-			print_at(16, 4, f"{rank[2]}SCORE{term.normal}: {int(self.resultsData['score'])}")
-			print_at(16, 6, f"{rank[2]}ACCURACY{term.normal}: {int(self.resultsData['accuracy'])}%")
-			print_at(31, 4, f"{self.ranks[0][2]}Marvelous: {term.on_webpurple}{	self.judgementCount[0]}{term.normal}")
-			print_at(31, 5, f"{self.ranks[1][2]}Perfect:   {term.on_cyan4}{		self.judgementCount[1]}{term.normal}")
-			print_at(31, 6, f"{self.ranks[2][2]}Epic:      {term.on_darkgreen}{	self.judgementCount[2]}{term.normal}")
-			print_at(31, 7, f"{self.ranks[3][2]}Good:      {term.on_yellow4}{	self.judgementCount[3]}{term.normal}")
-			print_at(31, 8, f"{self.ranks[4][2]}Eh:        {term.on_goldenrod4}{self.judgementCount[4]}{term.normal}")
-			print_at(31, 9, f"{self.ranks[5][2]}Misses:    {term.on_darkred}{	self.judgementCount[5]}{term.normal}")
-
-	def handle_input(self):
-		val = ''
-		val = term.inkey(timeout=1/inputFrequency)
-		# debug_val(val)
-
-		if val.name == "KEY_ESCAPE":
-			self.gameTurnOff = True
-		
-	def __init__(self) -> None:
-		f = open("./assets/ranks.txt")
-		self.rankIMGFile = f.readlines()
-		f.close()
-		for lineIndex in range(0, len(self.rankIMGFile), 10):
-			self.rankIMGImages.append("".join(self.rankIMGFile[lineIndex:lineIndex+10]))
-		pass
-
 class Game:
 	localConduc = Conductor()
 	beatSound = Song("assets/clap.wav")
@@ -116,7 +61,6 @@ class Game:
 	resultsScreen = ResultsScreen()
 
 	def setupKeys(self, layout):
-		global keys
 		if os.path.exists("./layout/" + layout):
 			output = []
 			f = open("./layout/" + layout)
@@ -126,7 +70,11 @@ class Game:
 				for char in range(10):
 					output.append(rows[row][char])
 
-			keys = output
+			if self != None:
+				global keys
+				keys = output
+			else:
+				return output
 
 	def scoreCalc(self):
 		filteredJudgementCount = 0
@@ -244,7 +192,6 @@ class Game:
 				print_at(10, 1, judgementNames[judgement])
 				return True
 
-
 	def getSongEndTime(self):
 		out = self.localConduc.getLength()
 		for note in self.chart["notes"]:
@@ -255,39 +202,39 @@ class Game:
 
 		return out
 
-	def renderNote(self, atPos, color, key, approachedBeats, notes, i, print_at):
+	def renderNote(self, atPos, color, key, approachedBeats, notes = {}, i = -1):
 		if int(approachedBeats*2) == 7:
-			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═ ")
-			print_at(atPos[0]-1, atPos[1],   f"{color}   ")
-			print_at(atPos[0]-1, atPos[1]+1, f"{color}   ")
+			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═ {term.normal}")
+			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}   {term.normal}")
+			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}   {term.normal}")
 		elif int(approachedBeats*2) == 6:
-			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═╗")
-			print_at(atPos[0]-1, atPos[1],   f"{color}   ")
-			print_at(atPos[0]-1, atPos[1]+1, f"{color}   ")
+			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
+			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}   {term.normal}")
+			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}   {term.normal}")
 		elif int(approachedBeats*2) == 5:
-			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═╗")
-			print_at(atPos[0]-1, atPos[1],   f"{color}  ║")
-			print_at(atPos[0]-1, atPos[1]+1, f"{color}   ")
+			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
+			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
+			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}   {term.normal}")
 		elif int(approachedBeats*2) == 4:
-			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═╗")
-			print_at(atPos[0]-1, atPos[1],   f"{color}  ║")
-			print_at(atPos[0]-1, atPos[1]+1, f"{color}  ╝")
+			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
+			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
+			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}  ╝{term.normal}")
 		elif int(approachedBeats*2) == 3:
-			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═╗")
-			print_at(atPos[0]-1, atPos[1],   f"{color}  ║")
-			print_at(atPos[0]-1, atPos[1]+1, f"{color} ═╝")
+			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
+			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
+			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color} ═╝{term.normal}")
 		elif int(approachedBeats*2) == 2:
-			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═╗")
-			print_at(atPos[0]-1, atPos[1],   f"{color}  ║")
-			print_at(atPos[0]-1, atPos[1]+1, f"{color}╚═╝")
+			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
+			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
+			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}╚═╝{term.normal}")
 		elif int(approachedBeats*2) == 1:
-			print_at(atPos[0]-1, atPos[1]-1, f"{color} ═╗")
-			print_at(atPos[0]-1, atPos[1],   f"{color}║ ║")
-			print_at(atPos[0]-1, atPos[1]+1, f"{color}╚═╝")
+			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
+			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}║ ║{term.normal}")
+			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}╚═╝{term.normal}")
 		elif int(approachedBeats*2) == 0:
-			print_at(atPos[0]-1, atPos[1]-1, f"{color}╔═╗")
-			print_at(atPos[0]-1, atPos[1],   f"{color}║ ║")
-			print_at(atPos[0]-1, atPos[1]+1, f"{color}╚═╝")
+			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color}╔═╗{term.normal}")
+			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}║ ║{term.normal}")
+			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}╚═╝{term.normal}")
 		
 		if self is not None:
 			if len(self.judgements) > len(notes) - (i+1):
@@ -343,7 +290,7 @@ class Game:
 				approachedBeats = (remBeats * self.chart["approachRate"]) + 1
 				if approachedBeats > -0.1 and approachedBeats < 4 and note not in self.dontDraw:
 
-					Game.renderNote(self, calc_pos, color, key, approachedBeats, notes, i, print_at) # Say it, you didn't expect a call directly to the Game class. Frankly it's the same shit lmao
+					Game.renderNote(self, calc_pos, color, key, approachedBeats, notes, i) # Say it, you didn't expect a call directly to the Game class. Frankly it's the same shit lmao
 
 					# print_at(calc_pos[0], calc_pos[1]+1, f"{term.normal}{int(remBeats)}{color}")
 				if note not in self.dontDraw and ((remTime <= -0.6) or (self.judgements[len(notes) - (i+1)] != {} and -0.2 > remTime > -0.6 )):
@@ -491,7 +438,6 @@ class Game:
 	def play(self, chart = {}, layout = "qwerty"):
 		# print(chart)
 		self.setupKeys(layout)
-		conduc.song.stop()
 		self.chart = chart
 		self.localConduc.loadsong(self.chart)
 		self.localConduc.play()

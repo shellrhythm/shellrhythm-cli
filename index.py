@@ -1,10 +1,9 @@
 from blessed import Terminal
-import os, sys
 import json
-from pybass3 import Song
-import time
 from term_image.image import *
 import random
+from src.conductor import *
+from src.loading import *
 
 term = Terminal()
 turnOff = False
@@ -34,227 +33,12 @@ bottomTextLines = bottom_txt.readlines()
 
 currentLoadedSong = 0
 
-def format_time(seconds):
-	hour = seconds // 3600
-	seconds %= 3600
-	minutes = seconds // 60
-	seconds %= 60
-
-	if hour != 0:
-		return "%d:%02d:%02d" % (hour, minutes, seconds)
-	else:
-		return "%d:%02d" % (minutes, seconds)
-
-class Conductor:
-	bpm = 120
-	offset = 0
-	startTime = 0
-	currentTimeSec = 0
-	prevTimeSec = 0
-	currentBeat = 0
-	prevBeat = 0
-	song = Song("./assets/clap.wav")
-	previewChart = {}
-	metronome = False
-	metroSound = Song("./assets/clap.wav")
-	startTimeNoOffset = 0
-	isPaused = False
-	pauseStartTime = 0
-	skippedTimeWithPause = 0
-
-	def loadsong(self, chart = {}):
-		self.bpm = chart["bpm"]
-		self.offset = chart["offset"]
-		self.song = chart["actualSong"]
-		self.previewChart = chart
-
-	def onBeat(self):
-		if self.metronome:
-			self.metroSound.play()
-
-	def debugSound(self):
-		print_at(0, term.height-6, f"beat: {self.currentBeat} | time: {self.currentTimeSec} | start time: {self.startTime}")
-
-	def play(self):
-		self.startTimeNoOffset = (time.time_ns() / 10**9)
-		self.startTime = self.startTimeNoOffset + self.offset
-		self.song.play()
-
-	def pause(self):
-		self.bpm = 0
-		self.isPaused = True
-		self.pauseStartTime = (time.time_ns() / 10**9)
-		self.song.pause()
-	
-	def resume(self):
-		self.isPaused = False
-		self.bpm = self.previewChart["bpm"]
-		self.skippedTimeWithPause = (time.time_ns() / 10**9) - self.pauseStartTime
-		self.song.move2position_seconds((time.time_ns() / 10**9) - (self.startTime + self.skippedTimeWithPause))
-		self.song.resume()
-
-	def update(self):
-		if not self.isPaused and self.bpm > 0:
-			self.currentTimeSec = (time.time_ns() / 10**9) - (self.startTime + self.skippedTimeWithPause)
-			self.deltatime = self.currentTimeSec - self.prevTimeSec
-			self.currentBeat = self.currentTimeSec * (self.bpm/60)
-			self.prevTimeSec = self.currentTimeSec
-
-			if int(self.currentBeat) > int(self.prevBeat):
-				self.onBeat()
-
-			self.prevBeat = self.currentBeat
-
-			return self.deltatime
-		else:
-			self.skippedTimeWithPause = (time.time_ns() / 10**9) - self.pauseStartTime
-			return 1/60
-
-	def stop(self):
-		# self.song.pause()
-		self.song.stop()
-
-	def getLength(self):
-		return self.song._length_seconds
-	
-	def setOffset(self, newOffset):
-		self.offset = newOffset
-		self.startTime = self.startTimeNoOffset + self.offset
-
-
-	def __init__(self) -> None:
-		pass
-
-import game
+import src.game as game
 
 conduc = Conductor()
 chartData = []
 
 # ========================= [UTIL FONCTIONS] =========================
-
-#region [Util Functions]
-def print_at(x, y, toPrint):
-	print(f"{term.move_xy(x=int(x), y=int(y))}" + toPrint)
-
-def debug_val(val):
-		if not val:
-			print_at(0,term.height-2,term.move_up(1))
-		elif val.is_sequence:
-			print_at(0,term.height-2,"got sequence: {0}.".format((str(val), val.name, val.code)) + term.clear_eol)
-		elif val:
-			print_at(0,term.height-2,"got {0}.".format(val) + term.clear_eol)
-
-def print_lines_at(x, y, text, center = False, eol = False, color = None):
-	if color is None:
-		color = term.normal
-	lines = text.split("\n")
-	for i in range(len(lines)):
-		if center:
-			print_at(x, y + i, color + term.center(lines[i]) + term.normal)
-		else:
-			if eol:
-				print_at(x, y + i, color + lines[i] + term.normal + term.clear_eol)
-			else:
-				print_at(x, y + i, color + lines[i] + term.normal)
-
-def print_image(x,y,imagePath,scale):
-	image = from_file(imagePath, width=scale)
-	print_lines_at(x, y, str(image))
-	
-def print_column(x, y, size, char):
-	for i in range(size):
-		print_at(x, y + i, char)
-
-def print_cropped(x, y, maxsize, text, offset, color, isWrapAround = True):
-	if isWrapAround:
-		print_at(x, y, color + (text*3)[(offset%len(text))+len(text):maxsize+(offset%len(text))+len(text)] + term.normal)
-	else:
-		actualText = text[offset%len(text):maxsize+(offset%len(text))]
-		print_at(x, y, color + actualText + term.normal + (" "*(maxsize - len(actualText))))
-		
-def load_options():
-	if os.path.exists("./options.json"):
-		global options
-		global selectedLocale
-		f = open("./options.json")
-		options_string = f.read()
-		options = json.loads(options_string)
-		f.close()
-		print(options)
-		selectedLocale = options["lang"]
-	else:
-		f = open("./options.json", "x")
-		f.write(json.dumps(options, indent=4))
-		f.close()
-
-def load_locales():
-	global locales
-	localeFiles = [f.name.split(".", 1)[0] for f in os.scandir("./lang") if f.is_file()]
-	for i in range(len(localeFiles)):
-		print(f"Loading locale \"{localeFiles[i]}\"... ({i+1}/{len(localeFiles)})")
-		f = open("./lang/" + localeFiles[i] + ".json")
-		locales[localeFiles[i]] = json.loads(f.read())
-		localeNames.append(localeFiles[i])
-		f.close()
-
-def check_chart(chart = {}, folder = ""):
-	output = {}
-	if "formatVersion" not in chart.keys():
-		chart["formatVersion"] = 0
-
-	if "approachRate" not in chart.keys():
-		chart["approachRate"] = 1
-
-	if chart["formatVersion"] == 0:
-		#Format 0 docs:
-		#no foldername
-		#no icon, defaults to a TXT 
-		#author/charter instead of artist/author
-		output = {
-			"formatVersion": 0,
-			"sound": chart["sound"],
-			"foldername": folder,
-			"icon": {
-				"img": None,
-				"txt": "icon.txt"
-			},
-			"bpm": chart["bpm"],
-			"offset": chart["offset"],
-			"metadata": {
-				"title": chart["metadata"]["title"],
-				"artist": chart["metadata"]["author"],
-				"author": chart["metadata"]["charter"],
-				"description": chart["metadata"]["description"]
-			},
-			"difficulty": 0,
-			"approachRate": 1,
-			"notes": chart["notes"]
-		}
-	else:
-		output = chart
-
-	# fixing errors
-	if output["sound"] == "" or output["sound"] == None:
-		print("[WARN] " + folder + " has no song!")
-	
-	if output["foldername"] != folder: output["foldername"] = folder
-
-	return output
-
-def load_charts():
-	global chartData
-	charts = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts") if f.is_dir()]
-	for i in range(len(charts)):
-		print(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})")
-		f = open("./charts/" + charts[i] + "/data.json").read()
-		jsonThing = json.loads(f)
-		jsonThing = check_chart(jsonThing, charts[i])
-		jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
-		chartData.append(jsonThing)
-
-	print("All charts loaded successfully!")
-
-#endregion
 
 # ========================= [MENU CLASSES] =========================
 
@@ -384,7 +168,6 @@ class Options:
 		if boot:
 			self.loop()
 
-
 # Chart selection menu
 class ChartSelect:
 	turnOff = False
@@ -457,6 +240,7 @@ class ChartSelect:
 	def enterPressed(self):
 		self.turnOff = True
 		conduc.stop()
+		conduc.song.stop()
 		loadedGame.play(chartData[self.selectedItem], options["layout"])
 		print(term.clear)
 		self.turnOff = False
@@ -646,9 +430,10 @@ class TitleScreen:
 			self.loop()
 
 if __name__ == "__main__":
-	load_charts()
-	load_locales()
-	load_options()
+	
+	chartData = load_charts()
+	locales, localeNames = load_locales()
+	options, selectedLocale = load_options(options)
 	print("Everything loaded successfully!\n=====================")
 	# print("Testing image rendering...")
 	# print("KittyImage: " + str(KittyImage.is_supported()))

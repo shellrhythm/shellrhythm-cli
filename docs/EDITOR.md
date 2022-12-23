@@ -30,5 +30,5 @@ Jokes aside, this editor has inspirations from vim, as in you can type different
 :wq             -> Combinaison of :w and :q
 :p              -> Places a tile at current position (will prompt you for a key)
 :p <KeyNum>     -> Places a tile at current position (with a defined key)
-:o <filename>   -> Opens a chart
+:o <foldername> -> Opens a chart
 ```
