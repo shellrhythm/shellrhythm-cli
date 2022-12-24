@@ -16,7 +16,11 @@ loadedMenus = {
 }
 loadedGame = None
 locales = {}
-localeNames = []
+localeNames = [
+	"en",
+	"fr",
+	"da"
+]
 selectedLocale = "en"
 
 options = {

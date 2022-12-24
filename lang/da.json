@@ -1,0 +1,38 @@
+{
+    "titlescreen":{
+        "play": "Spil",
+        "edit": "Rediger",
+        "options": "Indstillinger",
+        "quit": "Afslut spil",
+        "version": "Version"
+    },
+    "chartSelect":{
+        "backTitle": "Tilbage til hovedmenuen",
+        "play": "Spil",
+        "mods": "Modifikatorer",
+        "difficulty": "Sværhedsgrad",
+        "objs": "Hit objekter",
+        "metadata": {
+            "author": "Chart author",
+            "song": "Sang",
+            "artist": "Kunstner",
+            "description": "Beskrivelse"
+        },
+        "no_charts": "Hov, det ser ud til, at du ikke har nogen charts indlæst!"
+    },
+    "options":{
+        "globalOffset": "Globalt offset (ms)",
+        "lang": "Sprog",
+        "nerdFont": "Aktiver Nerd Font-visning",
+        "textImages": "Brug billeder som miniaturebillede"
+    },
+    "gameplay":{
+        "pause": {
+            "title": "PAUSEDE",
+            "subtitle": "this is the pause menu, i guess",
+            "resume": "Genoptag",
+            "retry": "Genstart",
+            "quit": "Tilbage til menuen"
+        }
+    }
+}
