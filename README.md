@@ -9,8 +9,8 @@ Every script that comes from the `master` branch has been removed. We've been st
 
 Title screen: `98%` (only needs a bit of polish and access to the editor)<br/>
 Chart selector: `55%` (needs to add more information)<br/>
-Gameplay: `90%` (Missing the results screen)<br/>
-Editor: `0%`<br/>
+Gameplay: `100%`<br/>
+Editor: `10%`<br/>
 Options: `60%` (Missing link with calibration menu)
 
 # shellrhythm

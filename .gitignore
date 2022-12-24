@@ -3,5 +3,5 @@
 /charts/*/
 /.vscode/
 *.so
-/logs
+/logs/*
 options.json

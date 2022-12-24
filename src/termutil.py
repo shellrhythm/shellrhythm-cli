@@ -39,7 +39,7 @@ def print_column(x, y, size, char):
 
 def print_cropped(x, y, maxsize, text, offset, color, isWrapAround = True):
 	if isWrapAround:
-		print_at(x, y, color + (text*3)[(offset%len(text))+len(text):maxsize+(offset%len(text))+len(text)] + term.normal)
+		print_at(x, y, color + (text*(3+int(maxsize/len(text))))[(offset%len(text))+len(text):maxsize+(offset%len(text))+len(text)] + term.normal)
 	else:
 		actualText = text[offset%len(text):maxsize+(offset%len(text))]
 		print_at(x, y, color + actualText + term.normal + (" "*(maxsize - len(actualText))))

@@ -5,9 +5,14 @@ from pybass3 import Song
 import time
 # from index import *
 import hashlib
-from src.termutil import *
-from src.conductor import *
-from src.results import ResultsScreen
+if __name__ == "src.game":
+	from src.termutil import *
+	from src.conductor import *
+	from src.results import ResultsScreen
+else:
+	from termutil import *
+	from conductor import *
+	from results import ResultsScreen
 
 term = Terminal()
 
@@ -179,6 +184,7 @@ class Game:
 					"judgement": judgement
 				}
 				self.accuracyUpdate()
+				self.score = int(self.scoreCalc())
 				calc_pos = []
 				if playfield_mode == "setSize":
 					calc_pos = [
@@ -304,7 +310,7 @@ class Game:
 					self.dontDraw.append(note)
 		text_beat = "○ ○ ○ ○"
 		text_beat = text_beat[:int(self.localConduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.localConduc.currentBeat)%4 * 2) + 1:]
-		print_at(int(term.width * 0.5), 1, term.normal + text_beat)
+		print_at(int(term.width * 0.5)-3, 1, term.normal + text_beat)
 		
 	def draw(self):
 		if not self.localConduc.isPaused:
@@ -369,7 +375,10 @@ class Game:
 				self.localConduc.pause()
 
 			if self.localConduc.currentTimeSec > self.endTime:
-				f = open("./logs/results.json", "w")
+				if not os.path.exists("./logs/results.json"):
+					f = open("./logs/results.json", "x")
+				else:
+					f = open("./logs/results.json", "w")
 				f.write(json.dumps(self.resultsFile(),indent=4))
 				f.close()
 				# raise NotImplementedError("Results screen missing!")
@@ -432,12 +441,21 @@ class Game:
 					self.resultsScreen.draw()
 					self.resultsScreen.handle_input()
 					self.turnOff = self.resultsScreen.gameTurnOff
+		# print("On god? Just like that?")
+		self.localConduc.stop()
+		self.localConduc.song.stop()
+		self.turnOff = False
+		self.resultsScreen.gameTurnOff = False
+		self.resultsScreen.isEnabled = False
 
 				
 
 	def play(self, chart = {}, layout = "qwerty"):
 		# print(chart)
 		self.setupKeys(layout)
+		self.judgements = []
+		self.missesCount = 0
+		self.score = 0
 		self.chart = chart
 		self.localConduc.loadsong(self.chart)
 		self.localConduc.play()

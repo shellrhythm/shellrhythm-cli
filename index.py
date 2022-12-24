@@ -2,8 +2,10 @@ from blessed import Terminal
 import json
 from term_image.image import *
 import random
+# from src import *
 from src.conductor import *
 from src.loading import *
+from src.editor import *
 
 term = Terminal()
 turnOff = False
@@ -159,6 +161,7 @@ class Options:
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
 			print(term.clear)
+			self.translate()
 			while not self.turnOff:
 				self.deltatime = conduc.update()
 				self.draw()
@@ -179,6 +182,7 @@ class ChartSelect:
 	chartsize = 0
 	selectedTab = 0
 	funniSpeen = 0
+	goBack = False
 	
 	def draw(self):
 		for i in range(len(chartData)):
@@ -247,7 +251,8 @@ class ChartSelect:
 		conduc.song.stop()
 		loadedGame.play(chartData[self.selectedItem], options["layout"])
 		print(term.clear)
-		self.turnOff = False
+		self.goBack = True
+		conduc.play()
 		
 	def handle_input(self):
 		"""
@@ -288,6 +293,10 @@ class ChartSelect:
 				self.draw()
 
 				self.handle_input()
+		if self.goBack == True:
+			self.goBack = False
+			self.turnOff = False
+			self.loop()
 
 	def __init__(self, boot = True):
 		"""
@@ -301,11 +310,10 @@ class ChartSelect:
 class TitleScreen:
 	logo = ""
 	turnOff = False
-
 	selectedItem = 0
 	maxItem = 4
-
 	curBottomText = 0
+	goBack = False
 
 	def moveBy(self, x):
 		self.selectedItem = (self.selectedItem + x)%self.maxItem
@@ -323,7 +331,16 @@ class TitleScreen:
 
 		if self.selectedItem == 1:
 			# Edit
+			conduc.stop()
+			conduc.song.stop()
+			loadedMenus["Editor"].layout = Game.setupKeys(None, "qwerty")
+			loadedMenus["Editor"].loop()
 			print(term.clear)
+			print_lines_at(0,1,self.logo,True)
+			print_at(int((term.width - len(self.curBottomText)) / 2), len(self.logo.splitlines()) + 2, self.curBottomText)
+			self.turnOff = True
+			self.goBack = True
+			conduc.play()
 
 		if self.selectedItem == 2:
 			# Options
@@ -421,6 +438,11 @@ class TitleScreen:
 				self.draw()
 
 				self.handle_input()
+		if self.goBack == True:
+			self.goBack = False
+			self.turnOff = False
+			self.loop()
+		print(term.clear)
 
 	def __init__(self, boot = True):
 		"""
@@ -452,6 +474,7 @@ if __name__ == "__main__":
 		loadedMenus["ChartSelect"] = ChartSelect(False)
 		loadedMenus["Titlescreen"] = TitleScreen(False)
 		loadedMenus["Options"] = Options(False) # Sixty-sixteen megabytes- by-bytes 
+		loadedMenus["Editor"] = Editor()
 
 		loadedGame = game.Game()
 
@@ -462,5 +485,5 @@ if __name__ == "__main__":
 		loadedMenus[menu].loop()
 	except KeyboardInterrupt:
 		print('Keyboard Interrupt detected!')
-	print(term.clear)
+	# print(term.clear)
 	print(f"Thanks for playing my game!")

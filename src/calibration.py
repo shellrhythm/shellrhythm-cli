@@ -1,9 +1,16 @@
 # from index import print_at, print_column, print_cropped, print_lines_at, Conductor, load_charts, chartData
-from termutil import print_at
-from conductor import Conductor
 from blessed import Terminal
 import json, os
-from loading import check_chart
+print(__name__)
+if __name__ != "src.calibration":
+	from loading import check_chart
+	from termutil import print_at
+	from conductor import Conductor
+else:
+	from src.loading import check_chart	
+	from src.termutil import print_at
+	from src.conductor import Conductor
+
 from pybass3 import Song
 
 conduc = Conductor()
@@ -43,7 +50,7 @@ def load_charts():
 
 def handle_input():
 	val = ''
-	val = term.inkey(timeout=1/60)
+	val = term.inkey(timeout=1/120)
 	if val:
 		global totalOffset
 		global turnOff

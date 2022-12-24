@@ -4,9 +4,12 @@ import json
 from pybass3 import Song
 import time
 # from index import *
-from game import *
-from conductor import *
-import hashlib
+if __name__ == "src.editor":
+	from src.game import *
+	from src.conductor import *
+else:
+	from game import *
+	from conductor import *
 
 term = Terminal()
 
@@ -117,9 +120,14 @@ class Editor:
 		commandSplit = command.split(" ")
 		print_at(0,term.height-2, term.clear_eol)
 		if commandSplit[0] == "q!" or (commandSplit[0] == "q" and not self.needsSaving):
-			sys.exit(0)
+			self.turnOff = True
+			return True, ""
 		elif commandSplit[0] == "w":
-			pass
+			output = json.dumps(self.mapToEdit)
+			f = open(self.fileLocation, "w")
+			f.write(output)
+			f.close()
+			return True, "Saved successfully!"
 			#save
 		elif commandSplit[0] == "o":
 			if len(commandSplit) == 2:
@@ -152,19 +160,33 @@ class Editor:
 				self.localConduc.currentBeat += (1/self.snap)*4
 				print_at(0,term.height-4, term.clear_eol)
 			if val.name == "KEY_LEFT":
-				self.localConduc.currentBeat -= (1/self.snap)*4
-				if self.localConduc.currentBeat < 0: self.localConduc.currentBeat = 0
+				self.localConduc.currentBeat = max(self.localConduc.currentBeat - (1/self.snap)*4, 0)
 				print_at(0,term.height-4, term.clear_eol)
-			if val.name == "KEY_DOWN":
-				if self.mapToEdit != {}:
+			if self.mapToEdit != {}:
+				if val.name == "KEY_DOWN":
 					print_at(0,term.height-4, term.clear_eol)
 					self.selectedNote = min(self.selectedNote + 1, len(self.mapToEdit["notes"])-1)
 					self.localConduc.currentBeat = (self.mapToEdit["notes"][self.selectedNote]["beatpos"][0] * 4 + self.mapToEdit["notes"][self.selectedNote]["beatpos"][1])
-			if val.name == "KEY_UP":
-				if self.mapToEdit != {}:
+				if val.name == "KEY_UP":
 					print_at(0,term.height-4, term.clear_eol)
 					self.selectedNote = max(self.selectedNote - 1, 0)
 					self.localConduc.currentBeat = (self.mapToEdit["notes"][self.selectedNote]["beatpos"][0] * 4 + self.mapToEdit["notes"][self.selectedNote]["beatpos"][1])
+				if val == "U":
+					self.localConduc.currentBeat = max(self.localConduc.currentBeat - (1/self.snap)*4, 0)
+					print_at(0,term.height-4, term.clear_eol)
+					self.mapToEdit["notes"][self.selectedNote]["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
+				if val == "I":
+					self.localConduc.currentBeat += (1/self.snap)*4
+					print_at(0,term.height-4, term.clear_eol)
+					self.mapToEdit["notes"][self.selectedNote]["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
+				if val == "H":
+					self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] = max(self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] - 0.05, 0)
+				if val == "J":
+					self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = max(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] - 0.05, 0)
+				if val == "K":
+					self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] = min(self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] + 0.05, 1)
+				if val == "L":
+					self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = min(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] + 0.05, 1)
 
 		else:
 			if val.name == "KEY_ESCAPE":
@@ -176,6 +198,8 @@ class Editor:
 				if isValid:
 					self.commandMode = False
 					self.commandString = ""
+					if errorStr != "":
+						print_at(0,term.height-2, term.on_green+errorStr+term.clear_eol+term.normal)
 				else:
 					self.commandMode = False
 					self.commandString = ""

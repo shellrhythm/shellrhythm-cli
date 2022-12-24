@@ -1,4 +1,7 @@
-from src.termutil import *
+if __name__ == "src.results":
+	from src.termutil import *
+else:
+	from termutil import *
 
 inputFrequency = 120
 

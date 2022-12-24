@@ -1,6 +1,10 @@
 from pybass3 import Song
 import time
-from src.termutil import *
+print(__name__)
+if __name__ != "src.conductor":
+	from termutil import *
+else:
+	from src.termutil import *
 
 def format_time(seconds):
 	hour = seconds // 3600
