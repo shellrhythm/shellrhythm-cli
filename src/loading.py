@@ -1,5 +1,6 @@
 import os, json
 from pybass3 import Song
+from src.termutil import *
 
 def load_options(options = {}):
 	if os.path.exists("./options.json"):
@@ -64,7 +65,7 @@ def check_chart(chart = {}, folder = ""):
 
 	# fixing errors
 	if output["sound"] == "" or output["sound"] == None:
-		print("[WARN] " + folder + " has no song!")
+		print(f"{term.yellow}[WARN] {folder} has no song!{term.normal}")
 	
 	if output["foldername"] != folder: output["foldername"] = folder
 
@@ -72,14 +73,17 @@ def check_chart(chart = {}, folder = ""):
 
 def load_charts():
 	chartData = []
-	charts = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts") if f.is_dir()]
-	for i in range(len(charts)):
-		print(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})")
-		f = open("./charts/" + charts[i] + "/data.json").read()
-		jsonThing = json.loads(f)
-		jsonThing = check_chart(jsonThing, charts[i])
-		jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
-		chartData.append(jsonThing)
+	if os.path.exists("./charts"):
+		charts = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts") if f.is_dir()]
+		for i in range(len(charts)):
+			print(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})")
+			f = open("./charts/" + charts[i] + "/data.json").read()
+			jsonThing = json.loads(f)
+			jsonThing = check_chart(jsonThing, charts[i])
+			jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
+			chartData.append(jsonThing)
+		print("All charts loaded successfully!")
+	else:
+		print(f"{term.yellow}[WARN] Chart folder inexistant!{term.normal}")
 
-	print("All charts loaded successfully!")
 	return chartData

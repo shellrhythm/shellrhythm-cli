@@ -196,7 +196,7 @@ class ChartSelect:
 			print_at(20,i,f"{term.normal}")
 		print_column(20, 0, term.height - 2, "┃")
 		# Actual image display
-		if self.selectedItem > len(chartData):
+		if len(chartData) == 0:
 			print_at(25,5, locales[selectedLocale]["chartSelect"]["no_charts"])
 		else:
 			if chartData[self.selectedItem]["icon"]["img"] != None:
@@ -411,7 +411,10 @@ class TitleScreen:
 		text_beat = text_beat[:int(conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(conduc.currentBeat)%4 * 2) + 1:]
 
 		print_at(0, 0, term.center(f"{text_beat}{term.clear_eol}"))
-		text_songTitle = chartData[currentLoadedSong]["metadata"]["artist"] + " - " + chartData[currentLoadedSong]["metadata"]["title"] + " // "
+		if len(chartData) != 0:
+			text_songTitle = chartData[currentLoadedSong]["metadata"]["artist"] + " - " + chartData[currentLoadedSong]["metadata"]["title"] + " // "
+		else:
+			text_songTitle = "[NO SONG PLAYING] // "
 		print_cropped(term.width - 31, 0, 30, text_songTitle, int(conduc.currentBeat), term.normal)
 
 		print_at(term.width-(len("© #Guigui, 2022") + 1), term.height-2, "© #Guigui, 2022")
@@ -475,16 +478,19 @@ if __name__ == "__main__":
 	chartData = load_charts()
 	locales, localeNames = load_locales()
 	options, selectedLocale = load_options(options)
-	print("Everything loaded successfully!\n=====================")
+	print("Everything loaded successfully!\n-----------------------------------------")
 	# print("Testing image rendering...")
 	# print("KittyImage: " + str(KittyImage.is_supported()))
 	# print("ITerm2Image: " + str(ITerm2Image.is_supported()))
 	# time.sleep(.5) # This is here to be able to see these values above. Everything goes so fast lmao
 	try:
-		songLoaded = random.randint(0, len(chartData)-1)
-		if chartData[songLoaded] != None:
-			conduc.loadsong(chartData[songLoaded])
-		conduc.play()
+		if len(chartData) != 0:
+			songLoaded = random.randint(0, len(chartData)-1)
+			if chartData[songLoaded] != None:
+				conduc.loadsong(chartData[songLoaded])
+			conduc.play()
+		else:
+			songLoaded = 0
 		menu = "Titlescreen"
 		loadedMenus["ChartSelect"] = ChartSelect(False)
 		loadedMenus["Titlescreen"] = TitleScreen(False)
