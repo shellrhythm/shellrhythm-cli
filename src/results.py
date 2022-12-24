@@ -30,6 +30,7 @@ class ResultsScreen:
 		return ["X", -1, term.darkred]
 
 	def setup(self):
+		self.judgementCount = [0,0,0,0,0,0]
 		for i in range(len(self.resultsData["judgements"])):
 			if self.resultsData["judgements"][i] != {}:
 				self.judgementCount[self.resultsData["judgements"][i]["judgement"]] += 1

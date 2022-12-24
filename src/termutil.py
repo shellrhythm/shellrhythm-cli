@@ -30,8 +30,12 @@ def print_lines_at(x, y, text, center = False, eol = False, color = None):
 				print_at(x, y + i, color + lines[i] + term.normal)
 
 def print_image(x,y,imagePath,scale):
-	image = from_file(imagePath, width=scale)
-	print_lines_at(x, y, str(image))
+	if os.path.exists(imagePath):
+		image = from_file(imagePath, width=scale)
+		print_lines_at(x, y, str(image))
+		return True
+	else:
+		return False
 	
 def print_column(x, y, size, char):
 	for i in range(size):

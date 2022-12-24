@@ -200,13 +200,18 @@ class ChartSelect:
 			print_at(25,5, locales[selectedLocale]["chartSelect"]["no_charts"])
 		else:
 			if chartData[self.selectedItem]["icon"]["img"] != None:
-				print_image(23, 1, 
+				fileExists = print_image(23, 1, 
 					"./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["img"], 
 					int(term.width * 0.2)
 				)
+				if not fileExists:
+					print_at(23, 1, "[NO IMAGE]")
 			else:
-				txt = open("./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["txt"])
-				print_lines_at(23, 1, txt.read())
+				if os.path.exists("./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["txt"]):
+					txt = open("./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["txt"])
+					print_lines_at(23, 1, txt.read())
+				else:
+					print_at(23, 1, "[NO ICON]")
 			print_column(25 + int(term.width * 0.2), 0, 8, "┃")
 			#region metadata
 			print_at(27 + int(term.width * 0.2), 2, term.blue 
@@ -268,10 +273,19 @@ class ChartSelect:
 		if val.name == "KEY_DOWN" or val == "j":
 			if self.selectedTab == 0:
 				self.selectedItem = (self.selectedItem + 1)%self.chartsize
+				conduc.stop()
+				conduc.song.stop()
 				conduc.loadsong(chartData[self.selectedItem])
+				conduc.play()
+				print(term.clear)
 		if val.name == "KEY_UP" or val == "k":
 			if self.selectedTab == 0:
 				self.selectedItem = (self.selectedItem - 1)%self.chartsize
+				conduc.stop()
+				conduc.song.stop()
+				conduc.loadsong(chartData[self.selectedItem])
+				conduc.play()
+				print(term.clear)
 		if val.name == "KEY_RIGHT" or val == "l":
 			self.selectedTab = min(self.selectedTab + 1, 1)
 
@@ -333,6 +347,7 @@ class TitleScreen:
 			# Edit
 			conduc.stop()
 			conduc.song.stop()
+			loadedMenus["Editor"].turnOff = False
 			loadedMenus["Editor"].layout = Game.setupKeys(None, "qwerty")
 			loadedMenus["Editor"].loop()
 			print(term.clear)

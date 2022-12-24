@@ -454,6 +454,9 @@ class Game:
 		# print(chart)
 		self.setupKeys(layout)
 		self.judgements = []
+		self.dontDraw = []
+		self.outOfHere = []
+		self.resultsScreen = ResultsScreen()
 		self.missesCount = 0
 		self.score = 0
 		self.chart = chart

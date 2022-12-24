@@ -66,7 +66,7 @@ class Editor:
 			else:
 				print_at((i*8)+(term.width*0.1)-slightOffset, term.height-5, "-"*(maxAfterwards+1))
 		print_at(int(term.width*0.1), term.height-4, "@")
-		print_at(0,term.height-6, term.normal+f"BPM: {self.localConduc.bpm} | Snap: 1/{self.snap} | Bar: {int(self.localConduc.currentBeat//4)} | Beat: {round(self.localConduc.currentBeat%4, 5)} | Note: {self.selectedNote} |{term.clear_eol}")
+		print_at(0,term.height-6, term.normal+f"BPM: {self.localConduc.bpm} | Snap: 1/{self.snap} | Bar: {int(self.localConduc.currentBeat//4)} | Beat: {round(self.localConduc.currentBeat%4, 5)} |{term.clear_eol}")
 
 		if self.mapToEdit != {}:
 			for i in range(len(self.mapToEdit["notes"])):
@@ -105,6 +105,9 @@ class Editor:
 							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.bold_grey}▚{term.normal}")
 						else:
 							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.normal}{term.bold_grey}▚{term.normal}")
+			#Current note info
+			selectedNote = self.mapToEdit['notes'][self.selectedNote]
+			print_at(0, term.height-7, term.normal+f"Currently selected note: {self.selectedNote} | Color: {colors[selectedNote['color']]}[{selectedNote['color']}]{term.normal} | Screenpos: {selectedNote['screenpos']} | Beatpos: {selectedNote['beatpos']}")
 		else:
 			text_nomaploaded = "Wow, such empty."
 			print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), term.normal+text_nomaploaded)
@@ -132,7 +135,10 @@ class Editor:
 		elif commandSplit[0] == "o":
 			if len(commandSplit) == 2:
 				fileExists = self.load_chart(commandSplit[1])
-				return fileExists, "This chart doesn't exist."
+				if not fileExists:
+					return fileExists, "This chart doesn't exist."
+				else:
+					return fileExists, "Chart loaded successfully."
 			elif len(commandSplit) == 3:
 				self.load_chart(commandSplit[1], commandSplit[2])
 			else:
@@ -153,6 +159,8 @@ class Editor:
 		val = term.inkey(timeout=1/120)
 		if not self.commandMode:
 			# debug_val(val)
+			if val.name != "KEY_ENTER":
+				print_at(0,term.height-2, term.clear_eol)
 			if val == ":":
 				self.commandMode = True
 				self.commandString = ""
@@ -171,22 +179,38 @@ class Editor:
 					print_at(0,term.height-4, term.clear_eol)
 					self.selectedNote = max(self.selectedNote - 1, 0)
 					self.localConduc.currentBeat = (self.mapToEdit["notes"][self.selectedNote]["beatpos"][0] * 4 + self.mapToEdit["notes"][self.selectedNote]["beatpos"][1])
-				if val == "U":
+
+				if val == "u":
 					self.localConduc.currentBeat = max(self.localConduc.currentBeat - (1/self.snap)*4, 0)
 					print_at(0,term.height-4, term.clear_eol)
 					self.mapToEdit["notes"][self.selectedNote]["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
-				if val == "I":
+				if val == "i":
 					self.localConduc.currentBeat += (1/self.snap)*4
 					print_at(0,term.height-4, term.clear_eol)
 					self.mapToEdit["notes"][self.selectedNote]["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
-				if val == "H":
-					self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] = max(self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] - 0.05, 0)
-				if val == "J":
-					self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = max(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] - 0.05, 0)
-				if val == "K":
-					self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] = min(self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] + 0.05, 1)
-				if val == "L":
-					self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = min(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] + 0.05, 1)
+				
+				screenPos = self.mapToEdit["notes"][self.selectedNote]["screenpos"]
+				calculatedPos = Game.calculatePosition(screenPos, 5, 3, term.width-10, term.height-7)
+				if val == "h":
+					print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
+					print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
+					print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
+					self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] = max(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] - 0.05, 2), 0)
+				if val == "j":
+					print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
+					print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
+					print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
+					self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = max(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] - 0.05, 2), 0)
+				if val == "k":
+					print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
+					print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
+					print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
+					self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = min(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] + 0.05, 2), 1)
+				if val == "l":
+					print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
+					print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
+					print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
+					self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] = min(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] + 0.05, 2), 1)
 
 		else:
 			if val.name == "KEY_ESCAPE":
