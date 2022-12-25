@@ -29,6 +29,9 @@ class Editor:
 	selectedNote = 0
 	layout = []
 	dontDrawList = []
+	keyPanelEnabled = False
+	keyPanelKey = ""
+	keyPanelSelected = -1 #Note: use -1 when creating a new note
 
 	def autocomplete(self, command):
 		output = []
@@ -36,6 +39,30 @@ class Editor:
 		#TODO where do i even begin
 
 		return output
+	
+	def create_note(self, atPos, key):
+		if "notes" in self.mapToEdit:
+			newNote = {
+				"type": "hit_object",
+				"beatpos": [
+					int(atPos//4),
+					round(atPos%4, 5)
+				],
+				"key": key,
+				"screenpos": [
+					0.5,
+					0.5
+				],
+				"color": 0
+			}
+			self.mapToEdit["notes"].append(newNote)
+
+	def draw_changeKeyPanel(self, toptext, curKey):
+		print_at(int((term.width-10)*0.5), int((term.height-7)*0.5), "-"*10)
+		print_at(int((term.width-10)*0.5), int((term.height+7)*0.5), "-"*10)
+		print_column(int((term.width-10)*0.5), int((term.height-6)*0.5), 13, "|")
+		print_column(int((term.width+10)*0.5), int((term.height-6)*0.5), 13, "|")
+		print_at(int((term.width-len(toptext))*0.5), int((term.height-6)*0.5), toptext)
 
 	def load_chart(self, chart_name, file = "data"):
 		self.fileLocation = f"./charts/{chart_name}/{file}.json"
@@ -151,6 +178,13 @@ class Editor:
 					return False, "Too few arguments."
 				else:
 					return False, "Too many arguments."
+		elif commandSplit[0] == "p":
+			if len(commandSplit) > 1:
+				if commandSplit[1].isdigit():
+					self.create_note(self.localConduc.currentBeat, int(commandSplit[1]))
+					return True, "Successfully created a new note."
+			return False, "Whoops, looks like you're in unimplemented territory!"
+
 		else:
 			if len(commandSplit[0]) > 128:
 				return False, "...what?"
