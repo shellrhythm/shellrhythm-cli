@@ -36,6 +36,7 @@ class Editor:
 	keyPanelSelected = -1 #Note: use -1 when creating a new note
 	keyPanelJustDisabled = False
 	loc:Locale = Locale("en")
+	endNote = -1
 
 	def autocomplete(self, command):
 		output = []
@@ -65,6 +66,7 @@ class Editor:
 			"difficulty": 0,
 			"notes": []
 		}
+		self.endNote = -1
 	
 	def create_note(self, atPos, key):
 		print(term.clear)
@@ -83,6 +85,23 @@ class Editor:
 				"color": 0
 			}
 			self.mapToEdit["notes"].append(newNote)
+
+	def set_end_note(self, atPos):
+		if self.endNote == -1:
+			if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
+				self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
+			else:
+				newNote = {
+					"type": "end",
+					"beatpos": [
+						int(atPos//4),
+						round(atPos%4, 5)
+					]
+				}
+				self.mapToEdit["notes"].append(newNote)
+				self.endNote = len(self.mapToEdit["notes"])-1
+		else:
+			self.mapToEdit["notes"][self.endNote]["beatpos"] = [int(atPos//4), round(atPos%4, 5)]
 
 	def draw_changeKeyPanel(self, toptext = None, curKey = 0):
 		width = 40
@@ -329,6 +348,8 @@ class Editor:
 					self.keyPanelEnabled = True
 					self.keyPanelSelected = -1
 					self.keyPanelKey = 0
+				if val == "Z":
+					self.set_end_note(self.localConduc.currentBeat)
 				if val == "e":
 					#Note options
 					pass
