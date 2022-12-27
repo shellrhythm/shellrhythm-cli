@@ -10,7 +10,7 @@ Every script that comes from the `master` branch has been removed. We've been st
 Title screen: `98%` (only needs a bit of polish and access to the editor)<br/>
 Chart selector: `55%` (needs to add more information)<br/>
 Gameplay: `100%`<br/>
-Editor: `10%`<br/>
+Editor: `50%`<br/>
 Options: `60%` (Missing link with calibration menu)
 
 # shellrhythm
@@ -49,17 +49,22 @@ python ./index.py
 
 By default, there are no charts. Mostly because of copyright reasons, ~~but also because I'm too lazy to finish a chart~~
 
-## How do I make a chart?
-
-Check `/charts/CHARTING.md`, everything you need to know is in there.
-
 ## Are there any charts I can download?
 
 You can check out the #shellrhythm-charts on my [Discord server](https://discord.gg/VGxqDahgvY), but I'll most likely update this part with, like, a chartpack or something. I'll just have to wait until charts are available.
 
+## How do I make a chart?
+
+Check `/charts/CHARTING.md`, everything you need to know is in there.
+
 ## Can I use this project for something?
 
-Sure! It's under the ISC license, so honestly do whatever with it.
+Sure! THe entire codebase is under the ISC license, so honestly do whatever with it.
+However, one of the library this project uses, [pybass3](https://github.com/devdave/pybass3/), uses a library called BASS, which is a commercial product. While it is free for non-commercial use, please ensure to [obtain a valid licence](http://www.un4seen.com/bass.html#license) if you plan on distributing any application using it commercially.
+
+## Known issues
+
+- [Linux isn't fully compatible with pybass3 yet,](https://github.com/devdave/pybass3/issues/2) however [there is a workaround to get it working anyways.](./docs/PYBASS3_LINUX.md)
 
 ## Help! I'm having issues!
 

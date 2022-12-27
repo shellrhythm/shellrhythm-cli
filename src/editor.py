@@ -30,8 +30,9 @@ class Editor:
 	layout = []
 	dontDrawList = []
 	keyPanelEnabled = False
-	keyPanelKey = ""
+	keyPanelKey = -1
 	keyPanelSelected = -1 #Note: use -1 when creating a new note
+	keyPanelJustDisabled = False
 
 	def autocomplete(self, command):
 		output = []
@@ -39,8 +40,31 @@ class Editor:
 		#TODO where do i even begin
 
 		return output
+
+	def setupMap(self):
+		self.mapToEdit = {
+			"formatVersion": 1,
+			"sound": None,
+			"foldername": "",
+			"icon": {
+			    "img": "",
+			    "txt": ""
+			},
+			"bpm": 120,
+			"offset": 0,
+			"metadata": {
+			    "title": "",
+			    "artist": "",
+			    "author": "",
+			    "description": ""
+			},
+			"approachRate": 1,
+			"difficulty": 0,
+			"notes": []
+		}
 	
 	def create_note(self, atPos, key):
+		print(term.clear)
 		if "notes" in self.mapToEdit:
 			newNote = {
 				"type": "hit_object",
@@ -57,12 +81,21 @@ class Editor:
 			}
 			self.mapToEdit["notes"].append(newNote)
 
-	def draw_changeKeyPanel(self, toptext, curKey):
-		print_at(int((term.width-10)*0.5), int((term.height-7)*0.5), "-"*10)
-		print_at(int((term.width-10)*0.5), int((term.height+7)*0.5), "-"*10)
-		print_column(int((term.width-10)*0.5), int((term.height-6)*0.5), 13, "|")
-		print_column(int((term.width+10)*0.5), int((term.height-6)*0.5), 13, "|")
-		print_at(int((term.width-len(toptext))*0.5), int((term.height-6)*0.5), toptext)
+	def draw_changeKeyPanel(self, toptext = None, curKey = 0):
+		width = 40
+		height = 7
+		if toptext != None:
+			print_at(int((term.width-width)*0.5), int((term.height-height)*0.5), "-"*width)
+			print_at(int((term.width-width)*0.5), int((term.height+height)*0.5), "-"*width)
+			print_column(int((term.width-width)*0.5), int((term.height-height)*0.5)+1, height, "|")
+			print_column(int((term.width+width)*0.5), int((term.height-height)*0.5)+1, height, "|")
+			print_at(int((term.width-len(toptext))*0.5), int((term.height-height)*0.5)+1, toptext)
+			if curKey > 0 and curKey < 30:
+				print_at(int(term.width*0.5)-1, int(term.height *0.5), term.reverse + f" {self.layout[curKey]} " + term.normal)
+			else:
+				print_at(int(term.width*0.5)-1, int(term.height *0.5), term.reverse + f"   " + term.normal)
+		else:
+			print_lines_at(int((term.width-width)*0.5), int((term.height-height)*0.5), (" "*(width+1)+"\n")*(height+1))
 
 	def load_chart(self, chart_name, file = "data"):
 		self.fileLocation = f"./charts/{chart_name}/{file}.json"
@@ -97,14 +130,24 @@ class Editor:
 		print_at(int(term.width*0.1), term.height-4, "@")
 		print_at(0,term.height-6, term.normal+f"BPM: {self.localConduc.bpm} | Snap: 1/{self.snap} | Bar: {int(self.localConduc.currentBeat//4)} | Beat: {round(self.localConduc.currentBeat%4, 5)} |{term.clear_eol}")
 
-		if self.mapToEdit != {}:
+		if self.keyPanelEnabled:
+			if self.keyPanelSelected == -1:
+				text_key = "Select a key to go with the added note."
+			else:
+				text_key = "Select a key to change this note's key to."
+			self.draw_changeKeyPanel(text_key,self.keyPanelKey)
+		elif self.keyPanelJustDisabled:
+			self.draw_changeKeyPanel()
+			self.keyPanelJustDisabled = False
+
+		if self.mapToEdit["notes"] != []:
 			for i in range(len(self.mapToEdit["notes"])):
 				j = len(self.mapToEdit["notes"]) - (i+1)
 				note = self.mapToEdit["notes"][j]
 				if self.mapToEdit["notes"][j]["type"] == "hit_object":
 					screenPos = note["screenpos"]
 					characterDisplayed = self.layout[note["key"]]
-					calculatedPos = Game.calculatePosition(screenPos, 5, 3, term.width-10, term.height-7)
+					calculatedPos = Game.calculatePosition(screenPos, 5, 3, term.width-10, term.height-11)
 					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
 
 					#TIMELINE
@@ -148,8 +191,11 @@ class Editor:
 			print_at(0,term.height-2, term.normal+":"+self.commandString+term.clear_eol)
 			chrAtCursor = ""
 			if len(self.commandString) != 0:
-				chrAtCursor = self.commandString[len(self.commandString)-(self.commandSelectPos+1)]
-				print_at(len(self.commandString)-self.commandSelectPos, term.height-2, term.underline + chrAtCursor + term.normal)
+				if self.commandSelectPos != 0:
+					chrAtCursor = self.commandString[len(self.commandString)-(self.commandSelectPos)]
+				else:
+					chrAtCursor = " "
+				print_at(len(self.commandString)-self.commandSelectPos + 1, term.height-2, term.underline + chrAtCursor + term.normal)
 
 	def run_command(self, command = ""):
 		commandSplit = command.split(" ")
@@ -183,7 +229,49 @@ class Editor:
 				if commandSplit[1].isdigit():
 					self.create_note(self.localConduc.currentBeat, int(commandSplit[1]))
 					return True, "Successfully created a new note."
-			return False, "Whoops, looks like you're in unimplemented territory!"
+			else:
+				self.keyPanelEnabled = True
+				self.keyPanelSelected = -1
+				self.keyPanelKey = 0
+				return True, ""
+			# return False, "Whoops, looks like you're in unimplemented territory!"
+		elif commandSplit[0] == "m":
+			#Move
+			if len(commandSplit) > 1:
+				if commandSplit[1].replace('.', '', 1).isdigit():
+					self.localConduc.currentBeat += float(commandSplit[1])
+		elif commandSplit[0] == "mt":
+			if len(commandSplit) >= 2:
+				valueChanged = ""
+				changedTo = ""
+				if commandSplit[1] in ["title", "t"]:
+					self.mapToEdit["metadata"]["title"] = " ".join(commandSplit[2:])
+					valueChanged = "title"
+					changedTo = self.mapToEdit["metadata"]["title"]
+				if commandSplit[1] in ["artist", "a"]:
+					self.mapToEdit["metadata"]["artist"] = " ".join(commandSplit[2:])
+					valueChanged = "artist"
+					changedTo = self.mapToEdit["metadata"]["artist"]
+				if commandSplit[1] in ["author", "charter", "au", "c"]:
+					self.mapToEdit["metadata"]["author"] = " ".join(commandSplit[2:])
+					valueChanged = "author"
+					changedTo = self.mapToEdit["metadata"]["author"]
+				if commandSplit[1] in ["description", "desc", "d"]:
+					self.mapToEdit["metadata"]["description"] = " ".join(commandSplit[2:])
+					valueChanged = "description"
+					changedTo = self.mapToEdit["metadata"]["description"]
+				return True, f"Successfully changed metadata \"{valueChanged}\" to \"{changedTo}\"."
+			elif len(commandSplit) == 1:
+				returnMessage = ""
+				if commandSplit[1] in ["title", "t"]:
+					returnMessage = self.mapToEdit["metadata"]["title"]
+				if commandSplit[1] in ["artist", "a"]:
+					returnMessage = self.mapToEdit["metadata"]["artist"]
+				if commandSplit[1] in ["author", "charter", "au", "c"]:
+					returnMessage = self.mapToEdit["metadata"]["author"]
+				if commandSplit[1] in ["description", "desc", "d"]:
+					returnMessage = self.mapToEdit["metadata"]["description"]
+				return True, returnMessage
 
 		else:
 			if len(commandSplit[0]) > 128:
@@ -198,59 +286,83 @@ class Editor:
 		val = term.inkey(timeout=1/120)
 		if not self.commandMode:
 			# debug_val(val)
-			if val.name != "KEY_ENTER" and val:
-				print_at(0,term.height-2, term.clear_eol)
-			if val == ":":
-				self.commandMode = True
-				self.commandString = ""
-			if val.name == "KEY_RIGHT":
-				self.localConduc.currentBeat += (1/self.snap)*4
-				print_at(0,term.height-4, term.clear_eol)
-			if val.name == "KEY_LEFT":
-				self.localConduc.currentBeat = max(self.localConduc.currentBeat - (1/self.snap)*4, 0)
-				print_at(0,term.height-4, term.clear_eol)
-			if self.mapToEdit != {}:
-				if val.name == "KEY_DOWN":
-					print_at(0,term.height-4, term.clear_eol)
-					self.selectedNote = min(self.selectedNote + 1, len(self.mapToEdit["notes"])-1)
-					self.localConduc.currentBeat = (self.mapToEdit["notes"][self.selectedNote]["beatpos"][0] * 4 + self.mapToEdit["notes"][self.selectedNote]["beatpos"][1])
-				if val.name == "KEY_UP":
-					print_at(0,term.height-4, term.clear_eol)
-					self.selectedNote = max(self.selectedNote - 1, 0)
-					self.localConduc.currentBeat = (self.mapToEdit["notes"][self.selectedNote]["beatpos"][0] * 4 + self.mapToEdit["notes"][self.selectedNote]["beatpos"][1])
+			if self.keyPanelEnabled:
+				if val.name == "KEY_ESCAPE":
+					self.keyPanelEnabled = False
+					self.keyPanelJustDisabled = True
+				elif val.name == "KEY_ENTER":
+					if self.keyPanelKey != -1:
+						self.create_note(self.localConduc.currentBeat, self.keyPanelKey)
+						self.keyPanelEnabled = False
+						self.keyPanelJustDisabled = True
+						self.keyPanelSelected = -1
+						self.keyPanelKey = -1
+				elif val:
+					self.keyPanelKey = self.layout.index(str(val))
 
-				if val == "u":
-					self.localConduc.currentBeat = max(self.localConduc.currentBeat - (1/self.snap)*4, 0)
-					print_at(0,term.height-4, term.clear_eol)
-					self.mapToEdit["notes"][self.selectedNote]["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
-				if val == "i":
+			else:
+				if val.name != "KEY_ENTER" and val:
+					print_at(0,term.height-2, term.clear_eol)
+				if val == ":":
+					self.commandMode = True
+					self.commandString = ""
+				if val.name == "KEY_RIGHT":
 					self.localConduc.currentBeat += (1/self.snap)*4
 					print_at(0,term.height-4, term.clear_eol)
-					self.mapToEdit["notes"][self.selectedNote]["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
-				
-				if self.mapToEdit["notes"][self.selectedNote]["type"] == "hit_object":
-					screenPos = self.mapToEdit["notes"][self.selectedNote]["screenpos"]
-					calculatedPos = Game.calculatePosition(screenPos, 5, 3, term.width-10, term.height-7)
-					if val == "h":
-						print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
-						print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
-						print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-						self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] = max(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] - 0.05, 2), 0)
-					if val == "j":
-						print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
-						print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
-						print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-						self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = max(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] - 0.05, 2), 0)
-					if val == "k":
-						print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
-						print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
-						print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-						self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = min(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] + 0.05, 2), 1)
-					if val == "l":
-						print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
-						print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
-						print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-						self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] = min(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] + 0.05, 2), 1)
+				if val.name == "KEY_LEFT":
+					self.localConduc.currentBeat = max(self.localConduc.currentBeat - (1/self.snap)*4, 0)
+					print_at(0,term.height-4, term.clear_eol)
+				if val == "z":
+					self.keyPanelEnabled = True
+					self.keyPanelSelected = -1
+					self.keyPanelKey = 0
+				if val == "e":
+					#Note options
+					pass
+
+					
+				if self.mapToEdit["notes"] != []:
+					if val.name == "KEY_DOWN":
+						print_at(0,term.height-4, term.clear_eol)
+						self.selectedNote = min(self.selectedNote + 1, len(self.mapToEdit["notes"])-1)
+						self.localConduc.currentBeat = (self.mapToEdit["notes"][self.selectedNote]["beatpos"][0] * 4 + self.mapToEdit["notes"][self.selectedNote]["beatpos"][1])
+					if val.name == "KEY_UP":
+						print_at(0,term.height-4, term.clear_eol)
+						self.selectedNote = max(self.selectedNote - 1, 0)
+						self.localConduc.currentBeat = (self.mapToEdit["notes"][self.selectedNote]["beatpos"][0] * 4 + self.mapToEdit["notes"][self.selectedNote]["beatpos"][1])
+
+					if val == "u":
+						self.localConduc.currentBeat = max(self.localConduc.currentBeat - (1/self.snap)*4, 0)
+						print_at(0,term.height-4, term.clear_eol)
+						self.mapToEdit["notes"][self.selectedNote]["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
+					if val == "i":
+						self.localConduc.currentBeat += (1/self.snap)*4
+						print_at(0,term.height-4, term.clear_eol)
+						self.mapToEdit["notes"][self.selectedNote]["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
+
+					if self.mapToEdit["notes"][self.selectedNote]["type"] == "hit_object":
+						screenPos = self.mapToEdit["notes"][self.selectedNote]["screenpos"]
+						calculatedPos = Game.calculatePosition(screenPos, 5, 3, term.width-10, term.height-11)
+						if val == "h":
+							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
+							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
+							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
+							self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] = max(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] - 0.05, 2), 0)
+						if val == "j":
+							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
+							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
+							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
+							self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = max(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] - 0.05, 2), 0)
+						if val == "k":
+							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
+							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
+							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
+							self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = min(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] + 0.05, 2), 1)
+						if val == "l":
+							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
+							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
+							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
+							self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] = min(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] + 0.05, 2), 1)
 
 		else:
 			if val.name == "KEY_ESCAPE":
@@ -258,16 +370,35 @@ class Editor:
 				self.commandString = ""
 				print_at(0,term.height-2, term.clear_eol+term.normal)
 			elif val.name == "KEY_ENTER":
-				isValid, errorStr = self.run_command(self.commandString)
-				if isValid:
+				splitCommands = self.commandString.split(";;")
+				if len(splitCommands) > 1:
+					results = []
+					errors = []
+					for comm in splitCommands:
+						isValid, errorStr = self.run_command(comm)
+						results.append([isValid, errorStr])
+					for i in range(len(results)):
+						col = term.on_green
+						if results[i][0] == False:
+							errors.append(results[i][1])
+							col = term.on_red
+						print_at(i,term.height-2, col+"*"+term.normal)
+					if len(errors) != 0:
+						print_at(term.width-(len(errors[-1])+1), term.height-2, term.on_red+errors[-1])
 					self.commandMode = False
 					self.commandString = ""
-					if errorStr != "":
-						print_at(0,term.height-2, term.on_green+errorStr+term.clear_eol+term.normal)
+				
 				else:
+					isValid, errorStr = self.run_command(self.commandString)
 					self.commandMode = False
 					self.commandString = ""
-					print_at(0,term.height-2, term.on_red+errorStr+term.clear_eol+term.normal)
+					if isValid:
+						if errorStr != "":
+							print_at(0,term.height-2, term.on_green+errorStr+term.clear_eol+term.normal)
+					else:
+						self.commandMode = False
+						self.commandString = ""
+						print_at(0,term.height-2, term.on_red+errorStr+term.clear_eol+term.normal)
 			elif val.name == "KEY_BACKSPACE":
 				if self.commandString != "":
 					self.commandString = self.commandString[:len(self.commandString)-(self.commandSelectPos+1)] + self.commandString[len(self.commandString)-self.commandSelectPos:]
@@ -289,12 +420,17 @@ class Editor:
 
 			else:
 				if val.name == None:
-					self.commandString += str(val)
+					if self.commandSelectPos == 0:
+						self.commandString += str(val)
+					else:
+						self.commandString = self.commandString[:len(self.commandString)-self.commandSelectPos] + str(val) + self.commandString[len(self.commandString)-self.commandSelectPos:]
 			
 
 	def loop(self):
 		with term.fullscreen(), term.hidden_cursor(), term.raw():
 			print(term.clear)
+			if self.mapToEdit == {}:
+				self.setupMap()
 			while not self.turnOff:
 				if self.playtest:
 					self.deltatime = self.localConduc.update()

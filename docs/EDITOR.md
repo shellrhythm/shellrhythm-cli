@@ -16,7 +16,7 @@ Jokes aside, let me introduce you to the basic controls of the editor.
 |H/J/K/L|Move selected note left/down/up/right|
 |U/I|Move selected note earlier/later|
 |:|Command mode|
-|E|Set key of note|
+|E|Note options|
 
 ## Command mode
 
@@ -32,4 +32,8 @@ Jokes aside, this editor has inspirations from vim, as in you can type different
 :p              -> Places a tile at current position (will prompt you for a key)
 :p <KeyNum>     -> Places a tile at current position (with a defined key)
 :o <foldername> -> Opens a chart
+:m <Beats>      -> Moves cursor by specified amount of beats
 ```
+
+Something cool about this command mode is that you can chain multiple commands at once using `;;`<br>
+So, for example, `:o test_chart;;m 5.5;;p 4;;w test_chart_2;;q` will open a chart in the folder `./charts/test_chart/`, move by 5.5 beats (so by default 1 bar and 1.5 beats), places a 4 (which, with QWERTY layout, corresponds to a `R`) at this position, and then saves it to a new folder, `./charts/test_chart_2/`, before closing everything. Yeah, that's a lot to take in...
