@@ -4,6 +4,7 @@ from term_image.image import *
 import random
 # from src import *
 from src.conductor import *
+from src.calibration import *
 from src.loading import *
 from src.editor import *
 
@@ -24,6 +25,9 @@ localeNames = [
 	"da"
 ]
 selectedLocale = "en"
+
+layouts = {}
+layoutNames = []
 
 options = {
     "layout": "qwerty",
@@ -53,19 +57,23 @@ class Options:
 	turnOff = False
 	deltatime = 0
 	selectedItem = 0
-	maxItem = 4
+	maxItem = 5
 	menuOptions = [
-		{"var": "globalOffset", "type":"intField", "displayName": "Global offset (ms)"},
+		{"var": "globalOffset", "type":"intField", "displayName": "Global offset (ms)", "isOffset": True},
 		{"var": "lang", "type":"enum", "displayName": "Language", "populatedValues": localeNames},
 		{"var": "nerdFont", "type":"bool", "displayName": "Enable Nerd Font display"},
-		{"var": "textImages", "type":"bool", "displayName": "Use images as thumbnails"}
+		{"var": "textImages", "type":"bool", "displayName": "Use images as thumbnails"},
+		{"var": "layout", "type":"enum", "displayName": "Layout", "populatedValues": layoutNames}
 	]
 	enumInteracted = -1
 	curEnumValue = -1
+	suggestedOffset = 0
+	isPickingOffset = False
+	goBack = False
 
 	def translate(self):
 		for optn in self.menuOptions:
-			optn["displayName"] = locales[selectedLocale]["options"][optn["var"]]
+			optn["displayName"] = locales[selectedLocale](f"options.{optn['var']}")
 
 	def moveBy(self, x):
 		self.selectedItem = (self.selectedItem + x)%self.maxItem
@@ -97,7 +105,7 @@ class Options:
 			leType = self.menuOptions[i]["type"]
 			leVar = self.menuOptions[i]["var"]
 			#DisplayName
-			if self.selectedItem == i:
+			if self.selectedItem == i and not self.isPickingOffset:
 				if int(conduc.currentBeat) % 2 == 1:
 					print_at(0,i*2 + 3, term.reverse + f"- {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}>" + term.normal)
 				else:
@@ -105,15 +113,26 @@ class Options:
 			else:
 				print_at(0,i*2 + 3, term.normal + f" {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}  ")
 			if leType == "intField":
-				print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000))
+				if self.selectedItem == i and self.menuOptions[i]["isOffset"]:
+					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + (" "*int(term.width*0.3)) + locales[selectedLocale]("options.calibrationTip") + term.clear_eol)
+				else:
+					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + term.clear_eol)
 			if leType == "enum":
-				print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄")
-				print_at(maxLength + 32, 0, str(self.menuOptions[i]["populatedValues"]))
+				if self.enumInteracted == i:
+					print_at(maxLength + 6, i*2+3, term.reverse + "{ " + options[leVar] + " }" +term.normal + (" "*6) + str(self.menuOptions[i]["populatedValues"]) + term.clear_eol)
+				else:
+					print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + term.clear_eol)
 			if leType == "bool":
 				if options[leVar] == True:
 					print_at(maxLength + 6, i*2+3, "☑")
 				else:
 					print_at(maxLength + 6, i*2+3, "☐")
+
+		if self.isPickingOffset:
+			text_offsetConfirm = f"Do you want to use the new following offset: {int(self.suggestedOffset*(10**3))}ms?"
+			print_at(int((term.width - len(text_offsetConfirm)) * 0.5), int(term.height*0.5)-1, text_offsetConfirm)
+			print_at(int(term.width * 0.4)-3, int(term.height*0.5)+1, term.reverse+"Yes [Y]"+term.normal)
+			print_at(int(term.width * 0.6)-3, int(term.height*0.5)+1, term.reverse+"No [N] "+term.normal)
 
 	def enterPressed(self):
 		selectedOption = self.menuOptions[self.selectedItem]
@@ -132,31 +151,61 @@ class Options:
 		val = term.inkey(timeout=1/60)
 		# debug_val(val)
 
-		if self.enumInteracted == -1:
-			if val.name == "KEY_DOWN" or val == "j":
-				self.moveBy(1)
-			if val.name == "KEY_UP" or val == "k":
-				self.moveBy(-1)
-			if val.name == "KEY_RIGHT" or val == "l" or val.name == "KEY_ENTER":
-				self.enterPressed()
-			if val.name == "KEY_ESCAPE":
-				global menu
-				self.saveOptions()
-				self.turnOff = True
-				loadedMenus["Titlescreen"].turnOff = False
-				loadedMenus["Titlescreen"].loop()
-				menu = "Titlescreen"
+		if self.isPickingOffset:
+			if val == "y":
+				leVar = self.menuOptions[self.selectedItem]["var"]
+				options[leVar] = round(self.suggestedOffset,3)
+				self.isPickingOffset = False
+				print(term.clear)
+			if val == "n":
+				self.isPickingOffset = False
+				self.suggestedOffset = 0
 				print(term.clear)
 		else:
-			if val.name == "KEY_DOWN" or val == "j":
-				self.curEnumValue = (self.curEnumValue-1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
-				self.interactEnum(self.menuOptions[self.enumInteracted], self.curEnumValue)
-			if val.name == "KEY_UP" or val == "k":
-				self.curEnumValue = (self.curEnumValue+1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
-				self.interactEnum(self.menuOptions[self.enumInteracted], self.curEnumValue)
-			if val.name == "KEY_ESCAPE":
-				self.enumInteracted = -1
-				
+			if self.enumInteracted == -1:
+				if val.name == "KEY_DOWN" or val == "j":
+					self.moveBy(1)
+				if val.name == "KEY_UP" or val == "k":
+					self.moveBy(-1)
+				if val.name == "KEY_RIGHT" or val == "l" or val.name == "KEY_ENTER":
+					self.enterPressed()
+				if val.name == "KEY_ESCAPE":
+					global menu
+					self.saveOptions()
+					self.turnOff = True
+					loadedMenus["Titlescreen"].turnOff = False
+					loadedMenus["Titlescreen"].loop()
+					menu = "Titlescreen"
+					print(term.clear)
+				if val == "c":
+					self.saveOptions()
+					self.turnOff = True
+					self.goBack = True
+					self.selectedItem = 0
+					conduc.stop()
+					# conduc.song.stop()
+					loadedMenus["Calibration"].turnOff = False
+					self.suggestedOffset = loadedMenus["Calibration"].init()
+					self.isPickingOffset = True
+					loadedMenus["Calibration"].conduc.stop()
+					loadedMenus["Calibration"].hitCount = 0
+					loadedMenus["Calibration"].hits = []
+					loadedMenus["Calibration"].totalOffset = 0
+					conduc.startAt(0)
+					# print(term.clear)
+					# text_offsetConfirm = f"Do you want to use the new following offset: {int(newOffset*3)}ms?"
+					# print_at(int((term.width - len(text_offsetConfirm)) * 0.5), int(term.height*0.5), text_offsetConfirm)
+
+			else:
+				if val.name == "KEY_DOWN" or val == "j":
+					self.curEnumValue = (self.curEnumValue-1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
+					self.interactEnum(self.menuOptions[self.enumInteracted], self.curEnumValue)
+				if val.name == "KEY_UP" or val == "k":
+					self.curEnumValue = (self.curEnumValue+1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
+					self.interactEnum(self.menuOptions[self.enumInteracted], self.curEnumValue)
+				if val.name == "KEY_ESCAPE":
+					self.enumInteracted = -1
+
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
@@ -167,6 +216,11 @@ class Options:
 				self.draw()
 
 				self.handle_input()
+
+		if self.goBack == True:
+			self.goBack = False
+			self.turnOff = False
+			self.loop()
 
 	def __init__(self, boot = True):
 		"""
@@ -197,7 +251,7 @@ class ChartSelect:
 		print_column(20, 0, term.height - 2, "┃")
 		# Actual image display
 		if len(chartData) == 0:
-			print_at(25,5, locales[selectedLocale]["chartSelect"]["no_charts"])
+			print_at(25,5, locales[selectedLocale]("chartSelect.no_charts"))
 		else:
 			if chartData[self.selectedItem]["icon"]["img"] != None:
 				fileExists = print_image(23, 1, 
@@ -215,28 +269,28 @@ class ChartSelect:
 			print_column(25 + int(term.width * 0.2), 0, 8, "┃")
 			#region metadata
 			print_at(27 + int(term.width * 0.2), 2, term.blue 
-				+ locales[selectedLocale]["chartSelect"]["metadata"]["song"] 
+				+ locales[selectedLocale]("chartSelect.metadata.song") 
 				+ term.normal 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["title"]
 				+ term.clear_eol
 			)
 			print_at(27 + int(term.width * 0.2), 3, term.blue 
-				+ locales[selectedLocale]["chartSelect"]["metadata"]["artist"] 
+				+ locales[selectedLocale]("chartSelect.metadata.artist") 
 				+ term.normal 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["artist"]
 				+ term.clear_eol
 			)
 			print_at(27 + int(term.width * 0.2), 5, term.blue 
-				+ locales[selectedLocale]["chartSelect"]["metadata"]["author"] 
+				+ locales[selectedLocale]("chartSelect.metadata.author") 
 				+ term.normal 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["author"]
 				+ term.clear_eol
 			)
 			print_at(27 + int(term.width * 0.2), 6, term.blue 
-				+ locales[selectedLocale]["chartSelect"]["difficulty"] 
+				+ locales[selectedLocale]("chartSelect.difficulty") 
 				+ term.normal 
 				+ ": " 
 				+ str(chartData[self.selectedItem]["difficulty"])
@@ -244,7 +298,7 @@ class ChartSelect:
 			)
 			#endregion
 			print_at(25 + int(term.width * 0.2), 8, "┠" + ("─"*(term.width - (26 + int(term.width * 0.2)))))
-			print_at(28 + int(term.width * 0.2), 8, locales[selectedLocale]["chartSelect"]["metadata"]["description"])
+			print_at(28 + int(term.width * 0.2), 8, locales[selectedLocale]("chartSelect.metadata.description"))
 			print_column(25 + int(term.width * 0.2), 9, 7, "┃")
 			print_lines_at(26 + int(term.width * 0.2), 11, chartData[self.selectedItem]["metadata"]["description"])
 		# Controls
@@ -349,6 +403,7 @@ class TitleScreen:
 			conduc.song.stop()
 			loadedMenus["Editor"].turnOff = False
 			loadedMenus["Editor"].layout = Game.setupKeys(None, "qwerty")
+			loadedMenus["Editor"].loc = locales[selectedLocale]
 			loadedMenus["Editor"].loop()
 			print(term.clear)
 			print_lines_at(0,1,self.logo,True)
@@ -371,10 +426,10 @@ class TitleScreen:
 			# sys.exit(0)
 	
 	def draw(self):
-		text_play = locales[selectedLocale]["titlescreen"]["play"] #python be wack
-		text_edit = locales[selectedLocale]["titlescreen"]["edit"] #python be wack
-		text_options = locales[selectedLocale]["titlescreen"]["options"] #python be wack
-		text_quit = locales[selectedLocale]["titlescreen"]["quit"] #python be wack
+		text_play = locales[selectedLocale]("titlescreen.play") #python be wack
+		text_edit = locales[selectedLocale]("titlescreen.edit") #python be wack
+		text_options = locales[selectedLocale]("titlescreen.options") #python be wack
+		text_quit = locales[selectedLocale]("titlescreen.quit") #python be wack
 		if self.selectedItem == 0:
 			if options["nerdFont"]:
 				print_at(0, term.height * 0.5 - 3, f"{term.reverse}   {text_play} {term.normal}\ue0b0")
@@ -478,6 +533,7 @@ if __name__ == "__main__":
 	chartData = load_charts()
 	locales, localeNames = load_locales()
 	options, selectedLocale = load_options(options)
+	layouts, layoutNames = load_layouts()
 	print("Everything loaded successfully!\n-----------------------------------------")
 	# print("Testing image rendering...")
 	# print("KittyImage: " + str(KittyImage.is_supported()))
@@ -496,6 +552,7 @@ if __name__ == "__main__":
 		loadedMenus["Titlescreen"] = TitleScreen(False)
 		loadedMenus["Options"] = Options(False) # Sixty-sixteen megabytes- by-bytes 
 		loadedMenus["Editor"] = Editor()
+		loadedMenus["Calibration"] = Calibration("CalibrationGlobal")
 
 		loadedGame = game.Game()
 

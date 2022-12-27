@@ -1,4 +1,5 @@
 {
+    "lang": "English",
     "titlescreen":{
         "play": "Play",
         "edit": "Edit",
@@ -22,17 +23,55 @@
     },
     "options":{
         "globalOffset": "Global offset (ms)",
+        "calibrationTip": "Press C to open the calibration menu!",
         "lang": "Language",
         "nerdFont": "Enable Nerd Font display",
-        "textImages": "Use images as thumbnails"
+        "textImages": "Use images as thumbnails",
+        "layout": "Keyboard layout"
     },
     "gameplay":{
         "pause": {
             "title": "PAUSED",
-            "subtitle": "this is the pause menu, i guess",
             "resume": "Resume",
             "retry": "Retry",
             "quit": "Quit to menu"
+        }
+    },
+    "editor":{
+        "emptyChart": "Wow, such empty.",
+        "timelineInfos":{
+            "bpm": "BPM",
+            "snap": "Snap",
+            "bar": "Bar",
+            "beat": "Beat",
+            "curNote": "Currently selected note",
+            "color": "Color",
+            "screenpos": "Screen position",
+            "beatpos": "Beat position",
+            "endpos": "End level pos"
+        },
+        "commandResults":{
+            "save": "Saved successfully!",
+            "open": {
+                "success": "Chart loaded successfully.",
+                "notFound": "This chart doesn't exist."
+            },
+            "common": {
+                "notEnoughArgs": "Too few arguments.",
+                "tooManyArgs": "Too many arguments.",
+                "notFound": "Command not found.",
+                "tooLong": "...what?"
+            },
+            "note": {
+                "success": "Successfully created a new note."
+            },
+            "meta": {
+                "success": "Successfully changed metadata \"{0}\" to \"{1}\"."
+            }
+        },
+        "newKey": {
+            "creating": "Select a key to go with the added note.",
+            "editing": "Select a key to change this note's key to."
         }
     }
 }

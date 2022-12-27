@@ -1,6 +1,7 @@
 import os, json
 from pybass3 import Song
 from src.termutil import *
+from src.translate import Locale
 
 def load_options(options = {}):
 	if os.path.exists("./options.json"):
@@ -15,16 +16,24 @@ def load_options(options = {}):
 		f.close()
 	return options, options["lang"]
 
+def load_layouts():
+	layouts = {}
+	layoutNames = []
+	layoutFiles = [f.name for f in os.scandir("./layout") if f.is_file()]
+	for i in range(len(layoutFiles)):
+		print(f"Loading layout \"{layoutFiles[i]}\"... ({i+1}/{len(layoutFiles)})")
+		f = open("./layout/" + layoutFiles[i])
+		layouts[layoutFiles[i]] = [char for char in f.read().replace('\n', '')]
+		layoutNames.append(layoutFiles[i])
+		f.close()
+	return layouts, layoutNames
+
 def load_locales():
 	locales = {}
-	localeNames = []
-	localeFiles = [f.name.split(".", 1)[0] for f in os.scandir("./lang") if f.is_file()]
-	for i in range(len(localeFiles)):
-		print(f"Loading locale \"{localeFiles[i]}\"... ({i+1}/{len(localeFiles)})")
-		f = open("./lang/" + localeFiles[i] + ".json")
-		locales[localeFiles[i]] = json.loads(f.read())
-		localeNames.append(localeFiles[i])
-		f.close()
+	localeNames = [f.name.split(".", 1)[0] for f in os.scandir("./lang") if f.is_file()]
+	for i in range(len(localeNames)):
+		newLoc = Locale(localeNames[i])
+		locales[localeNames[i]] = newLoc
 	return locales, localeNames
 
 def check_chart(chart = {}, folder = ""):

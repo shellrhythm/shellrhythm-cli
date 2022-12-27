@@ -1,4 +1,5 @@
 {
+    "lang":"Français",
     "titlescreen":{
         "play": "Jouer",
         "edit": "Éditer",
@@ -22,17 +23,49 @@
     },
     "options":{
         "globalOffset": "Offset global (ms)",
+        "calibrationTip": "Appuyez sur C pour ouvrir le menu de calibration!",
         "lang": "Langue",
         "nerdFont": "Activer l'affichage de caractères Nerd Font",
-        "textImages": "Utiliser des images comme miniatures"
+        "textImages": "Utiliser des images comme miniatures",
+        "layout": "Disposition du clavier"
     },
     "gameplay":{
         "pause": {
             "title": "MENU PAUSE",
-            "subtitle": "c'est le menu de pause, je crois",
             "resume": "Continuer",
             "retry": "Réessayer",
             "quit": "Retour au menu"
+        }
+    },
+    "editor":{
+        "emptyChart": "Wow, c'est vide.",
+        "timelineInfos":{
+            "bpm": "BPM",
+            "snap": "Alignement",
+            "bar": "Barre",
+            "beat": "Battement",
+            "curNote": "Note actuellement sélectionnée",
+            "color": "Couleur",
+            "screenpos": "Position à l'écran",
+            "beatpos": "Position temporelle",
+            "endpos": "Position de la fin du niveau"
+        },
+        "commandResults":{
+            "save": "Sauvegarde réussie!",
+            "open": {
+                "success": "Niveau chargé avec succès.",
+                "notFound": "Ce niveau n'existe pas."
+            },
+            "common": {
+                "notEnoughArgs": "Pas assez d'arguments.",
+                "tooManyArgs": "Trop d'arguments.",
+                "notFound": "Commande inconnue.",
+                "tooLong": "...pardon?"
+            }
+        },
+        "newKey": {
+            "creating": "Choisissez une touche pour aller avec la note ajoutée.",
+            "editing": "Choisissez la nouvelle touche de cette note."
         }
     }
 }

@@ -3,173 +3,159 @@ from blessed import Terminal
 import json, os
 print(__name__)
 if __name__ != "src.calibration":
-	from loading import check_chart
+	from loading import check_chart, load_charts
 	from termutil import print_at
 	from conductor import Conductor
 else:
-	from src.loading import check_chart	
+	from src.loading import check_chart, load_charts
 	from src.termutil import print_at
 	from src.conductor import Conductor
 
 from pybass3 import Song
 
-conduc = Conductor()
-
 term = Terminal()
-turnOff = False
 
-hitCount = 0
-maxHits = 16
+class Calibration:
+	conduc = Conductor()
+	turnOff = False
+	hitCount = 0
+	maxHits = 16
 
-hits = []
-totalOffset = 0
+	hits = []
+	totalOffset = 0
 
-calibrationMenu = "CalibrationSelect"
-# Possible things:
-# CalibrationSelect [100%]: Select calibration options
-# CalibrationGlobal [100%]: Calibrate your game
-# CalibrationSong [0%]: Sync song to beats
+	calibrationMenu = "CalibrationSelect"
+	# Possible things:
+	# CalibrationSelect [100%]: Select calibration options
+	# CalibrationGlobal [100%]: Calibrate your game
+	# CalibrationSong [100%]: Sync song to beats
 
-calibselec = 0
-selecSong = -1
+	calibselec = 0
+	selecSong = -1
 
-chartData = []
+	chartData = []
 
-def load_charts():
-	global chartData
-	charts = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts") if f.is_dir()]
-	for i in range(len(charts)):
-		print(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})")
-		f = open("./charts/" + charts[i] + "/data.json").read()
-		jsonThing = json.loads(f)
-		jsonThing = check_chart(jsonThing, charts[i])
-		jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
-		chartData.append(jsonThing)
-
-	print("All charts loaded successfully!")
-
-def handle_input():
-	val = ''
-	val = term.inkey(timeout=1/120)
-	if val:
-		global totalOffset
-		global turnOff
-		if calibrationMenu == "CalibrationGlobal":
-			global hitCount
-			offset = (conduc.currentBeat - int(conduc.currentBeat)) * (60/conduc.bpm)
-			print_at(0,14, f"{term.center(str(round(offset, 3)))}")
-			hits.append(offset)
-			totalOffset += offset
-			hitCount += 1
-			if hitCount >= maxHits:
-				turnOff = True
-		if calibrationMenu == "CalibrationSong":
-			if val.name == "KEY_ESCAPE":
-				turnOff = True
-			if val.name == "KEY_LEFT":
-				totalOffset -= 0.001
-				print_at(0,14, f"{term.center(str(round(totalOffset, 3)))}")
-				conduc.setOffset(totalOffset)
-			if val.name == "KEY_RIGHT":
-				totalOffset += 0.001
-				print_at(0,14, f"{term.center(str(round(totalOffset, 3)))}")
-				conduc.setOffset(totalOffset)
-
-		if calibrationMenu == "CalibrationSelect":
-			global calibselec
-			global selecSong
-			if selecSong == -1:
-				if val.name == "KEY_DOWN":
-						calibselec = (calibselec + 1)%3
-				if val.name == "KEY_UP":
-						calibselec = (calibselec + 2)%3
-				if val.name == "KEY_ENTER":
-					if calibselec == 0:
-						startCalibGlobal()
-					if calibselec == 1:
-						selecSong = 0
-						print_at(int((term.width)*0.2), int(term.height*0.5)-1,"Select a song:")
-						print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(selecSong) + "  ")
-					if calibselec == 2:
-						turnOff = True
-			else:
+	def handle_input(self):
+		val = ''
+		val = term.inkey(timeout=1/120)
+		if val:
+			if self.calibrationMenu == "CalibrationGlobal":
+				offset = (self.conduc.currentBeat - int(self.conduc.currentBeat)) * (60/self.conduc.bpm)
+				print_at(0,14, f"{term.center(str(round(offset, 3)))}")
+				self.hits.append(offset)
+				self.totalOffset += offset
+				self.hitCount += 1
+				if self.hitCount >= self.maxHits:
+					self.turnOff = True
+			if self.calibrationMenu == "CalibrationSong":
+				if val.name == "KEY_ESCAPE":
+					self.turnOff = True
 				if val.name == "KEY_LEFT":
-					selecSong = (selecSong - 1)%len(chartData)
-					print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(selecSong) + "  ")
+					self.totalOffset -= 0.001
+					print_at(0,14, f"{term.center(str(round(self.totalOffset, 3)))}")
+					self.conduc.setOffset(self.totalOffset)
 				if val.name == "KEY_RIGHT":
-					selecSong = (selecSong + 1)%len(chartData)
-					print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(selecSong) + "  ")
-				if val.name == "KEY_ENTER":
-					startCalibSong(chartData[selecSong])
+					self.totalOffset += 0.001
+					print_at(0,14, f"{term.center(str(round(self.totalOffset, 3)))}")
+					self.conduc.setOffset(self.totalOffset)
+
+			if self.calibrationMenu == "CalibrationSelect":
+				if self.selecSong == -1:
+					if val.name == "KEY_DOWN":
+							self.calibselec = (self.calibselec + 1)%3
+					if val.name == "KEY_UP":
+							self.calibselec = (self.calibselec + 2)%3
+					if val.name == "KEY_ENTER":
+						if self.calibselec == 0:
+							self.startCalibGlobal()
+						if self.calibselec == 1:
+							self.selecSong = 0
+							print_at(int((term.width)*0.2), int(term.height*0.5)-1,"Select a song:")
+							print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(self.selecSong) + "  ")
+						if self.calibselec == 2:
+							self.turnOff = True
+				else:
+					if val.name == "KEY_LEFT":
+						self.selecSong = (self.selecSong - 1)%len(self.chartData)
+						print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(self.selecSong) + "  ")
+					if val.name == "KEY_RIGHT":
+						self.selecSong = (self.selecSong + 1)%len(self.chartData)
+						print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(self.selecSong) + "  ")
+					if val.name == "KEY_ENTER":
+						self.startCalibSong(self.chartData[self.selecSong])
 
 
-def draw():
-	if calibrationMenu == "CalibrationGlobal":
-		text_beat = "○ ○ ○ ○"
-		text_beat = text_beat[:int(conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(conduc.currentBeat)%4 * 2) + 1:]
+	def draw(self):
+		if self.calibrationMenu == "CalibrationGlobal":
+			text_beat = "○ ○ ○ ○"
+			text_beat = text_beat[:int(self.conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.conduc.currentBeat)%4 * 2) + 1:]
 
-		print_at(0,10,f"{term.center('Hit on beat!')}")
-		print_at(0,12,f"{term.center(text_beat)}")
-	if calibrationMenu == "CalibrationSong":
-		text_title = chartData[selecSong]["metadata"]["title"] + " - " + chartData[selecSong]["metadata"]["artist"]
-		text_bpm = "BPM: " + str(chartData[selecSong]["bpm"])
-		print_at(0,9,f"{term.center(text_title)}")
-		print_at(0,10,f"{term.center(text_bpm)}")
-		
-		text_beat = "○ ○ ○ ○"
-		text_beat = text_beat[:int(conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(conduc.currentBeat)%4 * 2) + 1:]
-		print_at(0,12,f"{term.center(text_beat)}")
-		
+			print_at(0,10,f"{term.center('Hit on beat!')}")
+			print_at(0,12,f"{term.center(text_beat)}")
+		if self.calibrationMenu == "CalibrationSong":
+			text_title = self.chartData[self.selecSong]["metadata"]["title"] + " - " + self.chartData[self.selecSong]["metadata"]["artist"]
+			text_bpm = "BPM: " + str(self.chartData[self.selecSong]["bpm"])
+			print_at(0,9,f"{term.center(text_title)}")
+			print_at(0,10,f"{term.center(text_bpm)}")
 
-	if calibrationMenu == "CalibrationSelect":
-		text_first = "Global offset calibration"
-		text_second = "Song offset test"
-		text_quit = "Quit"
-		if calibselec == 0:
-			print_at(int((term.width - len(text_first))*0.5)+2, int(term.height*0.5) - 2, term.reverse + "> " + text_first + " <" + term.normal)
-		else:
-			print_at(int((term.width - len(text_first))*0.5)+2, int(term.height*0.5) - 2, "< " + text_first + " >")
+			text_beat = "○ ○ ○ ○"
+			text_beat = text_beat[:int(self.conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.conduc.currentBeat)%4 * 2) + 1:]
+			print_at(0,12,f"{term.center(text_beat)}")
 
-		if calibselec == 1:
-			print_at(int((term.width - len(text_second))*0.5)+2, int(term.height*0.5), term.reverse + "> " + text_second + " <" + term.normal)
-		else:
-			print_at(int((term.width - len(text_second))*0.5)+2, int(term.height*0.5), "< " + text_second + " >")
-		
-		if calibselec == 2:
-			print_at(int((term.width - len(text_quit))*0.5)+2, int(term.height*0.5) + 2, term.reverse + "> " + text_quit + " <" + term.normal)
-		else:
-			print_at(int((term.width - len(text_quit))*0.5)+2, int(term.height*0.5) + 2, "< " + text_quit + " >")
 
-def startCalibGlobal():
-	global calibrationMenu
-	calibrationMenu = "CalibrationGlobal"
-	print(term.clear)
-	conduc.play()
+		if self.calibrationMenu == "CalibrationSelect":
+			text_first = "Global offset calibration"
+			text_second = "Song offset test"
+			text_quit = "Quit"
+			if self.calibselec == 0:
+				print_at(int((term.width - len(text_first))*0.5)+2, int(term.height*0.5) - 2, term.reverse + "> " + text_first + " <" + term.normal)
+			else:
+				print_at(int((term.width - len(text_first))*0.5)+2, int(term.height*0.5) - 2, "< " + text_first + " >")
 
-def startCalibSong(chart):
-	global calibrationMenu
-	calibrationMenu = "CalibrationSong"
-	print(term.clear)
-	conduc.stop()
-	conduc.loadsong(chart)
-	conduc.play()
-	conduc.metronome = True
+			if self.calibselec == 1:
+				print_at(int((term.width - len(text_second))*0.5)+2, int(term.height*0.5), term.reverse + "> " + text_second + " <" + term.normal)
+			else:
+				print_at(int((term.width - len(text_second))*0.5)+2, int(term.height*0.5), "< " + text_second + " >")
 
-def init():
-	load_charts()
-	conduc.loadsong(chartData[0])
-	with term.fullscreen(), term.cbreak(), term.hidden_cursor():
+			if self.calibselec == 2:
+				print_at(int((term.width - len(text_quit))*0.5)+2, int(term.height*0.5) + 2, term.reverse + "> " + text_quit + " <" + term.normal)
+			else:
+				print_at(int((term.width - len(text_quit))*0.5)+2, int(term.height*0.5) + 2, "< " + text_quit + " >")
+
+	def startCalibGlobal(self):
+		self.calibrationMenu = "CalibrationGlobal"
 		print(term.clear)
-		while not turnOff:
-			if calibrationMenu != "CalibrationSelect":
-				deltatime = conduc.update()
+		self.conduc.play()
 
-			draw()
-			handle_input()
+	def startCalibSong(self, chart):
+		self.calibrationMenu = "CalibrationSong"
+		print(term.clear)
+		self.conduc.stop()
+		self.conduc.loadsong(chart)
+		self.conduc.play()
+		self.conduc.metronome = True
 
-	if hitCount != 0:
-		print(round(totalOffset / hitCount, 3))
-		return totalOffset / hitCount
+	def init(self):
+		self.chartData = load_charts()
+		self.conduc.loadsong(self.chartData[0])
+		if self.calibrationMenu == "CalibrationGlobal":
+			self.startCalibGlobal()
+		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
+			print(term.clear)
+			while not self.turnOff:
+				if self.calibrationMenu != "CalibrationSelect":
+					deltatime = self.conduc.update()
+
+				self.draw()
+				self.handle_input()
+
+		if self.hitCount != 0:
+			print(round(self.totalOffset / self.hitCount, 3))
+			return self.totalOffset / self.hitCount
+	
+	def __init__(self, calibrationMenu) -> None:
+		self.calibrationMenu = calibrationMenu
 
 if __name__ == "__main__":
-	init()
+	calib = Calibration("CalibrationSelect")
+	calib.init()

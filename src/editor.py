@@ -7,9 +7,11 @@ import time
 if __name__ == "src.editor":
 	from src.game import *
 	from src.conductor import *
+	from src.translate import Locale
 else:
 	from game import *
 	from conductor import *
+	from translate import Locale
 
 term = Terminal()
 
@@ -33,6 +35,7 @@ class Editor:
 	keyPanelKey = -1
 	keyPanelSelected = -1 #Note: use -1 when creating a new note
 	keyPanelJustDisabled = False
+	loc:Locale = Locale("en")
 
 	def autocomplete(self, command):
 		output = []
@@ -128,13 +131,18 @@ class Editor:
 			else:
 				print_at(drawAt, term.height-5, "-"*(maxAfterwards+1))
 		print_at(int(term.width*0.1), term.height-4, "@")
-		print_at(0,term.height-6, term.normal+f"BPM: {self.localConduc.bpm} | Snap: 1/{self.snap} | Bar: {int(self.localConduc.currentBeat//4)} | Beat: {round(self.localConduc.currentBeat%4, 5)} |{term.clear_eol}")
+		print_at(0,term.height-6, term.normal
+		+f"{self.loc('editor.timelineInfos.bpm')}: {self.localConduc.bpm} | "
+		+f"{self.loc('editor.timelineInfos.snap')}: 1/{self.snap} | "
+		+f"{self.loc('editor.timelineInfos.bar')}: {int(self.localConduc.currentBeat//4)} | "
+		+f"{self.loc('editor.timelineInfos.beat')}: {round(self.localConduc.currentBeat%4, 5)} | "
+		+term.clear_eol)
 
 		if self.keyPanelEnabled:
 			if self.keyPanelSelected == -1:
-				text_key = "Select a key to go with the added note."
+				text_key = self.loc("editor.newKey.creating")
 			else:
-				text_key = "Select a key to change this note's key to."
+				text_key = self.loc("editor.newKey.editing")
 			self.draw_changeKeyPanel(text_key,self.keyPanelKey)
 		elif self.keyPanelJustDisabled:
 			self.draw_changeKeyPanel()
@@ -180,11 +188,16 @@ class Editor:
 			#Current note info
 			selectedNote = self.mapToEdit['notes'][self.selectedNote]
 			if selectedNote["type"] == "hit_object":
-				print_at(0, term.height-7, term.normal+f"Currently selected note: {self.selectedNote} | Color: {colors[selectedNote['color']]}[{selectedNote['color']}]{term.normal} | Screenpos: {selectedNote['screenpos']} | Beatpos: {selectedNote['beatpos']}{term.clear_eol}")
+				print_at(0, term.height-7, term.normal
+				+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | "
+				+f"{self.loc('editor.timelineInfos.color')}: {colors[selectedNote['color']]}[{selectedNote['color']}]{term.normal} | "
+				+f"{self.loc('editor.timelineInfos.screenpos')}: {selectedNote['screenpos']} | "
+				+f"{self.loc('editor.timelineInfos.beatpos')}: {selectedNote['beatpos']}"
+				+term.clear_eol)
 			else:
-				print_at(0, term.height-7, f"{term.normal}Currently selected note: {self.selectedNote} | End position: {selectedNote['beatpos']}{term.clear_eol}")
+				print_at(0, term.height-7, term.normal+f"{'editor.timelineInfos.curNote'}: {self.selectedNote} | {self.loc('editor.timelineInfos.endpos')}: {selectedNote['beatpos']}{term.clear_eol}")
 		else:
-			text_nomaploaded = "Wow, such empty."
+			text_nomaploaded = self.loc("editor.emptyChart")
 			print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), term.normal+text_nomaploaded)
 			
 		if self.commandMode:
@@ -208,27 +221,27 @@ class Editor:
 			f = open(self.fileLocation, "w")
 			f.write(output)
 			f.close()
-			return True, "Saved successfully!"
+			return True, self.loc("editor.commandResults.save")
 			#save
 		elif commandSplit[0] == "o":
 			if len(commandSplit) == 2:
 				fileExists = self.load_chart(commandSplit[1])
 				if not fileExists:
-					return fileExists, "This chart doesn't exist."
+					return fileExists, self.loc("editor.commandResults.open.notFound")
 				else:
-					return fileExists, "Chart loaded successfully."
+					return fileExists, self.loc("editor.commandResults.open.success")
 			elif len(commandSplit) == 3:
 				self.load_chart(commandSplit[1], commandSplit[2])
 			else:
 				if len(commandSplit) < 2:
-					return False, "Too few arguments."
+					return False, self.loc("editor.commandResults.common.notEnoughArgs")
 				else:
-					return False, "Too many arguments."
+					return False, self.loc("editor.commandResults.common.tooManyArgs")
 		elif commandSplit[0] == "p":
 			if len(commandSplit) > 1:
 				if commandSplit[1].isdigit():
 					self.create_note(self.localConduc.currentBeat, int(commandSplit[1]))
-					return True, "Successfully created a new note."
+					return True, self.loc("editor.commandResults.note.success")
 			else:
 				self.keyPanelEnabled = True
 				self.keyPanelSelected = -1
@@ -260,7 +273,7 @@ class Editor:
 					self.mapToEdit["metadata"]["description"] = " ".join(commandSplit[2:])
 					valueChanged = "description"
 					changedTo = self.mapToEdit["metadata"]["description"]
-				return True, f"Successfully changed metadata \"{valueChanged}\" to \"{changedTo}\"."
+				return True, self.loc("editor.commandResults.meta.success").format(valueChanged, changedTo)
 			elif len(commandSplit) == 1:
 				returnMessage = ""
 				if commandSplit[1] in ["title", "t"]:
@@ -275,8 +288,8 @@ class Editor:
 
 		else:
 			if len(commandSplit[0]) > 128:
-				return False, "...what?"
-			return False, "Command not found."
+				return False, self.loc("editor.commandResults.common.tooLong")
+			return False, self.loc("editor.commandResults.common.notFound")
 
 		return True, ""
 		

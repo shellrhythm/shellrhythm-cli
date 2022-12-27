@@ -1,4 +1,5 @@
 {
+    "lang": "Dansk",
     "titlescreen":{
         "play": "Spil",
         "edit": "Rediger",
@@ -29,7 +30,6 @@
     "gameplay":{
         "pause": {
             "title": "PAUSEDE",
-            "subtitle": "this is the pause menu, i guess",
             "resume": "Genoptag",
             "retry": "Genstart",
             "quit": "Tilbage til menuen"
