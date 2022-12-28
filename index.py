@@ -298,11 +298,26 @@ class ChartSelect:
 			)
 			#endregion
 			print_at(25 + int(term.width * 0.2), 8, "┠" + ("─"*(term.width - (26 + int(term.width * 0.2)))))
-			print_at(28 + int(term.width * 0.2), 8, locales[selectedLocale]("chartSelect.metadata.description"))
-			print_column(25 + int(term.width * 0.2), 9, 7, "┃")
-			print_lines_at(26 + int(term.width * 0.2), 11, chartData[self.selectedItem]["metadata"]["description"])
+			print_at(28 + int(term.width * 0.2), 8, term.reverse + locales[selectedLocale]("chartSelect.metadata.description") + term.normal)
+			print_column(25 + int(term.width * 0.2), 9, 10, "┃")
+			print_lines_at(26 + int(term.width * 0.2), 9, chartData[self.selectedItem]["metadata"]["description"])
+			print_at(25 + int(term.width * 0.2), 19, "┸" + ("─"*(term.width - (26 + int(term.width * 0.2)))))
+			text_auto = locales[selectedLocale]("chartSelect.auto")
+			if loadedGame.auto:
+				print_at(23, 18, 
+					term.reverse + (" "*int((round(term.width*0.2)-len(text_auto))/2)) 
+					+ text_auto + (" "*int((int(term.width*0.2)-len(text_auto))/2)) 
+					+ term.normal
+				)
+			else:
+				print_at(23, 18, term.normal+(" "*int(term.width*0.2)))
 		# Controls
-		print_at(1,term.height - 2, f"{term.reverse}[ENTER] Play level {term.normal} {term.reverse}[J/↓] Scroll down {term.normal} {term.reverse}[K/↑] Scroll up {term.normal} ")
+		print_at(1,term.height - 2, 
+		f"{term.reverse}[ENTER] {locales[selectedLocale]('chartSelect.controls.play')} {term.normal} "+
+		f"{term.reverse}[J/↓] {locales[selectedLocale]('chartSelect.controls.down')} {term.normal} "+
+		f"{term.reverse}[K/↑] {locales[selectedLocale]('chartSelect.controls.up')} {term.normal} "+
+		f"{term.reverse}[A] {locales[selectedLocale]('chartSelect.controls.auto')} {term.normal} "
+		)
 
 	def enterPressed(self):
 		self.turnOff = True
@@ -322,8 +337,6 @@ class ChartSelect:
 		val = term.inkey(timeout=1/60)
 		# debug_val(val)
 
-		if val.name == "KEY_LEFT" or val == "h":
-			self.selectedTab = max(self.selectedTab - 1, 0)
 		if val.name == "KEY_DOWN" or val == "j":
 			if self.selectedTab == 0:
 				self.selectedItem = (self.selectedItem + 1)%self.chartsize
@@ -340,8 +353,12 @@ class ChartSelect:
 				conduc.loadsong(chartData[self.selectedItem])
 				conduc.play()
 				print(term.clear)
+		if val.name == "KEY_LEFT" or val == "h":
+			self.selectedTab = max(self.selectedTab - 1, 0)
 		if val.name == "KEY_RIGHT" or val == "l":
 			self.selectedTab = min(self.selectedTab + 1, 1)
+		if val == "a":
+			loadedGame.auto = not loadedGame.auto
 
 		if val.name == "KEY_ENTER":
 			self.enterPressed()

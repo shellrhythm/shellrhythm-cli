@@ -19,7 +19,14 @@
             "artist": "Artist",
             "description": "Description"
         },
-        "no_charts": "Whoops, looks like you don't have any charts loaded!"
+        "no_charts": "Whoops, looks like you don't have any charts loaded!",
+        "auto": "[AUTO ENABLED]",
+        "controls":{
+            "play": "Play chart",
+            "down": "Scroll down",
+            "up": "Scroll up",
+            "auto": "Toggle auto mode"
+        }
     },
     "options":{
         "globalOffset": "Global offset (ms)",
@@ -72,6 +79,11 @@
         "newKey": {
             "creating": "Select a key to go with the added note.",
             "editing": "Select a key to change this note's key to."
+        },
+        "keyOptions": {
+            "key": "Change key",
+            "color": "Change color",
+            "delete": "Delete note"
         }
     }
 }

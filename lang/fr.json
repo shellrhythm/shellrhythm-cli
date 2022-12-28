@@ -19,7 +19,14 @@
             "artist": "Artiste",
             "description": "Description"
         },
-        "no_charts": "Oops, on dirait que tu n'as pas de niveaux chargés!"
+        "no_charts": "Oops, on dirait que tu n'as pas de niveaux chargés!",
+        "auto": "[AUTO ACTIVÉ]",
+        "controls":{
+            "play": "Jouer au niveau",
+            "down": "Défiler vers le bas",
+            "up": "Défiler vers le haut",
+            "auto": "Activer mode auto"
+        }
     },
     "options":{
         "globalOffset": "Offset global (ms)",
@@ -66,6 +73,11 @@
         "newKey": {
             "creating": "Choisissez une touche pour aller avec la note ajoutée.",
             "editing": "Choisissez la nouvelle touche de cette note."
+        },
+        "keyOptions": {
+            "key": "Changer de touche",
+            "color": "Changer de couleur",
+            "delete": "Supprimer la note"
         }
     }
 }

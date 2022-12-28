@@ -17,26 +17,52 @@ term = Terminal()
 
 class Editor:
 	turnOff = False
+
+	#Basics
 	mapToEdit = {}
 	localConduc = Conductor()
 	playtest = False
+	dontDrawList = []
+	
+	#Saving
+	needsSaving = False
+	fileLocation = ""
+
+	#Notes selected
+	selectedNote = 0
+	endNote = -1
+	
+	#Command mode
 	commandMode = False
 	commandString = ""
 	commandSelectPos = 0
 	commandAutoMode = False
 	commandAutoPropositions = []
-	needsSaving = False
-	fileLocation = ""
+
+	#Editor settings
 	snap = 4
-	selectedNote = 0
+	selectedSnap = 2
+	snapPossible = [1, 2, 4, 8, 16, 3, 6, 12]
 	layout = []
-	dontDrawList = []
+
+	#Key panel
 	keyPanelEnabled = False
 	keyPanelKey = -1
 	keyPanelSelected = -1 #Note: use -1 when creating a new note
 	keyPanelJustDisabled = False
+	
+	#Locale
 	loc:Locale = Locale("en")
-	endNote = -1
+
+	#Note settings
+	noteMenu = [
+		{"name": "key", "keybind": 20},
+		{"name": "color", "keybind": 21},
+		{"name": "delete", "keybind": 22},
+	]
+	noteMenuEnabled = False
+	noteMenuJustDisabled = False
+	noteMenuSelected = 0
 
 	def autocomplete(self, command):
 		output = []
@@ -85,6 +111,10 @@ class Editor:
 				"color": 0
 			}
 			self.mapToEdit["notes"].append(newNote)
+			self.mapToEdit["notes"] = sorted(self.mapToEdit["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
+			if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
+				self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
+			
 
 	def set_end_note(self, atPos):
 		if self.endNote == -1:
@@ -102,6 +132,47 @@ class Editor:
 				self.endNote = len(self.mapToEdit["notes"])-1
 		else:
 			self.mapToEdit["notes"][self.endNote]["beatpos"] = [int(atPos//4), round(atPos%4, 5)]
+
+	def draw_noteSettings(self, note, selectedOption):
+		if note["type"] == "hit_object":
+			calculatedPos = Game.calculatePosition(note["screenpos"], 5, 3, term.width-10, term.height-11)
+			width = max(len(self.loc("editor.keyOptions." + option["name"])) for option in self.noteMenu)+4
+			height = len(self.noteMenu)+2
+			anchorPoint = [calculatedPos[0]+2, min(calculatedPos[1]-1, term.height-(2+height))]
+			if anchorPoint[0] + width >=term.width:
+				anchorPoint[0] = calculatedPos[0]-(2+width)
+			print_at(anchorPoint[0], anchorPoint[1], 			"┌"+("─"*(width-2))+"┐")
+			print_at(anchorPoint[0], anchorPoint[1]+height-1,	"└"+("─"*(width-2))+"┘")
+			print_column(anchorPoint[0],		 anchorPoint[1]+1, height-2, "│")
+			print_column(anchorPoint[0]+width-1, anchorPoint[1]+1, height-2, "│")
+			for i in range(len(self.noteMenu)):
+				text = self.loc("editor.keyOptions." + self.noteMenu[i]["name"])
+				if i == selectedOption:
+					print_at(anchorPoint[0], 	anchorPoint[1]+1+i, ">"+term.reverse	+ text + (" "*(width-(len(text)+3))) + self.layout[self.noteMenu[i]["keybind"]].upper() + term.reverse	)
+				else:
+					print_at(anchorPoint[0]+1, 	anchorPoint[1]+1+i,		term.normal 	+ text + (" "*(width-(len(text)+3))) + self.layout[self.noteMenu[i]["keybind"]].upper() + term.normal	)
+
+	def clear_noteSettings(self, note):
+		calculatedPos = Game.calculatePosition(note["screenpos"], 5, 3, term.width-10, term.height-11)
+		width = max(len(self.loc("editor.keyOptions." + option["name"])) for option in self.noteMenu)+4
+		height = len(self.noteMenu)+2
+		anchorPoint = [calculatedPos[0]+2, min(calculatedPos[1]-1, term.height-(2+height))]
+		print_lines_at(anchorPoint[0], anchorPoint[1], (" "*width+"\n")*height)
+
+	def run_noteSettings(self, note, noteID, option):
+		if option == 0:
+			self.keyPanelEnabled = True
+			self.keyPanelSelected = noteID
+			self.keyPanelKey = note["key"]
+			return True
+		elif option == 1:
+			#TODO better color picker
+			note["color"] += 1
+			note["color"] %= len(colors)
+			return False
+		elif option == 2:
+			self.mapToEdit["notes"].remove(note)
+			return True
 
 	def draw_changeKeyPanel(self, toptext = None, curKey = 0):
 		width = 40
@@ -168,6 +239,12 @@ class Editor:
 			self.keyPanelJustDisabled = False
 
 		if self.mapToEdit["notes"] != []:
+			note = self.mapToEdit["notes"][self.selectedNote]
+			if self.noteMenuEnabled:
+				self.draw_noteSettings(note, self.noteMenuSelected)
+			elif self.noteMenuJustDisabled:
+				self.clear_noteSettings(note)
+				self.noteMenuJustDisabled = False
 			for i in range(len(self.mapToEdit["notes"])):
 				j = len(self.mapToEdit["notes"]) - (i+1)
 				note = self.mapToEdit["notes"][j]
@@ -267,6 +344,11 @@ class Editor:
 				self.keyPanelKey = 0
 				return True, ""
 			# return False, "Whoops, looks like you're in unimplemented territory!"
+		elif commandSplit[0] == "s":
+			#Change snap
+			if len(commandSplit) > 1:
+				if commandSplit[1].replace('.', '', 1).isdigit():
+					self.snap = float(commandSplit[1])
 		elif commandSplit[0] == "m":
 			#Move
 			if len(commandSplit) > 1:
@@ -316,7 +398,36 @@ class Editor:
 	def handle_input(self):
 		val = ''
 		val = term.inkey(timeout=1/120)
-		if not self.commandMode:
+
+		if len(self.mapToEdit["notes"]) == 0 and self.noteMenuEnabled:
+			self.noteMenuEnabled = False
+
+		if self.noteMenuEnabled:
+			if val:
+				note = self.mapToEdit["notes"][self.selectedNote]
+				goOff = False
+
+				keyBinds = [self.layout[note["keybind"]] for note in self.noteMenu]
+				allowedSpKeys = ["KEY_UP", "KEY_DOWN", "KEY_ENTER"]
+				if val not in keyBinds and val.name not in allowedSpKeys:
+					goOff = True
+				else:
+					if val.name == "KEY_ENTER":
+						goOff = self.run_noteSettings(note, self.selectedNote, self.noteMenuSelected)
+					elif val.name == "KEY_UP":
+						self.noteMenuSelected -= 1
+						self.noteMenuSelected %= len(self.noteMenu)
+					elif val.name == "KEY_DOWN":
+						self.noteMenuSelected += 1
+						self.noteMenuSelected %= len(self.noteMenu)
+					if val in keyBinds:
+						goOff = self.run_noteSettings(note, self.selectedNote, keyBinds.index(val))
+				if goOff == True:
+					# self.noteMenuJustDisabled = self.noteMenuEnabled
+					self.noteMenuEnabled = not self.noteMenuEnabled
+					self.clear_noteSettings(note)
+
+		elif not self.commandMode:
 			# debug_val(val)
 			if self.keyPanelEnabled:
 				if val.name == "KEY_ESCAPE":
@@ -324,7 +435,10 @@ class Editor:
 					self.keyPanelJustDisabled = True
 				elif val.name == "KEY_ENTER":
 					if self.keyPanelKey != -1:
-						self.create_note(self.localConduc.currentBeat, self.keyPanelKey)
+						if self.keyPanelSelected == -1:
+							self.create_note(self.localConduc.currentBeat, self.keyPanelKey)
+						else:
+							self.mapToEdit["notes"][self.keyPanelSelected]["key"] = self.keyPanelKey
 						self.keyPanelEnabled = False
 						self.keyPanelJustDisabled = True
 						self.keyPanelSelected = -1
@@ -352,15 +466,25 @@ class Editor:
 					self.set_end_note(self.localConduc.currentBeat)
 				if val == "e":
 					#Note options
+					self.noteMenuJustDisabled = self.noteMenuEnabled
+					self.noteMenuEnabled = not self.noteMenuEnabled
+					pass
+				if val in ["1", "&"]:
+					self.selectedSnap -= 1
+					self.selectedSnap %= len(self.snapPossible)
+					pass
+				if val in ["2", "é"]:
+					self.selectedSnap += 1
+					self.selectedSnap %= len(self.snapPossible)
 					pass
 
 					
 				if self.mapToEdit["notes"] != []:
-					if val.name == "KEY_DOWN":
+					if val.name == "KEY_DOWN" and not self.noteMenuEnabled:
 						print_at(0,term.height-4, term.clear_eol)
 						self.selectedNote = min(self.selectedNote + 1, len(self.mapToEdit["notes"])-1)
 						self.localConduc.currentBeat = (self.mapToEdit["notes"][self.selectedNote]["beatpos"][0] * 4 + self.mapToEdit["notes"][self.selectedNote]["beatpos"][1])
-					if val.name == "KEY_UP":
+					if val.name == "KEY_UP" and not self.noteMenuEnabled:
 						print_at(0,term.height-4, term.clear_eol)
 						self.selectedNote = max(self.selectedNote - 1, 0)
 						self.localConduc.currentBeat = (self.mapToEdit["notes"][self.selectedNote]["beatpos"][0] * 4 + self.mapToEdit["notes"][self.selectedNote]["beatpos"][1])
@@ -376,23 +500,28 @@ class Editor:
 
 					if self.mapToEdit["notes"][self.selectedNote]["type"] == "hit_object":
 						screenPos = self.mapToEdit["notes"][self.selectedNote]["screenpos"]
+						note = self.mapToEdit["notes"][self.selectedNote]
 						calculatedPos = Game.calculatePosition(screenPos, 5, 3, term.width-10, term.height-11)
 						if val == "h":
+							self.clear_noteSettings(note)
 							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
 							self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] = max(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] - 0.05, 2), 0)
 						if val == "j":
+							self.clear_noteSettings(note)
 							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
 							self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = max(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] - 0.05, 2), 0)
 						if val == "k":
+							self.clear_noteSettings(note)
 							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
 							self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = min(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] + 0.05, 2), 1)
 						if val == "l":
+							self.clear_noteSettings(note)
 							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
