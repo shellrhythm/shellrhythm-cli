@@ -25,7 +25,7 @@
             "play": "Afspil chart",
             "down": "Rul ned",
             "up": "Rul op",
-            "auto": "Toggle auto mode"
+            "auto": "Skift mellem autotilstand"
         }
     },
     "options":{
