@@ -19,7 +19,14 @@
             "artist": "Kunstner",
             "description": "Beskrivelse"
         },
-        "no_charts": "Hov, det ser ud til, at du ikke har nogen charts indlæst!"
+        "no_charts": "Hov, det ser ud til, at du ikke har nogen charts indlæst!",
+        "auto": "[AUTO AKTIVERET]",
+        "controls":{
+            "play": "Afspil chart",
+            "down": "Rul ned",
+            "up": "Rul op",
+            "auto": "Skift mellem autotilstand"
+        }
     },
     "options":{
         "globalOffset": "Globalt offset (ms)",
@@ -72,6 +79,11 @@
         "newKey": {
             "creating": "Vælg en tast i tilknytning til den tilføjede note.",
             "editing": "Vælg en tast, som denne notes tast skal ændres til."
+        },
+        "keyOptions": {
+            "key": "Ændre tast",
+            "color": "Skift farve",
+            "delete": "Slet note"
         }
     }
 }
