@@ -23,9 +23,11 @@
     },
     "options":{
         "globalOffset": "Globalt offset (ms)",
+        "calibrationTip": "Tryk på C for at åbne kalibreringsmenuen!",
         "lang": "Sprog",
         "nerdFont": "Aktiver Nerd Font-visning",
-        "textImages": "Brug billeder som miniaturebillede"
+        "textImages": "Brug billeder som miniaturebillede",
+        "layout": "Tastaturlayout"
     },
     "gameplay":{
         "pause": {
@@ -33,6 +35,43 @@
             "resume": "Genoptag",
             "retry": "Genstart",
             "quit": "Tilbage til menuen"
+        }
+    },
+    "editor":{
+        "emptyChart": "Wow, så tomt.",
+        "timelineInfos":{
+            "bpm": "BPM",
+            "snap": "Tilpasning",
+            "bar": "Bar",
+            "beat": "Beat",
+            "curNote": "Aktuelt valgt note",
+            "color": "Farve",
+            "screenpos": "Skærmposition",
+            "beatpos": "Beat-position",
+            "endpos": "Placering af niveauets slutpunkt"
+        },
+        "commandResults":{
+            "save": "Gemt!",
+            "open": {
+                "success": "Niveau blev indlæst.",
+                "notFound": "Dette niveau findes ikke."
+            },
+            "common": {
+                "notEnoughArgs": "Ikke nok argumenter.",
+                "tooManyArgs": "For mange argumenter.",
+                "notFound": "Kommando ikke fundet.",
+                "tooLong": "...hvad?"
+            },
+            "note": {
+                "success": "En ny note blev oprettet."
+            },
+            "meta": {
+                "success": "Metadata \"{0}\" blev ændret til \"{1}\"."
+            }
+        },
+        "newKey": {
+            "creating": "Vælg en tast i tilknytning til den tilføjede note.",
+            "editing": "Vælg en tast, som denne notes tast skal ændres til."
         }
     }
 }
