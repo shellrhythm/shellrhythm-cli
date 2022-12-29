@@ -34,7 +34,18 @@
         "lang": "Language",
         "nerdFont": "Enable Nerd Font display",
         "textImages": "Use images as thumbnails",
-        "layout": "Keyboard layout"
+        "layout": "Keyboard layout",
+        "layoutTip": "Press L to create a custom layout!"
+    },
+    "calibration":{
+        "hit": "Hit on beat!",
+        "global": "Global offset calibration",
+        "perSong": "Song offset test",
+        "quit": "Quit",
+        "selectSong": "Select a song:"
+    },
+    "layout":{
+        "newKey":"Please input the key to replace this position to."
     },
     "gameplay":{
         "pause": {

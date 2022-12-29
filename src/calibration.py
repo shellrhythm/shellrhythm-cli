@@ -6,10 +6,12 @@ if __name__ != "src.calibration":
 	from loading import check_chart, load_charts
 	from termutil import print_at
 	from conductor import Conductor
+	from translate import Locale
 else:
 	from src.loading import check_chart, load_charts
 	from src.termutil import print_at
 	from src.conductor import Conductor
+	from src.translate import Locale
 
 from pybass3 import Song
 
@@ -26,14 +28,17 @@ class Calibration:
 
 	calibrationMenu = "CalibrationSelect"
 	# Possible things:
-	# CalibrationSelect [100%]: Select calibration options
-	# CalibrationGlobal [100%]: Calibrate your game
-	# CalibrationSong [100%]: Sync song to beats
+	# CalibrationSelect : Select calibration options
+	# CalibrationGlobal : Calibrate your game
+	# CalibrationSong   : Sync song to beats
 
 	calibselec = 0
 	selecSong = -1
 
 	chartData = []
+
+	#Locale
+	loc:Locale = Locale("en")
 
 	def handle_input(self):
 		val = ''
@@ -70,7 +75,7 @@ class Calibration:
 							self.startCalibGlobal()
 						if self.calibselec == 1:
 							self.selecSong = 0
-							print_at(int((term.width)*0.2), int(term.height*0.5)-1,"Select a song:")
+							print_at(int((term.width)*0.2), int(term.height*0.5)-1,self.loc("calibration.selectSong"))
 							print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(self.selecSong) + "  ")
 						if self.calibselec == 2:
 							self.turnOff = True
@@ -90,7 +95,7 @@ class Calibration:
 			text_beat = "○ ○ ○ ○"
 			text_beat = text_beat[:int(self.conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.conduc.currentBeat)%4 * 2) + 1:]
 
-			print_at(0,10,f"{term.center('Hit on beat!')}")
+			print_at(0,10,f"{term.center(self.loc('calibration.hit'))}")
 			print_at(0,12,f"{term.center(text_beat)}")
 		if self.calibrationMenu == "CalibrationSong":
 			text_title = self.chartData[self.selecSong]["metadata"]["title"] + " - " + self.chartData[self.selecSong]["metadata"]["artist"]
@@ -104,9 +109,9 @@ class Calibration:
 
 
 		if self.calibrationMenu == "CalibrationSelect":
-			text_first = "Global offset calibration"
-			text_second = "Song offset test"
-			text_quit = "Quit"
+			text_first = self.loc('calibration.global')
+			text_second = self.loc('calibration.perSong')
+			text_quit = self.loc('calibration.quit')
 			if self.calibselec == 0:
 				print_at(int((term.width - len(text_first))*0.5)+2, int(term.height*0.5) - 2, term.reverse + "> " + text_first + " <" + term.normal)
 			else:

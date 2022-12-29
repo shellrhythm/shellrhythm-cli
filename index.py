@@ -1,5 +1,6 @@
 from blessed import Terminal
 import json
+import copy
 from term_image.image import *
 import random
 # from src import *
@@ -7,6 +8,7 @@ from src.conductor import *
 from src.calibration import *
 from src.loading import *
 from src.editor import *
+from src.layout import *
 
 term = Terminal()
 turnOff = False
@@ -64,6 +66,7 @@ class Options:
 		{"var": "nerdFont", "type":"bool", "displayName": "Enable Nerd Font display"},
 		{"var": "textImages", "type":"bool", "displayName": "Use images as thumbnails"},
 		{"var": "layout", "type":"enum", "displayName": "Layout", "populatedValues": layoutNames}
+		# {"var": "displayName", "type":"strField", "displayName": "Local username", "default": "Player"} # Not for this commit!
 	]
 	enumInteracted = -1
 	curEnumValue = -1
@@ -71,11 +74,16 @@ class Options:
 	isPickingOffset = False
 	goBack = False
 
+	def populate_enum(self):
+		self.menuOptions[1]["populatedValues"] = localeNames
+		self.menuOptions[4]["populatedValues"] = layoutNames
+
 	def translate(self):
 		for optn in self.menuOptions:
 			optn["displayName"] = locales[selectedLocale](f"options.{optn['var']}")
 
 	def moveBy(self, x):
+		print(term.clear)
 		self.selectedItem = (self.selectedItem + x)%self.maxItem
 	def interactBool(self, boolOption):
 		global options
@@ -85,9 +93,10 @@ class Options:
 		global options
 		global selectedLocale
 		options[enum["var"]] = enum["populatedValues"][curChoice]
-		selectedLocale = enum["populatedValues"][curChoice]
-		print(term.clear)
-		self.translate()
+		if enum["var"] == "lang":
+			selectedLocale = enum["populatedValues"][curChoice]
+			print(term.clear)
+			self.translate()
 
 	def saveOptions(self):
 		f = open("./options.json", "w")
@@ -121,12 +130,19 @@ class Options:
 				if self.enumInteracted == i:
 					print_at(maxLength + 6, i*2+3, term.reverse + "{ " + options[leVar] + " }" +term.normal + (" "*6) + str(self.menuOptions[i]["populatedValues"]) + term.clear_eol)
 				else:
-					print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + term.clear_eol)
+					if self.selectedItem == i and self.menuOptions[i]["var"] == "layout":
+						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + (" "*int(term.width*0.3)) + locales[selectedLocale]("options.layoutTip") + term.clear_eol)
+					else:
+						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + term.clear_eol)
 			if leType == "bool":
 				if options[leVar] == True:
 					print_at(maxLength + 6, i*2+3, "☑")
 				else:
 					print_at(maxLength + 6, i*2+3, "☐")
+
+		if self.menuOptions[self.selectedItem]["var"] == "layout":
+			text = f"┌───{'┬───'*9}┐\n" + "".join(["".join([f"│ {key} " for key in layouts[options["layout"]]][10*i:10*(i+1)]) + f"│\n├───{'┼───'*9}┤\n" for i in range(2)]) + "".join([f"│ {key} " for key in layouts[options["layout"]]][20:30]) + f"│\n└───{'┴───'*9}┘\n"
+			print_lines_at(int(term.width*0.5 - len(f"┌───{'┬───'*9}┐")/2), term.height-10, text)
 
 		if self.isPickingOffset:
 			text_offsetConfirm = f"Do you want to use the new following offset: {int(self.suggestedOffset*(10**3))}ms?"
@@ -167,7 +183,7 @@ class Options:
 					self.moveBy(1)
 				if val.name == "KEY_UP" or val == "k":
 					self.moveBy(-1)
-				if val.name == "KEY_RIGHT" or val == "l" or val.name == "KEY_ENTER":
+				if val.name == "KEY_RIGHT" or val.name == "KEY_ENTER":
 					self.enterPressed()
 				if val.name == "KEY_ESCAPE":
 					global menu
@@ -184,6 +200,7 @@ class Options:
 					self.selectedItem = 0
 					conduc.stop()
 					# conduc.song.stop()
+					loadedMenus["Calibration"].loc = locales[selectedLocale]
 					loadedMenus["Calibration"].turnOff = False
 					self.suggestedOffset = loadedMenus["Calibration"].init()
 					self.isPickingOffset = True
@@ -195,6 +212,23 @@ class Options:
 					# print(term.clear)
 					# text_offsetConfirm = f"Do you want to use the new following offset: {int(newOffset*3)}ms?"
 					# print_at(int((term.width - len(text_offsetConfirm)) * 0.5), int(term.height*0.5), text_offsetConfirm)
+				if val == "l":
+					self.saveOptions()
+					self.turnOff = True
+					self.goBack = True
+					self.selectedItem = 4
+
+					loadedMenus["LayoutEditor"].loc = locales[selectedLocale]
+					result = False
+					error = ""
+					customLayout = ["╳" for _ in range(30)]
+					if "custom" in layouts:
+						customLayout = layouts["custom"]
+					while not result:
+						loadedMenus["LayoutEditor"].turnOff = False
+						result, error = loadedMenus["LayoutEditor"].loop(customLayout)
+
+					
 
 			else:
 				if val.name == "KEY_DOWN" or val == "j":
@@ -203,7 +237,7 @@ class Options:
 				if val.name == "KEY_UP" or val == "k":
 					self.curEnumValue = (self.curEnumValue+1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
 					self.interactEnum(self.menuOptions[self.enumInteracted], self.curEnumValue)
-				if val.name == "KEY_ESCAPE":
+				if val.name == "KEY_ESCAPE" or val.name == "KEY_ENTER":
 					self.enumInteracted = -1
 
 
@@ -570,10 +604,12 @@ if __name__ == "__main__":
 		loadedMenus["Options"] = Options(False) # Sixty-sixteen megabytes- by-bytes 
 		loadedMenus["Editor"] = Editor()
 		loadedMenus["Calibration"] = Calibration("CalibrationGlobal")
+		loadedMenus["LayoutEditor"] = LayoutCreator()
 
 		loadedGame = game.Game()
 
 		loadedMenus["ChartSelect"].selectedItem = songLoaded
+		loadedMenus["Options"].populate_enum()
 
 		currentLoadedSong = songLoaded
 

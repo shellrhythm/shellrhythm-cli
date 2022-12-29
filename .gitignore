@@ -5,3 +5,4 @@
 *.so
 /logs/*
 options.json
+/layout/custom

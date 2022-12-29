@@ -34,7 +34,18 @@
         "lang": "Langue",
         "nerdFont": "Activer l'affichage de caractères Nerd Font",
         "textImages": "Utiliser des images comme miniatures",
-        "layout": "Disposition du clavier"
+        "layout": "Disposition du clavier",
+        "layoutTip": "Appuyez sur L pour créer votre propre disposition!"
+    },
+    "calibration":{
+        "hit": "Tapez en rythme!",
+        "global": "Calibration de l'offset global",
+        "perSong": "Test d'offset de musique",
+        "quit": "Quitter",
+        "selectSong": "Choisissez une musique:"
+    },
+    "layout":{
+        "newKey":"Please input the key to replace this position to."
     },
     "gameplay":{
         "pause": {
