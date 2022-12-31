@@ -37,7 +37,7 @@ keys = [
 	"w","x","c","v","b","n",",",";",":","!"
 ]
 
-hitWindows = [0.05, 0.075, 0.1, 0.15, 0.2]
+hitWindows = [0.05, 0.1, 0.2, 0.3, 0.4]
 judgementNames = ["MARV", "PERF", "EPIC", "GOOD", " EH ", "MISS"]
 judgementShort = [f"{term.purple}@", f"{term.aqua}#", f"{term.green}$", f"{term.yellow}*", f"{term.orange};", f"{term.red}/"]
 accMultiplier = [1, 1, 0.85, 0.75, 0.5, 0]

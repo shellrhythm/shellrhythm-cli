@@ -10,6 +10,9 @@ from src.loading import *
 from src.editor import *
 from src.layout import *
 
+import sys
+print(sys.stdout.encoding)
+
 term = Terminal()
 turnOff = False
 
