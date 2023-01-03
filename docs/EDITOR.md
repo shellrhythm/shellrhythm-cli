@@ -11,7 +11,6 @@ Jokes aside, let me introduce you to the basic controls of the editor.
 |Space|Preview from position|
 |Ctrl+Space|Preview from beginning|
 |T|Metronome On/Off|
-|A/D|Previous/Next bar|
 |Z|New note at position|
 |H/J/K/L|Move selected note left/down/up/right|
 |U/I|Move selected note earlier/later|

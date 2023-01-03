@@ -9,9 +9,12 @@ from src.calibration import *
 from src.loading import *
 from src.editor import *
 from src.layout import *
+from src.results import ranks, getRank
 
 import sys
-print(sys.stdout.encoding)
+# print(sys.stdout.encoding)
+
+__version__ = "1.0.0"
 
 term = Terminal()
 turnOff = False
@@ -40,7 +43,7 @@ options = {
     "lang": "en",
     "nerdFont": False,
     "textImages": True,
-    "displayName": "Player"
+    "displayName": "Unknown"
 }
 
 bottom_txt = open("./assets/bottom.txt")
@@ -52,8 +55,7 @@ import src.game as game
 
 conduc = Conductor()
 chartData = []
-
-# ========================= [UTIL FONCTIONS] =========================
+scores = {}
 
 # ========================= [MENU CLASSES] =========================
 
@@ -269,9 +271,10 @@ class Options:
 # Chart selection menu
 class ChartSelect:
 	turnOff = False
-	selectedItem = 0
 	chartsize = 0
+	selectedItem = 0
 	selectedTab = 0
+	selectedScore = 0
 	funniSpeen = 0
 	goBack = False
 	
@@ -285,8 +288,9 @@ class ChartSelect:
 					text = chartData[i]["metadata"]["artist"] + " - " + chartData[i]["metadata"]["title"]
 					print_cropped(0, i+1, 20, text, 0, term.normal, False)
 			print_at(20,i,f"{term.normal}")
-		print_column(20, 0, term.height - 2, "┃")
-		# Actual image display
+		print_column(20, 0, 19, "┃")
+		print_column(20, 20, term.height - 22, "┃")
+		# Actual chart info display
 		if len(chartData) == 0:
 			print_at(25,5, locales[selectedLocale]("chartSelect.no_charts"))
 		else:
@@ -339,6 +343,7 @@ class ChartSelect:
 			print_column(25 + int(term.width * 0.2), 9, 10, "┃")
 			print_lines_at(26 + int(term.width * 0.2), 9, chartData[self.selectedItem]["metadata"]["description"])
 			print_at(25 + int(term.width * 0.2), 19, "┸" + ("─"*(term.width - (26 + int(term.width * 0.2)))))
+			print_at(20, 19, "┠" + ("─"*(4+int(term.width * 0.2))))
 			text_auto = locales[selectedLocale]("chartSelect.auto")
 			if loadedGame.auto:
 				print_at(23, 18, 
@@ -348,6 +353,26 @@ class ChartSelect:
 				)
 			else:
 				print_at(23, 18, term.normal+(" "*int(term.width*0.2)))
+
+			#Scores!
+			for i in range(len(scores[chartData[self.selectedItem]["foldername"]])):
+				score = scores[chartData[self.selectedItem]["foldername"]][i]
+				rank = getRank(score["score"])
+				if score["checkPassed"]:
+					if i == self.selectedScore:
+						if score["isOutdated"]:
+							print_at(23, 20+i, f"{term.grey}{term.reverse}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + term.clear_eol + term.normal)
+						else:
+							print_at(23, 20+i, f"{term.reverse}{rank[2]}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" + term.clear_eol + term.normal)
+					else:
+						if score["isOutdated"]:
+							print_at(23, 20+i, f"{term.grey}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + term.clear_eol)
+						else: 
+							print_at(23, 20+i, f"{rank[2]}{rank[0]}{term.normal} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" + term.clear_eol)
+				else:
+					print_at(25, 20+i, "[INVALID SCORE]")
+			if len(scores[chartData[self.selectedItem]["foldername"]]) == 0:
+				print_at(35, int((term.height-18)/2)+17, "No scores yet!")
 		# Controls
 		print_at(1,term.height - 2, 
 		f"{term.reverse}[ENTER] {locales[selectedLocale]('chartSelect.controls.play')} {term.normal} "+
@@ -360,8 +385,11 @@ class ChartSelect:
 		self.turnOff = True
 		conduc.stop()
 		conduc.song.stop()
+		loadedGame.playername = options["displayName"]
 		loadedGame.play(chartData[self.selectedItem], options["layout"])
 		print(term.clear)
+		global scores
+		scores[chartData[self.selectedItem]["foldername"]] = load_scores(chartData[self.selectedItem]["foldername"])
 		self.goBack = True
 		conduc.play()
 		
@@ -382,6 +410,9 @@ class ChartSelect:
 				conduc.loadsong(chartData[self.selectedItem])
 				conduc.play()
 				print(term.clear)
+			else:
+				self.selectedScore += 1
+				self.selectedScore %= len(scores[chartData[self.selectedItem]["foldername"]])
 		if val.name == "KEY_UP" or val == "k":
 			if self.selectedTab == 0:
 				self.selectedItem = (self.selectedItem - 1)%self.chartsize
@@ -390,6 +421,9 @@ class ChartSelect:
 				conduc.loadsong(chartData[self.selectedItem])
 				conduc.play()
 				print(term.clear)
+			else:
+				self.selectedScore -= 1
+				self.selectedScore %= len(scores[chartData[self.selectedItem]["foldername"]])
 		if val.name == "KEY_LEFT" or val == "h":
 			self.selectedTab = max(self.selectedTab - 1, 0)
 		if val.name == "KEY_RIGHT" or val == "l":
@@ -569,7 +603,7 @@ class TitleScreen:
 			self.goBack = False
 			self.turnOff = False
 			self.loop()
-		print(term.clear)
+		# print(term.clear)
 
 	def __init__(self, boot = True):
 		"""
@@ -583,8 +617,7 @@ class TitleScreen:
 			self.loop()
 
 if __name__ == "__main__":
-	
-	chartData = load_charts()
+	chartData, scores = load_charts()
 	locales, localeNames = load_locales()
 	options, selectedLocale = load_options(options)
 	layouts, layoutNames = load_layouts()

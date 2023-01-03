@@ -40,7 +40,7 @@ keys = [
 hitWindows = [0.05, 0.1, 0.2, 0.3, 0.4]
 judgementNames = ["MARV", "PERF", "EPIC", "GOOD", " EH ", "MISS"]
 judgementShort = [f"{term.purple}@", f"{term.aqua}#", f"{term.green}$", f"{term.yellow}*", f"{term.orange};", f"{term.red}/"]
-accMultiplier = [1, 1, 0.85, 0.75, 0.5, 0]
+accMultiplier = [1, 0.95, 0.85, 0.75, 0.5, 0]
 
 # You can either use "setSize" or "scale"
 # setSize will use a set terminal size as playfield (By default, 80x24)
@@ -50,6 +50,7 @@ playfield_mode = "scale"
 maxScore = 1000000
 
 class Game:
+	version = 1
 	localConduc = Conductor()
 	beatSound = Song("assets/clap.wav")
 	chart = {}
@@ -60,10 +61,11 @@ class Game:
 	dontDraw = []
 	endTime = 2**32
 	accuracy = 100
-	auto = True
+	auto = False
 	missesCount = 0
 	pauseOption = 0
 	resultsScreen = ResultsScreen()
+	playername = ""
 
 	def setupKeys(self, layout):
 		if os.path.exists("./layout/" + layout):
@@ -99,7 +101,10 @@ class Game:
 			"accuracy": self.accuracy,
 			"score": self.score,
 			"judgements": self.judgements,
-			"checksum": hashlib.sha256(json.dumps(f"{self.chart['notes']}",skipkeys=True,ensure_ascii=False).encode("utf-8")).hexdigest()
+			"checksum": hashlib.sha256(json.dumps(f"{self.chart['notes']}",skipkeys=True,ensure_ascii=False).encode("utf-8")).hexdigest(),
+			"version": self.version,
+			"time": time.time(),
+			"playername": self.playername
 			# "keys": keys
 		}
 		return output
@@ -364,6 +369,7 @@ class Game:
 		self.localConduc.stop()
 		self.localConduc.song.move2position_seconds(0)
 		self.localConduc.play()
+		self.localConduc.resume()
 
 	def handle_input(self):
 		if not self.localConduc.isPaused:
@@ -375,14 +381,23 @@ class Game:
 				self.localConduc.pause()
 
 			if self.localConduc.currentTimeSec > self.endTime:
-				if not os.path.exists("./logs/results.json"):
-					f = open("./logs/results.json", "x")
-				else:
-					f = open("./logs/results.json", "w")
-				f.write(json.dumps(self.resultsFile(),indent=4))
-				f.close()
+				result = self.resultsFile()
+				if not self.auto:
+					if not os.path.exists("./scores/"):
+						os.mkdir("./scores/")
+					if not os.path.exists("./logs/"):
+						os.mkdir("./logs/")
+					if not os.path.exists("./logs/results.json"):
+						f = open("./logs/results.json", "x")
+					else:
+						f = open("./logs/results.json", "w")
+					f.write(json.dumps(result,indent=4))
+					f.close()
+					f2 = open("./scores/" + self.chart["foldername"] + "-" + hashlib.sha256(json.dumps(result).encode("utf-8")).hexdigest(), "x")
+					f2.write(json.dumps(result))
+					f2.close()
 				# raise NotImplementedError("Results screen missing!")
-				self.resultsScreen.resultsData = self.resultsFile()
+				self.resultsScreen.resultsData = result
 				self.resultsScreen.isEnabled = True
 				self.resultsScreen.setup()
 
@@ -426,8 +441,11 @@ class Game:
 					self.localConduc.resume()
 				if self.pauseOption == 1:
 					self.retry()
+					# self.localConduc.resume()
+					# self.localConduc.song.move2position_bytes(0)
 				if self.pauseOption == 2:
 					self.turnOff = True
+					self.localConduc.resume()
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():

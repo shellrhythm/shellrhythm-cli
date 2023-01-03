@@ -66,7 +66,7 @@ class Conductor:
 		self.isPaused = False
 		self.bpm = self.previewChart["bpm"]
 		self.skippedTimeWithPause = (time.time_ns() / 10**9) - self.pauseStartTime
-		self.song.move2position_seconds((time.time_ns() / 10**9) - (self.startTime + self.skippedTimeWithPause))
+		self.song.move2position_seconds(max((time.time_ns() / 10**9) - (self.startTime + self.skippedTimeWithPause), 0))
 		self.song.resume()
 
 	def update(self):

@@ -2,6 +2,8 @@ import os, json
 from pybass3 import Song
 from src.termutil import *
 from src.translate import Locale
+import hashlib
+from src.game import Game
 
 def load_options(options = {}):
 	if os.path.exists("./options.json"):
@@ -35,6 +37,38 @@ def load_locales():
 		newLoc = Locale(localeNames[i])
 		locales[localeNames[i]] = newLoc
 	return locales, localeNames
+
+def load_scores(chartName):
+	scoreFiles = [f.name for f in os.scandir("./scores/") if f.is_file() and f.name.startswith(chartName+"-")]
+	output = []
+	for i in range(len(scoreFiles)):
+		file = scoreFiles[i]
+		print(f"Loading scores for map {chartName}: ({i+1}/{len(scoreFiles)})")
+		f = open("./scores/" + file)
+		leContent = f.read()
+		leHash = hashlib.sha256(leContent.encode("utf-8")).hexdigest() 
+		leJson = json.loads(leContent)
+		if leHash != file[len(chartName)+1:]:
+			print(term.yellow+"[WARNING] SHA256 check failed for score " + leHash + term.normal)
+			leJson["checkPassed"] = False
+		else:
+			leJson["checkPassed"] = True
+		if type(leJson["version"]) is str:
+			print(term.yellow+"[WARNING] Score " + leHash + " was made on an outdated version! (on game.py pre-version 1)" + term.normal)
+			leJson["isOutdated"] = True
+		elif leJson["version"] < Game.version:
+			print(term.yellow+"[WARNING] Score " + leHash + " was made on an outdated version! (on game.py version " + leJson["version"] + ")" + term.normal)
+			leJson["isOutdated"] = True
+		else:
+			leJson["isOutdated"] = False
+
+		f.close()
+		output.append(leJson)
+
+	output.sort(key=lambda score:-score["score"] + (10**8 if score["isOutdated"] or not score["checkPassed"] else 0))
+
+	return output
+
 
 def check_chart(chart = {}, folder = ""):
 	output = {}
@@ -82,6 +116,7 @@ def check_chart(chart = {}, folder = ""):
 
 def load_charts():
 	chartData = []
+	scores = {}
 	if os.path.exists("./charts"):
 		charts = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts") if f.is_dir()]
 		for i in range(len(charts)):
@@ -91,8 +126,9 @@ def load_charts():
 			jsonThing = check_chart(jsonThing, charts[i])
 			jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
 			chartData.append(jsonThing)
+			scores[charts[i]] = load_scores(charts[i])
 		print("All charts loaded successfully!")
 	else:
 		print(f"{term.yellow}[WARN] Chart folder inexistant!{term.normal}")
 
-	return chartData
+	return chartData, scores
