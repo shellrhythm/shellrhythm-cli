@@ -64,7 +64,7 @@ class ResultsScreen:
 				]
 				var1 = int(self.offsets[i]/self.oneRowIsThisMS) * -1
 				var1_rest = 4 - (((self.offsets[i]/self.oneRowIsThisMS)%1) * 4)
-				var1_color = int((var1+1)/2)
+				var1_color = abs(int((var1+1)/2))
 				# print_at(5+int(i), self.centerRow+11, str(var1))
 				if i+1 < len(self.offsets):
 					var2 = int(self.offsets[i+1]/self.oneRowIsThisMS) * -1
@@ -82,6 +82,7 @@ class ResultsScreen:
 
 	def draw(self):
 		if self.resultsData != {}:
+			print_box(4, 2, term.width-7, term.height-4, term.normal, 0)
 			rank = getRank(self.resultsData["score"])
 			print_lines_at(5,3, self.rankIMGImages[rank[1]], False, False, rank[2])
 			print_at(16, 4, f"{rank[2]}SCORE{term.normal}: {int(self.resultsData['score'])}")
@@ -99,6 +100,7 @@ class ResultsScreen:
 		# debug_val(val)
 
 		if val.name == "KEY_ESCAPE":
+			print(term.clear)
 			self.gameTurnOff = True
 		
 	def __init__(self) -> None:

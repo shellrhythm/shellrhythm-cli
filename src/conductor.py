@@ -98,15 +98,19 @@ class Conductor:
 		self.startTime = self.startTimeNoOffset + self.offset
 	
 	def startAt(self, beatpos):
-		self.song.stop()
-		self.song.play()
 		secPos = beatpos*(60/self.bpm)
 		self.startTimeNoOffset = (time.time_ns() / 10**9) - secPos
 		self.startTime = self.startTimeNoOffset + self.offset
-		self.song.move2position_seconds(secPos)
 		self.currentTimeSec = secPos
 		self.prevTimeSec = 0
 		self.currentBeat = beatpos
+		if self.song._length_seconds is not None:
+			if self.song._length_seconds >= secPos:
+				self.song.stop()
+				self.song.play()
+				self.song.move2position_seconds(secPos)
+				return True
+		return False
 
 
 	def __init__(self) -> None:

@@ -325,15 +325,17 @@ class Game:
 			print_at(term.width - (len(str(self.accuracy)) + 2), 0, str(self.accuracy) + "%")
 			print_at(term.width - (len(str(self.score)) + 1), 1, str(self.score))
 			if playfield_mode == "scale":
-				print_at(5,2,"-"* (term.width - 9))
-				print_at(5,term.height - 3,"-"* (term.width - 9))
-				print_column(4,3,term.height-6,"|")
-				print_column(term.width-4,3,term.height-6, "|")
+				print_box(4,2,term.width-7,term.height-4,term.normal,1)
+				# print_at(5,2,"-"* (term.width - 9))
+				# print_at(5,term.height - 3,"-"* (term.width - 9))
+				# print_column(4,3,term.height-6,"|")
+				# print_column(term.width-4,3,term.height-6, "|")
 			elif playfield_mode == "setSize":
-				print_at(5,2,"-"* (defaultSize[0]))
-				print_at(5,defaultSize[1] + 3,"-"* (defaultSize[0]))
-				print_column(4,3,defaultSize[1],"|")
-				print_column(defaultSize[0]+5, 3, defaultSize[1], "|")
+				print_box(4,2,defaultSize[0],defaultSize[1]-4,term.normal,1)
+				# print_at(5,2,"-"* (defaultSize[0]))
+				# print_at(5,defaultSize[1] + 3,"-"* (defaultSize[0]))
+				# print_column(4,3,defaultSize[1],"|")
+				# print_column(defaultSize[0]+5, 3, defaultSize[1], "|")
 
 			self.actualKeysRendering(self.chart["notes"])
 		else:
@@ -449,7 +451,7 @@ class Game:
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
-			print(term.clear)
+			# print(term.clear)
 			while not self.turnOff:
 				self.deltatime = self.localConduc.update()
 				if not self.resultsScreen.isEnabled:

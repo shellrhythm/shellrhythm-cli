@@ -8,7 +8,7 @@ Every script that comes from the `master` branch has been removed. We've been st
 ## Status
 
 Title screen: `100%`<br/>
-Chart selector: `70%` (Need to add local scores)<br/>
+Chart selector: `97%` (To add: Score preview)<br/>
 Gameplay: `100%`<br/>
 Editor: `90%` (Need to add an interface to change metadata)<br/>
 Options: `100%`

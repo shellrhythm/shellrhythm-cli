@@ -220,6 +220,8 @@ class Editor:
 				print_at(drawAt, term.height-5, char+("-"*maxAfterwards))
 			else:
 				print_at(drawAt, term.height-5, "-"*(maxAfterwards+1))
+		if self.playtest:
+			print_at(0,term.height-4, term.clear_eol)
 		print_at(int(term.width*0.1), term.height-4, "@")
 		print_at(0,term.height-6, term.normal
 		+f"{self.loc('editor.timelineInfos.bpm')}: {self.localConduc.bpm} | "
@@ -452,6 +454,12 @@ class Editor:
 				if val == ":":
 					self.commandMode = True
 					self.commandString = ""
+				if val == " ":
+					if not self.playtest:
+						self.localConduc.startAt(self.localConduc.currentBeat)
+					else:
+						self.localConduc.stop()
+					self.playtest = not self.playtest
 				if val.name == "KEY_RIGHT":
 					self.localConduc.currentBeat += (1/self.snap)*4
 					print_at(0,term.height-4, term.clear_eol)
@@ -469,13 +477,17 @@ class Editor:
 					self.noteMenuJustDisabled = self.noteMenuEnabled
 					self.noteMenuEnabled = not self.noteMenuEnabled
 					pass
+				if val == "t":
+					self.localConduc.metronome = not self.localConduc.metronome
 				if val in ["1", "&"]:
 					self.selectedSnap -= 1
 					self.selectedSnap %= len(self.snapPossible)
+					self.snap = self.snapPossible[self.selectedSnap]
 					pass
 				if val in ["2", "é"]:
 					self.selectedSnap += 1
 					self.selectedSnap %= len(self.snapPossible)
+					self.snap = self.snapPossible[self.selectedSnap]
 					pass
 
 					

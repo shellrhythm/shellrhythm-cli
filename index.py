@@ -9,7 +9,7 @@ from src.calibration import *
 from src.loading import *
 from src.editor import *
 from src.layout import *
-from src.results import ranks, getRank
+from src.results import *
 
 import sys
 # print(sys.stdout.encoding)
@@ -57,6 +57,28 @@ conduc = Conductor()
 chartData = []
 scores = {}
 
+# ========================= [UTIL FUNCTIONS] =======================
+
+# adapted from https://stackoverflow.com/questions/410221/natural-relative-days-in-python#5164027
+import datetime
+def prettydate(d):
+	diff = datetime.datetime.utcnow() - d
+	output = d.strftime('%d %b %y, %H:%M:%S')
+	if diff.seconds <= 1:
+		output = "just now".format(int(diff.seconds))
+	elif diff.seconds < 60:
+		output = "{} seconds ago".format(int(diff.seconds))
+	elif diff.seconds < 120:
+		output = "1 minute ago"
+	elif diff.seconds < 3600:
+		output = "{} minutes ago".format(int(diff.seconds/60))
+	elif diff.seconds < 7200:
+		output = "1 hour ago"
+	elif diff.days < 3:
+		output = "{} hours ago".format(int(diff.seconds/3600))
+	elif diff.days < 7:
+		output = "{} days ago".format(int(diff.days))
+	return output
 # ========================= [MENU CLASSES] =========================
 
 # Options menu
@@ -66,7 +88,7 @@ class Options:
 	selectedItem = 0
 	maxItem = 5
 	menuOptions = [
-		{"var": "globalOffset", "type":"intField", "displayName": "Global offset (ms)", "isOffset": True},
+		{"var": "globalOffset", "type":"intField", "displayName": "Global offset (ms)", "isOffset": True, "snap": 0.001},
 		{"var": "lang", "type":"enum", "displayName": "Language", "populatedValues": localeNames},
 		{"var": "nerdFont", "type":"bool", "displayName": "Enable Nerd Font display"},
 		{"var": "textImages", "type":"bool", "displayName": "Use images as thumbnails"},
@@ -90,6 +112,7 @@ class Options:
 	def moveBy(self, x):
 		print(term.clear)
 		self.selectedItem = (self.selectedItem + x)%self.maxItem
+	
 	def interactBool(self, boolOption):
 		global options
 		options[boolOption["var"]] = not options[boolOption["var"]]
@@ -171,6 +194,7 @@ class Options:
 		val = ''
 		val = term.inkey(timeout=1/60)
 		# debug_val(val)
+		global options
 
 		if self.isPickingOffset:
 			if val == "y":
@@ -188,8 +212,14 @@ class Options:
 					self.moveBy(1)
 				if val.name == "KEY_UP" or val == "k":
 					self.moveBy(-1)
-				if val.name == "KEY_RIGHT" or val.name == "KEY_ENTER":
+				if (val.name == "KEY_RIGHT" and self.menuOptions[self.selectedItem]["type"] != "intField") or val.name == "KEY_ENTER":
 					self.enterPressed()
+				if val.name == "KEY_LEFT" and self.menuOptions[self.selectedItem]["type"] == "intField":
+					leVar = self.menuOptions[self.selectedItem]["var"]
+					options[leVar] -= self.menuOptions[self.selectedItem]["snap"]
+				if val.name == "KEY_RIGHT" and self.menuOptions[self.selectedItem]["var"]:
+					leVar = self.menuOptions[self.selectedItem]["var"]
+					options[leVar] += self.menuOptions[self.selectedItem]["snap"]
 				if val.name == "KEY_ESCAPE":
 					global menu
 					self.saveOptions()
@@ -275,8 +305,10 @@ class ChartSelect:
 	selectedItem = 0
 	selectedTab = 0
 	selectedScore = 0
+	scoreScrolledBy = []
 	funniSpeen = 0
 	goBack = False
+	resultsThing = ResultsScreen()
 	
 	def draw(self):
 		for i in range(len(chartData)):
@@ -355,20 +387,27 @@ class ChartSelect:
 				print_at(23, 18, term.normal+(" "*int(term.width*0.2)))
 
 			#Scores!
-			for i in range(len(scores[chartData[self.selectedItem]["foldername"]])):
-				score = scores[chartData[self.selectedItem]["foldername"]][i]
+			maxRenderedScores = min(len(scores[chartData[self.selectedItem]["foldername"]]), term.height-23) 
+			offset = max(0, min(self.selectedScore - maxRenderedScores + 1, len(scores[chartData[self.selectedItem]["foldername"]]) - maxRenderedScores))
+			for i in range(maxRenderedScores):
+				score = scores[chartData[self.selectedItem]["foldername"]][i + offset]
 				rank = getRank(score["score"])
 				if score["checkPassed"]:
-					if i == self.selectedScore:
+					if i+offset == self.selectedScore:
+						color = term.underline
+						if self.selectedTab == 1: color = term.reverse
+
 						if score["isOutdated"]:
-							print_at(23, 20+i, f"{term.grey}{term.reverse}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + term.clear_eol + term.normal)
+							print_at(23, 20+i, f"{term.grey}{color}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + term.clear_eol + term.normal)
 						else:
-							print_at(23, 20+i, f"{term.reverse}{rank[2]}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" + term.clear_eol + term.normal)
+							print_at(23, 20+i, f"{color}{rank[2]}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" + term.clear_eol + term.normal)
 					else:
 						if score["isOutdated"]:
 							print_at(23, 20+i, f"{term.grey}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + term.clear_eol)
 						else: 
 							print_at(23, 20+i, f"{rank[2]}{rank[0]}{term.normal} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" + term.clear_eol)
+					text_date_format = prettydate(datetime.datetime.fromtimestamp(score["time"]))
+					print_at(term.width - (len(text_date_format)+1), 20+i, text_date_format)
 				else:
 					print_at(25, 20+i, "[INVALID SCORE]")
 			if len(scores[chartData[self.selectedItem]["foldername"]]) == 0:
@@ -382,16 +421,22 @@ class ChartSelect:
 		)
 
 	def enterPressed(self):
-		self.turnOff = True
-		conduc.stop()
-		conduc.song.stop()
-		loadedGame.playername = options["displayName"]
-		loadedGame.play(chartData[self.selectedItem], options["layout"])
-		print(term.clear)
-		global scores
-		scores[chartData[self.selectedItem]["foldername"]] = load_scores(chartData[self.selectedItem]["foldername"])
-		self.goBack = True
-		conduc.play()
+		if self.selectedTab == 0:
+			self.turnOff = True
+			conduc.stop()
+			conduc.song.stop()
+			loadedGame.playername = options["displayName"]
+			loadedGame.play(chartData[self.selectedItem], options["layout"])
+			# print(term.clear)
+			global scores
+			scores[chartData[self.selectedItem]["foldername"]] = load_scores(chartData[self.selectedItem]["foldername"])
+			self.goBack = True
+			conduc.play()
+		else:
+			print(term.clear)
+			self.resultsThing.resultsData = scores[chartData[self.selectedItem]["foldername"]][self.selectedScore]
+			self.resultsThing.setup()
+			self.resultsThing.isEnabled = True
 		
 	def handle_input(self):
 		"""
@@ -411,8 +456,10 @@ class ChartSelect:
 				conduc.play()
 				print(term.clear)
 			else:
-				self.selectedScore += 1
-				self.selectedScore %= len(scores[chartData[self.selectedItem]["foldername"]])
+				if len(scores[chartData[self.selectedItem]["foldername"]]) != 0:
+					self.selectedScore += 1
+					self.selectedScore = min(self.selectedScore, len(scores[chartData[self.selectedItem]["foldername"]])-1)
+					# self.selectedScore %= len(scores[chartData[self.selectedItem]["foldername"]])
 		if val.name == "KEY_UP" or val == "k":
 			if self.selectedTab == 0:
 				self.selectedItem = (self.selectedItem - 1)%self.chartsize
@@ -422,12 +469,14 @@ class ChartSelect:
 				conduc.play()
 				print(term.clear)
 			else:
-				self.selectedScore -= 1
-				self.selectedScore %= len(scores[chartData[self.selectedItem]["foldername"]])
+				if len(scores[chartData[self.selectedItem]["foldername"]]) != 0:
+					self.selectedScore -= 1
+					self.selectedScore = max(self.selectedScore, 0)
 		if val.name == "KEY_LEFT" or val == "h":
 			self.selectedTab = max(self.selectedTab - 1, 0)
 		if val.name == "KEY_RIGHT" or val == "l":
-			self.selectedTab = min(self.selectedTab + 1, 1)
+			if len(scores[chartData[self.selectedItem]["foldername"]]) > 0:
+				self.selectedTab = min(self.selectedTab + 1, 1)
 		if val == "a":
 			loadedGame.auto = not loadedGame.auto
 
@@ -446,9 +495,16 @@ class ChartSelect:
 			print(term.clear)
 			while not self.turnOff:
 				self.deltatime = conduc.update()
-				self.draw()
+				if self.resultsThing.isEnabled:
+					self.resultsThing.draw()
+					self.resultsThing.handle_input()
 
-				self.handle_input()
+					if self.resultsThing.gameTurnOff:
+						self.resultsThing.gameTurnOff = False
+						self.resultsThing.isEnabled = False
+				else:
+					self.draw()
+					self.handle_input()
 		if self.goBack == True:
 			self.goBack = False
 			self.turnOff = False
@@ -560,7 +616,10 @@ class TitleScreen:
 			text_songTitle = "[NO SONG PLAYING] // "
 		print_cropped(term.width - 31, 0, 30, text_songTitle, int(conduc.currentBeat), term.normal)
 
-		print_at(term.width-(len("© #Guigui, 2022") + 1), term.height-2, "© #Guigui, 2022")
+		text_copyright = "© #Guigui, 2022-2023"
+		text_version = "v"+__version__
+		print_at(term.width-(len(text_version) + 1), term.height-3, text_version)
+		print_at(term.width-(len(text_copyright) + 1), term.height-2, text_copyright)
 
 	
 	def handle_input(self):
@@ -653,4 +712,5 @@ if __name__ == "__main__":
 	except KeyboardInterrupt:
 		print('Keyboard Interrupt detected!')
 	# print(term.clear)
-	print(f"Thanks for playing my game!")
+	# print(f"Thanks for playing my game!")
+	print(term.move_xy(0,0))
