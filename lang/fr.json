@@ -89,6 +89,12 @@
             "key": "Changer de touche",
             "color": "Changer de couleur",
             "delete": "Supprimer la note"
+        },
+        "metadata":{
+            "title": "Titre",
+            "artist": "Artiste",
+            "author": "Auteur du niveau",
+            "description": "Description"
         }
     }
 }

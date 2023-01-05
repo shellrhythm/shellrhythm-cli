@@ -43,6 +43,7 @@ options = {
     "lang": "en",
     "nerdFont": False,
     "textImages": True,
+	"shortTimeFormat": False,
     "displayName": "Unknown"
 }
 
@@ -61,23 +62,37 @@ scores = {}
 
 # adapted from https://stackoverflow.com/questions/410221/natural-relative-days-in-python#5164027
 import datetime
-def prettydate(d):
-	diff = datetime.datetime.utcnow() - d
+def prettydate(d, longFormat = False):
+	diff = datetime.datetime.fromtimestamp(time.time()) - d
 	output = d.strftime('%d %b %y, %H:%M:%S')
-	if diff.seconds <= 1:
-		output = "just now".format(int(diff.seconds))
-	elif diff.seconds < 60:
-		output = "{} seconds ago".format(int(diff.seconds))
-	elif diff.seconds < 120:
-		output = "1 minute ago"
-	elif diff.seconds < 3600:
-		output = "{} minutes ago".format(int(diff.seconds/60))
-	elif diff.seconds < 7200:
-		output = "1 hour ago"
-	elif diff.days < 3:
-		output = "{} hours ago".format(int(diff.seconds/3600))
-	elif diff.days < 7:
-		output = "{} days ago".format(int(diff.days))
+	if longFormat:
+		if diff.seconds <= 1:
+			output = "just now"
+		elif diff.seconds < 60:
+			output = "{} seconds ago".format(int(diff.seconds))
+		elif diff.seconds < 120:
+			output = "1 minute ago"
+		elif diff.seconds < 3600:
+			output = "{} minutes ago".format(int(diff.seconds/60))
+		elif diff.seconds < 7200:
+			output = "1 hour ago"
+		elif diff.days < 1:
+			output = "{} hours ago".format(int(diff.seconds/3600))
+		elif diff.days < 2:
+			output = "yesterday"
+		elif diff.days < 30:
+			output = "{} days ago".format(int(diff.days))
+	else:
+		if diff.seconds <= 10:
+			output = "now"
+		elif diff.seconds < 60:
+			output = "{}s".format(int(diff.seconds))
+		elif diff.seconds < 3600:
+			output = "{}m".format(int(diff.seconds/60))
+		elif diff.days < 2:
+			output = "{}h".format(int(diff.seconds/3600))
+		elif diff.days < 30:
+			output = "{}d".format(int(diff.days))
 	return output
 # ========================= [MENU CLASSES] =========================
 
@@ -92,6 +107,7 @@ class Options:
 		{"var": "lang", "type":"enum", "displayName": "Language", "populatedValues": localeNames},
 		{"var": "nerdFont", "type":"bool", "displayName": "Enable Nerd Font display"},
 		{"var": "textImages", "type":"bool", "displayName": "Use images as thumbnails"},
+		{"var": "shortTimeFormat", "type":"bool", "displayName": "Shorten relative time formatting"},
 		{"var": "layout", "type":"enum", "displayName": "Layout", "populatedValues": layoutNames}
 		# {"var": "displayName", "type":"strField", "displayName": "Local username", "default": "Player"} # Not for this commit!
 	]
@@ -393,6 +409,7 @@ class ChartSelect:
 				score = scores[chartData[self.selectedItem]["foldername"]][i + offset]
 				rank = getRank(score["score"])
 				if score["checkPassed"]:
+					text_date_format = prettydate(datetime.datetime.fromtimestamp(score["time"]), not options["shortTimeFormat"])
 					if i+offset == self.selectedScore:
 						color = term.underline
 						if self.selectedTab == 1: color = term.reverse
@@ -401,13 +418,13 @@ class ChartSelect:
 							print_at(23, 20+i, f"{term.grey}{color}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + term.clear_eol + term.normal)
 						else:
 							print_at(23, 20+i, f"{color}{rank[2]}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" + term.clear_eol + term.normal)
+						print_at(term.width - (len(text_date_format)+1), 20+i, term.reverse + text_date_format + term.normal)
 					else:
 						if score["isOutdated"]:
 							print_at(23, 20+i, f"{term.grey}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + term.clear_eol)
 						else: 
 							print_at(23, 20+i, f"{rank[2]}{rank[0]}{term.normal} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" + term.clear_eol)
-					text_date_format = prettydate(datetime.datetime.fromtimestamp(score["time"]))
-					print_at(term.width - (len(text_date_format)+1), 20+i, text_date_format)
+						print_at(term.width - (len(text_date_format)+1), 20+i, text_date_format)
 				else:
 					print_at(25, 20+i, "[INVALID SCORE]")
 			if len(scores[chartData[self.selectedItem]["foldername"]]) == 0:

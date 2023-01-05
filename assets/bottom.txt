@@ -33,3 +33,4 @@ if you're running this with admin permissions, what is wrong with you???
 You want a change of color? Check out your terminal emulator's settings.
 If you don't have access to full color you're not missing out on much.
 sha256 this, sha256 that, how about you sha256 deez nuts in yo m-
+keep in mind you can also modify your options from the options.json file

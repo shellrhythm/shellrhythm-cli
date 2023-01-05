@@ -95,6 +95,12 @@
             "key": "Change key",
             "color": "Change color",
             "delete": "Delete note"
+        },
+        "metadata": {
+            "title": "Title",
+            "artist": "Artist",
+            "author": "Chart author",
+            "description": "Description"
         }
     }
 }

@@ -4,5 +4,6 @@
     "lang": "en",
     "nerdFont": false,
     "textImages": true,
+    "shortTimeFormat": false,
     "displayName": "Player"
 }

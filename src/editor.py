@@ -8,10 +8,12 @@ if __name__ == "src.editor":
 	from src.game import *
 	from src.conductor import *
 	from src.translate import Locale
+	from src.textbox import textbox_logic
 else:
 	from game import *
 	from conductor import *
 	from translate import Locale
+	from textbox import textbox_logic
 
 term = Terminal()
 
@@ -63,6 +65,14 @@ class Editor:
 	noteMenuEnabled = False
 	noteMenuJustDisabled = False
 	noteMenuSelected = 0
+
+	#Metadata settings
+	metadataParts = ["title", "artist", "author", "description"]
+	metadataMenuEnabled = False
+	metadataMenuSelection = 0
+	metadataTyping = False
+	metadataString = ""
+	metadataTypingCursor = 0
 
 	def autocomplete(self, command):
 		output = []
@@ -230,6 +240,16 @@ class Editor:
 		+f"{self.loc('editor.timelineInfos.beat')}: {round(self.localConduc.currentBeat%4, 5)} | "
 		+term.clear_eol)
 
+		if self.metadataMenuEnabled:
+			length = max(len(self.loc('editor.metadata.'+i)) for i in self.metadataParts)
+			for i in range(len(self.metadataParts)):
+				if i == self.metadataMenuSelection:
+					print_at(1,1+i,f"{term.reverse}{self.loc('editor.metadata.'+self.metadataParts[i])}{' '*(length-len(self.loc('editor.metadata.'+self.metadataParts[i]))+1)}: {term.underline}{self.mapToEdit['metadata'][self.metadataParts[i]]}{term.normal}")
+				else:
+					print_at(1,1+i,f"{self.loc('editor.metadata.'+self.metadataParts[i])}{' '*(length-len(self.loc('editor.metadata.'+self.metadataParts[i]))+1)}: {self.mapToEdit['metadata'][self.metadataParts[i]]}")
+			pass
+			print_box(0,0,40,len(self.metadataParts) + 2,term.normal,0)
+
 		if self.keyPanelEnabled:
 			if self.keyPanelSelected == -1:
 				text_key = self.loc("editor.newKey.creating")
@@ -357,7 +377,7 @@ class Editor:
 				if commandSplit[1].replace('.', '', 1).isdigit():
 					self.localConduc.currentBeat += float(commandSplit[1])
 		elif commandSplit[0] == "mt":
-			if len(commandSplit) >= 2:
+			if len(commandSplit) >= 3:
 				valueChanged = ""
 				changedTo = ""
 				if commandSplit[1] in ["title", "t"]:
@@ -377,7 +397,7 @@ class Editor:
 					valueChanged = "description"
 					changedTo = self.mapToEdit["metadata"]["description"]
 				return True, self.loc("editor.commandResults.meta.success").format(valueChanged, changedTo)
-			elif len(commandSplit) == 1:
+			elif len(commandSplit) == 2:
 				returnMessage = ""
 				if commandSplit[1] in ["title", "t"]:
 					returnMessage = self.mapToEdit["metadata"]["title"]
@@ -388,6 +408,14 @@ class Editor:
 				if commandSplit[1] in ["description", "desc", "d"]:
 					returnMessage = self.mapToEdit["metadata"]["description"]
 				return True, returnMessage
+		elif commandSplit[0] == "bpm":
+			if len(commandSplit) == 2:
+				self.mapToEdit["bpm"] = int(commandSplit[1])
+				self.localConduc.bpm = int(commandSplit[1])
+				return True, ""
+			elif len(commandSplit) > 2:
+				return False, self.loc("editor.commandResults.common.tooManyArgs")
+			return False, self.loc("editor.commandResults.common.notEnoughArgs")
 
 		else:
 			if len(commandSplit[0]) > 128:
@@ -429,6 +457,36 @@ class Editor:
 					self.noteMenuEnabled = not self.noteMenuEnabled
 					self.clear_noteSettings(note)
 
+		elif self.metadataMenuEnabled:
+			if not self.metadataTyping:
+				if val.name == "KEY_ESCAPE":
+					print(term.clear)
+					self.metadataMenuEnabled = False
+				if val.name == "KEY_UP":
+					self.metadataMenuSelection -= 1
+					self.metadataMenuSelection = max(self.metadataMenuSelection, 0)
+				if val.name == "KEY_DOWN":
+					self.metadataMenuSelection += 1
+					self.metadataMenuSelection = min(self.metadataMenuSelection, 4)
+				if val.name == "KEY_ENTER":
+					self.metadataTyping = True
+					self.metadataString = self.mapToEdit["metadata"][self.metadataParts[self.metadataMenuSelection]]
+			else:
+				if val.name == "KEY_ESCAPE":
+					self.metadataTyping = False
+					# self.commandString = ""
+					print_at(0,term.height-2, term.clear_eol+term.normal)
+				elif val.name == "KEY_ENTER":
+					self.metadataTyping = False
+					self.mapToEdit["metadata"][self.metadataParts[self.metadataMenuSelection]] = self.metadataString
+					pass #TODO
+				else:
+					if self.metadataString == "" and val.name == "KEY_BACKSPACE":
+						self.commandMode = False
+						# print_at(0,term.height-2, term.clear_eol+term.normal)
+					self.metadataString, self.metadataTypingCursor = textbox_logic(self.metadataString, self.metadataTypingCursor, val)
+
+
 		elif not self.commandMode:
 			# debug_val(val)
 			if self.keyPanelEnabled:
@@ -459,7 +517,10 @@ class Editor:
 						self.localConduc.startAt(self.localConduc.currentBeat)
 					else:
 						self.localConduc.stop()
+						self.localConduc.currentBeat = round(self.localConduc.currentBeat/(self.snap/4)) * (self.snap/4)
 					self.playtest = not self.playtest
+				if val.name == "KEY_ESCAPE":
+					self.metadataMenuEnabled = True
 				if val.name == "KEY_RIGHT":
 					self.localConduc.currentBeat += (1/self.snap)*4
 					print_at(0,term.height-4, term.clear_eol)
@@ -574,32 +635,12 @@ class Editor:
 						self.commandMode = False
 						self.commandString = ""
 						print_at(0,term.height-2, term.on_red+errorStr+term.clear_eol+term.normal)
-			elif val.name == "KEY_BACKSPACE":
-				if self.commandString != "":
-					self.commandString = self.commandString[:len(self.commandString)-(self.commandSelectPos+1)] + self.commandString[len(self.commandString)-self.commandSelectPos:]
-				else:
+			else:
+				if self.commandString == "" and val.name == "KEY_BACKSPACE":
 					self.commandMode = False
 					print_at(0,term.height-2, term.clear_eol+term.normal)
-			elif val.name == "KEY_LEFT":
-				self.commandSelectPos += 1
-				if self.commandSelectPos > len(self.commandString):
-					self.commandSelectPos = len(self.commandString)
-			elif val.name == "KEY_RIGHT":
-				self.commandSelectPos -= 1
-				if self.commandSelectPos < 0:
-					self.commandSelectPos = 0
-			elif val.name == "KEY_TAB":
-				self.commandAutoPropositions = self.autocomplete(self.commandString)
-				if self.commandAutoPropositions != []:
-					self.commandAutoMode = True
+				self.commandString, self.commandSelectPos = textbox_logic(self.commandString, self.commandSelectPos, val, self.autocomplete)
 
-			else:
-				if val.name == None:
-					if self.commandSelectPos == 0:
-						self.commandString += str(val)
-					else:
-						self.commandString = self.commandString[:len(self.commandString)-self.commandSelectPos] + str(val) + self.commandString[len(self.commandString)-self.commandSelectPos:]
-			
 
 	def loop(self):
 		with term.fullscreen(), term.hidden_cursor(), term.raw():
