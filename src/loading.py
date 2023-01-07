@@ -9,9 +9,14 @@ def load_options(options = {}):
 	if os.path.exists("./options.json"):
 		f = open("./options.json")
 		options_string = f.read()
-		options = json.loads(options_string)
+		maybeOptions = json.loads(options_string)
 		f.close()
-		print(options)
+		print(maybeOptions)
+		for k,v in options.items():
+			maybeOptions.setdefault(k, v)
+
+		options = maybeOptions
+
 	else:
 		f = open("./options.json", "x")
 		f.write(json.dumps(options, indent=4))
@@ -39,6 +44,8 @@ def load_locales():
 	return locales, localeNames
 
 def load_scores(chartName, chartChecksum):
+	if not os.path.exists("./scores/"):
+		os.mkdir("./scores/")
 	scoreFiles = [f.name for f in os.scandir("./scores/") if f.is_file() and f.name.startswith(chartName+"-")]
 	output = []
 	for i in range(len(scoreFiles)):

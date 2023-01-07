@@ -3,6 +3,7 @@ import os, sys
 import json
 from term_image.image import *
 import signal
+import platform
 
 box_styles = [
 	"┌─┐││└─┘", #Base box
@@ -22,11 +23,12 @@ def on_resize(sig, action):
 	beforeWidth = term.width
 	beforeHeight = term.height
 
-signal.signal(signal.SIGWINCH, on_resize)
+if platform.system() != "Windows":
+	signal.signal(signal.SIGWINCH, on_resize)
 
 def check_term_size():
 	if beforeWidth != term.width or beforeHeight != term.height:
-		on_resize(signal.SIGWINCH, None)
+		on_resize(None, None)
 
 def print_at(x, y, toPrint):
 	print(f"{term.move_xy(x=int(x), y=int(y))}" + toPrint)
