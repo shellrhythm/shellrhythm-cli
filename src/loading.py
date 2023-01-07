@@ -38,7 +38,7 @@ def load_locales():
 		locales[localeNames[i]] = newLoc
 	return locales, localeNames
 
-def load_scores(chartName):
+def load_scores(chartName, chartChecksum):
 	scoreFiles = [f.name for f in os.scandir("./scores/") if f.is_file() and f.name.startswith(chartName+"-")]
 	output = []
 	for i in range(len(scoreFiles)):
@@ -63,6 +63,11 @@ def load_scores(chartName):
 			leJson["isOutdated"] = False
 
 		f.close()
+
+		if leJson["checksum"] != chartChecksum:
+			print(term.yellow+"[WARNING] Score " + leHash + " wasn't made on the current version of this chart!" + term.normal)
+			print(term.yellow+"[WARNING] Expected: " + chartChecksum + ", but got " + leJson["checksum"] + term.normal)
+			leJson["isOutdated"] = True
 		output.append(leJson)
 
 	output.sort(key=lambda score:-score["score"] + (10**8 if score["isOutdated"] or not score["checkPassed"] else 0))
@@ -122,11 +127,12 @@ def load_charts():
 		for i in range(len(charts)):
 			print(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})")
 			f = open("./charts/" + charts[i] + "/data.json").read()
+			completelyNormalJson = json.loads(f)
 			jsonThing = json.loads(f)
 			jsonThing = check_chart(jsonThing, charts[i])
 			jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
 			chartData.append(jsonThing)
-			scores[charts[i]] = load_scores(charts[i])
+			scores[charts[i]] = load_scores(charts[i], hashlib.sha256(f.encode("utf-8")).hexdigest())
 		print("All charts loaded successfully!")
 	else:
 		print(f"{term.yellow}[WARN] Chart folder inexistant!{term.normal}")

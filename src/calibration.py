@@ -42,7 +42,7 @@ class Calibration:
 
 	def handle_input(self):
 		val = ''
-		val = term.inkey(timeout=1/120)
+		val = term.inkey(timeout=1/120, esc_delay=0)
 		if val:
 			if self.calibrationMenu == "CalibrationGlobal":
 				offset = (self.conduc.currentBeat - int(self.conduc.currentBeat)) * (60/self.conduc.bpm)

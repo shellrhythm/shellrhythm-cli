@@ -110,6 +110,8 @@ class Conductor:
 				self.song.play()
 				self.song.move2position_seconds(secPos)
 				return True
+		else:
+			self.song.play()
 		return False
 
 

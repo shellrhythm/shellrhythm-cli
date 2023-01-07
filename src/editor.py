@@ -24,7 +24,9 @@ class Editor:
 	mapToEdit = {}
 	localConduc = Conductor()
 	playtest = False
+	beatSound = Song("assets/clap.wav")
 	dontDrawList = []
+	dontBeat = [] #Notes that have already got their beatsound played
 	
 	#Saving
 	needsSaving = False
@@ -244,7 +246,10 @@ class Editor:
 			length = max(len(self.loc('editor.metadata.'+i)) for i in self.metadataParts)
 			for i in range(len(self.metadataParts)):
 				if i == self.metadataMenuSelection:
-					print_at(1,1+i,f"{term.reverse}{self.loc('editor.metadata.'+self.metadataParts[i])}{' '*(length-len(self.loc('editor.metadata.'+self.metadataParts[i]))+1)}: {term.underline}{self.mapToEdit['metadata'][self.metadataParts[i]]}{term.normal}")
+					if self.metadataTyping:
+						print_at(1,1+i,f"{term.reverse}{self.loc('editor.metadata.'+self.metadataParts[i])}{' '*(length-len(self.loc('editor.metadata.'+self.metadataParts[i]))+1)}: {term.underline}{self.metadataString}{term.normal}")
+					else:
+						print_at(1,1+i,f"{term.reverse}{self.loc('editor.metadata.'+self.metadataParts[i])}{' '*(length-len(self.loc('editor.metadata.'+self.metadataParts[i]))+1)}: {term.underline}{self.mapToEdit['metadata'][self.metadataParts[i]]}{term.normal}")
 				else:
 					print_at(1,1+i,f"{self.loc('editor.metadata.'+self.metadataParts[i])}{' '*(length-len(self.loc('editor.metadata.'+self.metadataParts[i]))+1)}: {self.mapToEdit['metadata'][self.metadataParts[i]]}")
 			pass
@@ -315,8 +320,9 @@ class Editor:
 			else:
 				print_at(0, term.height-7, term.normal+f"{'editor.timelineInfos.curNote'}: {self.selectedNote} | {self.loc('editor.timelineInfos.endpos')}: {selectedNote['beatpos']}{term.clear_eol}")
 		else:
-			text_nomaploaded = self.loc("editor.emptyChart")
-			print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), term.normal+text_nomaploaded)
+			if not self.keyPanelEnabled:
+				text_nomaploaded = self.loc("editor.emptyChart")
+				print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), term.normal+text_nomaploaded)
 			
 		if self.commandMode:
 			print_at(0,term.height-2, term.normal+":"+self.commandString+term.clear_eol)
@@ -331,16 +337,49 @@ class Editor:
 	def run_command(self, command = ""):
 		commandSplit = command.split(" ")
 		print_at(0,term.height-2, term.clear_eol)
+		# :q - Quit
 		if commandSplit[0] == "q!" or (commandSplit[0] == "q" and not self.needsSaving):
 			self.turnOff = True
 			return True, ""
+
+		# :w - Write (Save) | 1 optional argument (where to save it)
 		elif commandSplit[0] == "w":
 			output = json.dumps(self.mapToEdit)
-			f = open(self.fileLocation, "w")
+			if len(commandSplit) == 2:
+				self.fileLocation = f"./charts/{commandSplit[1]}/data.json"
+			elif len(commandSplit) == 3:
+				self.fileLocation = f"./charts/{commandSplit[1]}/{commandSplit[2]}.json"
+			elif self.fileLocation == "" and len(commandSplit) == 1:
+				return False, self.loc("editor.commandResults.common.notEnoughArgs")
+			if os.path.exists(self.fileLocation):
+				f = open(self.fileLocation, "w")
+			else:
+				if not os.path.exists("./charts/"):
+					os.mkdir("./charts")
+				if not os.path.exists(f"./charts/{commandSplit[1]}"):
+					os.mkdir(f"./charts/{commandSplit[1]}")
+				f = open(self.fileLocation, "x")
 			f.write(output)
 			f.close()
 			return True, self.loc("editor.commandResults.save")
-			#save
+		
+		# :wq - Save and Quit | 1 optional argument (where to save it)
+		elif commandSplit[0] == "wq!" or (commandSplit[0] == "wq" and not self.needsSaving):
+			output = json.dumps(self.mapToEdit)
+			if len(commandSplit) == 2:
+				self.fileLocation = f"./charts/{commandSplit[1]}/data.json"
+			elif len(commandSplit) == 3:
+				self.fileLocation = f"./charts/{commandSplit[1]}/{commandSplit[2]}.json"
+			if os.path.exists(self.fileLocation):
+				f = open(self.fileLocation, "w")
+			else:
+				f = open(self.fileLocation, "x")
+			f.write(output)
+			f.close()
+			self.turnOff = True
+			return True, self.loc("editor.commandResults.save")
+
+		# :o - Open 
 		elif commandSplit[0] == "o":
 			if len(commandSplit) == 2:
 				fileExists = self.load_chart(commandSplit[1])
@@ -355,6 +394,8 @@ class Editor:
 					return False, self.loc("editor.commandResults.common.notEnoughArgs")
 				else:
 					return False, self.loc("editor.commandResults.common.tooManyArgs")
+		
+		# :p - Place
 		elif commandSplit[0] == "p":
 			if len(commandSplit) > 1:
 				if commandSplit[1].isdigit():
@@ -366,16 +407,20 @@ class Editor:
 				self.keyPanelKey = 0
 				return True, ""
 			# return False, "Whoops, looks like you're in unimplemented territory!"
+
+		# :s - Snap
 		elif commandSplit[0] == "s":
-			#Change snap
 			if len(commandSplit) > 1:
 				if commandSplit[1].replace('.', '', 1).isdigit():
 					self.snap = float(commandSplit[1])
+
+		# :m - Move cursor
 		elif commandSplit[0] == "m":
-			#Move
 			if len(commandSplit) > 1:
 				if commandSplit[1].replace('.', '', 1).isdigit():
 					self.localConduc.currentBeat += float(commandSplit[1])
+		
+		# :mt - Metadata
 		elif commandSplit[0] == "mt":
 			if len(commandSplit) >= 3:
 				valueChanged = ""
@@ -408,6 +453,8 @@ class Editor:
 				if commandSplit[1] in ["description", "desc", "d"]:
 					returnMessage = self.mapToEdit["metadata"]["description"]
 				return True, returnMessage
+
+		# :bpm - Change BPM
 		elif commandSplit[0] == "bpm":
 			if len(commandSplit) == 2:
 				self.mapToEdit["bpm"] = int(commandSplit[1])
@@ -427,10 +474,20 @@ class Editor:
 
 	def handle_input(self):
 		val = ''
-		val = term.inkey(timeout=1/120)
+		val = term.inkey(timeout=1/120, esc_delay=0)
 
 		if len(self.mapToEdit["notes"]) == 0 and self.noteMenuEnabled:
 			self.noteMenuEnabled = False
+
+		if self.playtest:
+			for note in self.mapToEdit["notes"]:
+				remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
+				if note not in self.dontBeat and remBeats <= 0:
+					self.beatSound.move2position_seconds(0)
+					self.beatSound.play()
+					self.dontBeat.append(note)
+				if note in self.dontBeat and remBeats > 0:
+					self.dontBeat.remove(note)
 
 		if self.noteMenuEnabled:
 			if val:
@@ -467,7 +524,7 @@ class Editor:
 					self.metadataMenuSelection = max(self.metadataMenuSelection, 0)
 				if val.name == "KEY_DOWN":
 					self.metadataMenuSelection += 1
-					self.metadataMenuSelection = min(self.metadataMenuSelection, 4)
+					self.metadataMenuSelection = min(self.metadataMenuSelection, len(self.metadataParts) - 1)
 				if val.name == "KEY_ENTER":
 					self.metadataTyping = True
 					self.metadataString = self.mapToEdit["metadata"][self.metadataParts[self.metadataMenuSelection]]
@@ -504,7 +561,8 @@ class Editor:
 						self.keyPanelSelected = -1
 						self.keyPanelKey = -1
 				elif val:
-					self.keyPanelKey = self.layout.index(str(val))
+					if str(val) in self.layout:
+						self.keyPanelKey = self.layout.index(str(val))
 
 			else:
 				if val.name != "KEY_ENTER" and val:
@@ -514,6 +572,10 @@ class Editor:
 					self.commandString = ""
 				if val == " ":
 					if not self.playtest:
+						for note in self.mapToEdit["notes"]:
+							remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
+							if remBeats < 0:
+								self.dontBeat.append(note)
 						self.localConduc.startAt(self.localConduc.currentBeat)
 					else:
 						self.localConduc.stop()
@@ -531,6 +593,7 @@ class Editor:
 					self.keyPanelEnabled = True
 					self.keyPanelSelected = -1
 					self.keyPanelKey = 0
+					print_at(0,int(term.height*0.4), term.clear_eol)
 				if val == "Z":
 					self.set_end_note(self.localConduc.currentBeat)
 				if val == "e":

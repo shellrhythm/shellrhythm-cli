@@ -51,7 +51,7 @@ class LayoutCreator:
 
 	def handle_input(self):
 		val = ''
-		val = term.inkey(timeout=1/120)
+		val = term.inkey(timeout=1/120, esc_delay=0)
 
 		if val:
 			if val.name == "KEY_ESCAPE":

@@ -8,9 +8,9 @@ Every script that comes from the `master` branch has been removed. We've been st
 ## Status
 
 Title screen: `100%`<br/>
-Chart selector: `97%` (To add: Score preview)<br/>
+Chart selector: `100%`<br/>
 Gameplay: `100%`<br/>
-Editor: `90%` (Need to add an interface to change metadata)<br/>
+Editor: `95%`<br/>
 Options: `100%`
 
 # shellrhythm
@@ -62,9 +62,10 @@ Check `/charts/CHARTING.md`, everything you need to know is in there.
 Sure! THe entire codebase is under the ISC license, so honestly do whatever with it.
 However, one of the library this project uses, [pybass3](https://github.com/devdave/pybass3/), uses a library called BASS, which is a commercial product. While it is free for non-commercial use, please ensure to [obtain a valid licence](http://www.un4seen.com/bass.html#license) if you plan on distributing any application using it commercially.
 
-## Known issues
+## Known issues (that are bound to the packages I'm using)
 
 - [Linux isn't fully compatible with pybass3 yet,](https://github.com/devdave/pybass3/issues/2) however [there is a workaround to get it working anyways.](./docs/PYBASS3_LINUX.md)
+- [Framebuffer issues when resizing](https://github.com/HastagGuigui/shellrhythm/issues/8) (this is fixed on Linux, but [not yet on Windows](https://github.com/jquast/blessed/issues/131).)
 
 ## Help! I'm having issues!
 

@@ -97,11 +97,12 @@ class Game:
 	def resultsFile(self):
 		global keys
 		self.score = self.scoreCalc()
+		toBeCheckSumd = dict((i,self.chart[i]) for i in self.chart if i != "actualSong")
 		output = {
 			"accuracy": self.accuracy,
 			"score": self.score,
 			"judgements": self.judgements,
-			"checksum": hashlib.sha256(json.dumps(f"{self.chart['notes']}",skipkeys=True,ensure_ascii=False).encode("utf-8")).hexdigest(),
+			"checksum": hashlib.sha256(json.dumps(toBeCheckSumd,skipkeys=True,ensure_ascii=False).encode("utf-8")).hexdigest(),
 			"version": self.version,
 			"time": time.time(),
 			"playername": self.playername
@@ -268,16 +269,6 @@ class Game:
 		return [int(screenPos[0]*width)+x, int(screenPos[1]*height)+y]
 
 	def actualKeysRendering(self, notes):
-		# if playfield_mode == "scale":
-		# 	print_at(5,2,"-"* (term.width - 9))
-		# 	print_at(5,term.height - 3,"-"* (term.width - 9))
-		# 	print_column(4,3,term.height-6,"|")
-		# 	print_column(term.width-4,3,term.height-6, "|")
-		# elif playfield_mode == "setSize":
-		# 	print_at(5,2,"-"* (defaultSize[0]))
-		# 	print_at(5,defaultSize[1] + 3,"-"* (defaultSize[0]))
-		# 	print_column(4,3,defaultSize[1],"|")
-		# 	print_column(defaultSize[0]+5, 3, defaultSize[1], "|")
 		if len(notes) >= len(self.judgements):
 			while len(notes) >= len(self.judgements):
 				self.judgements.append({})
@@ -296,7 +287,7 @@ class Game:
 						int(note["screenpos"][1]*(term.height-9))+4]
 				color = colors[note["color"]]
 				key = keys[note["key"]]
-				remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
+				remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat - (self.localConduc.offset/(60/self.localConduc.bpm))
 				remTime = ((note["beatpos"][0] * 4 + note["beatpos"][1]) * (60/self.localConduc.bpm)) - self.localConduc.currentTimeSec
 				approachedBeats = (remBeats * self.chart["approachRate"]) + 1
 				if approachedBeats > -0.1 and approachedBeats < 4 and note not in self.dontDraw:
@@ -376,7 +367,7 @@ class Game:
 	def handle_input(self):
 		if not self.localConduc.isPaused:
 			val = ''
-			val = term.inkey(timeout=1/inputFrequency)
+			val = term.inkey(timeout=1/inputFrequency, esc_delay=0)
 			# debug_val(val)
 
 			if val.name == "KEY_ESCAPE":
@@ -429,7 +420,7 @@ class Game:
 								break;
 		else:
 			val = ''
-			val = term.inkey(timeout=1/60)
+			val = term.inkey(timeout=1/60, esc_delay=0)
 			
 			if val.name == "KEY_ESCAPE":
 				self.localConduc.resume()

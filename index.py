@@ -12,6 +12,7 @@ from src.layout import *
 from src.results import *
 
 import sys
+import platform
 # print(sys.stdout.encoding)
 
 __version__ = "1.0.0"
@@ -208,7 +209,7 @@ class Options:
 		(Note: it is called *after* the `draw()` function, and takes the entire frame to run.)
 		"""
 		val = ''
-		val = term.inkey(timeout=1/60)
+		val = term.inkey(timeout=1/60, esc_delay=0)
 		# debug_val(val)
 		global options
 
@@ -301,6 +302,9 @@ class Options:
 				self.draw()
 
 				self.handle_input()
+
+				if platform.system() == "Windows":
+					check_term_size()
 
 		if self.goBack == True:
 			self.goBack = False
@@ -445,8 +449,10 @@ class ChartSelect:
 			loadedGame.playername = options["displayName"]
 			loadedGame.play(chartData[self.selectedItem], options["layout"])
 			# print(term.clear)
+			toBeCheckSumd = dict((i,chartData[self.selectedItem][i]) for i in chartData[self.selectedItem] if i != "actualSong")
+			checksum = hashlib.sha256(json.dumps(toBeCheckSumd,skipkeys=True,ensure_ascii=False).encode("utf-8")).hexdigest()
 			global scores
-			scores[chartData[self.selectedItem]["foldername"]] = load_scores(chartData[self.selectedItem]["foldername"])
+			scores[chartData[self.selectedItem]["foldername"]] = load_scores(chartData[self.selectedItem]["foldername"], checksum)
 			self.goBack = True
 			conduc.play()
 		else:
@@ -461,7 +467,7 @@ class ChartSelect:
 		(Note: it is called *after* the `draw()` function, and takes the entire frame to run.)
 		"""
 		val = ''
-		val = term.inkey(timeout=1/60)
+		val = term.inkey(timeout=1/60, esc_delay=0)
 		# debug_val(val)
 
 		if val.name == "KEY_DOWN" or val == "j":
@@ -522,6 +528,9 @@ class ChartSelect:
 				else:
 					self.draw()
 					self.handle_input()
+
+				if platform.system() == "Windows":
+					check_term_size()
 		if self.goBack == True:
 			self.goBack = False
 			self.turnOff = False
@@ -645,7 +654,7 @@ class TitleScreen:
 		(Note: it is called *after* the `draw()` function.)
 		"""
 		val = ''
-		val = term.inkey(timeout=1/60)
+		val = term.inkey(timeout=1/60, esc_delay=0)
 		debug_val(val)
 
 		if val.name == "KEY_LEFT" or val == "h":
@@ -675,6 +684,9 @@ class TitleScreen:
 				self.draw()
 
 				self.handle_input()
+
+				if platform.system() == "Windows":
+					check_term_size()
 		if self.goBack == True:
 			self.goBack = False
 			self.turnOff = False

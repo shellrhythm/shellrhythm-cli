@@ -2,6 +2,7 @@ from blessed import Terminal
 import os, sys
 import json
 from term_image.image import *
+import signal
 
 box_styles = [
 	"┌─┐││└─┘", #Base box
@@ -10,6 +11,22 @@ box_styles = [
 ]
 
 term = Terminal()
+
+beforeWidth = 0
+beforeHeight = 0
+
+def on_resize(sig, action):
+	print(term.clear)
+	global beforeWidth
+	global beforeHeight
+	beforeWidth = term.width
+	beforeHeight = term.height
+
+signal.signal(signal.SIGWINCH, on_resize)
+
+def check_term_size():
+	if beforeWidth != term.width or beforeHeight != term.height:
+		on_resize(signal.SIGWINCH, None)
 
 def print_at(x, y, toPrint):
 	print(f"{term.move_xy(x=int(x), y=int(y))}" + toPrint)

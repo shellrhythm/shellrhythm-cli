@@ -96,7 +96,7 @@ class ResultsScreen:
 
 	def handle_input(self):
 		val = ''
-		val = term.inkey(timeout=1/inputFrequency)
+		val = term.inkey(timeout=1/inputFrequency, esc_delay=0)
 		# debug_val(val)
 
 		if val.name == "KEY_ESCAPE":
