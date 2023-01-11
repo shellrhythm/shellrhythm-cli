@@ -35,7 +35,9 @@
         "nerdFont": "Activer l'affichage de caractères Nerd Font",
         "textImages": "Utiliser des images comme miniatures",
         "layout": "Disposition du clavier",
-        "layoutTip": "Appuyez sur L pour créer votre propre disposition!"
+        "layoutTip": "Appuyez sur L pour créer votre propre disposition!",
+        "shortTimeFormat": "Raccourcir les dates relatives",
+        "displayName": "Nom d'utilisateur local"
     },
     "calibration":{
         "hit": "Tapez en rythme!",
@@ -95,6 +97,25 @@
             "artist": "Artiste",
             "author": "Auteur du niveau",
             "description": "Description"
+        }
+    },
+    "datetime":{
+        "long":{
+            "now": "à l'instant",
+            "secs": "il y a {} secondes",
+            "min1": "il y a 1 minute",
+            "min": "il y a {} minutes",
+            "hour1": "il y a 1 heure",
+            "hour": "il y a {} heures",
+            "ystd": "hier",
+            "day": "il y a {} jours"
+        },
+        "short":{
+            "now": "maintenant",
+            "secs": "{}s",
+            "mins": "{}m",
+            "hours": "{}h",
+            "days": "{}j"
         }
     }
 }

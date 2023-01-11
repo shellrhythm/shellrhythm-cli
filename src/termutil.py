@@ -15,13 +15,17 @@ term = Terminal()
 
 beforeWidth = 0
 beforeHeight = 0
+hasBeenResized = False
+minWidth = 125
+minHeight = 32
 
 def on_resize(sig, action):
 	print(term.clear)
-	global beforeWidth
-	global beforeHeight
+	sys.stdout.write("\x1b[8;{rows};{cols}t".format(rows=max(term.height,minHeight), cols=max(term.width, minWidth)))
+	global beforeWidth, beforeHeight, hasBeenResized
 	beforeWidth = term.width
 	beforeHeight = term.height
+	hasBeenResized = True
 
 if platform.system() != "Windows":
 	signal.signal(signal.SIGWINCH, on_resize)

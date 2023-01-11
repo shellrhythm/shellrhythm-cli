@@ -1,6 +1,5 @@
 from blessed import Terminal
 import json
-import copy
 from term_image.image import *
 import random
 # from src import *
@@ -67,33 +66,35 @@ def prettydate(d, longFormat = False):
 	diff = datetime.datetime.fromtimestamp(time.time()) - d
 	output = d.strftime('%d %b %y, %H:%M:%S')
 	if longFormat:
-		if diff.seconds <= 1:
-			output = "just now"
-		elif diff.seconds < 60:
-			output = "{} seconds ago".format(int(diff.seconds))
-		elif diff.seconds < 120:
-			output = "1 minute ago"
-		elif diff.seconds < 3600:
-			output = "{} minutes ago".format(int(diff.seconds/60))
-		elif diff.seconds < 7200:
-			output = "1 hour ago"
-		elif diff.days < 1:
-			output = "{} hours ago".format(int(diff.seconds/3600))
+		if diff.days < 1:
+			if diff.seconds <= 1:
+				output = locales[selectedLocale](f"datetime.long.now")
+			elif diff.seconds < 60:
+				output = locales[selectedLocale](f"datetime.long.secs").format(int(diff.seconds))
+			elif diff.seconds < 120:
+				output = locales[selectedLocale](f"datetime.long.min1")
+			elif diff.seconds < 3600:
+				output = locales[selectedLocale](f"datetime.long.min").format(int(diff.seconds/60))
+			elif diff.seconds < 7200:
+				output = locales[selectedLocale](f"datetime.long.hour1")
+			else:
+				output = locales[selectedLocale](f"datetime.long.hour").format(int(diff.seconds/3600))
 		elif diff.days < 2:
-			output = "yesterday"
+			output = locales[selectedLocale](f"datetime.long.ystd")
 		elif diff.days < 30:
-			output = "{} days ago".format(int(diff.days))
+			output = locales[selectedLocale](f"datetime.long.day").format(int(diff.days))
 	else:
-		if diff.seconds <= 10:
-			output = "now"
-		elif diff.seconds < 60:
-			output = "{}s".format(int(diff.seconds))
-		elif diff.seconds < 3600:
-			output = "{}m".format(int(diff.seconds/60))
-		elif diff.days < 2:
-			output = "{}h".format(int(diff.seconds/3600))
+		if diff.days < 1:
+			if diff.seconds <= 10:
+				output = locales[selectedLocale](f"datetime.short.now")
+			elif diff.seconds < 60:
+				output = locales[selectedLocale](f"datetime.short.secs").format(int(diff.seconds))
+			elif diff.seconds < 3600:
+				output = locales[selectedLocale](f"datetime.short.mins").format(int(diff.seconds/60))
+			else:
+				output = locales[selectedLocale](f"datetime.short.hours").format(int(diff.seconds/3600))
 		elif diff.days < 30:
-			output = "{}d".format(int(diff.days))
+			output = locales[selectedLocale](f"datetime.short.days").format(int(diff.days))
 	return output
 # ========================= [MENU CLASSES] =========================
 
@@ -102,21 +103,24 @@ class Options:
 	turnOff = False
 	deltatime = 0
 	selectedItem = 0
-	maxItem = 5
 	menuOptions = [
-		{"var": "globalOffset", "type":"intField", "displayName": "Global offset (ms)", "isOffset": True, "snap": 0.001},
-		{"var": "lang", "type":"enum", "displayName": "Language", "populatedValues": localeNames},
-		{"var": "nerdFont", "type":"bool", "displayName": "Enable Nerd Font display"},
-		{"var": "textImages", "type":"bool", "displayName": "Use images as thumbnails"},
-		{"var": "shortTimeFormat", "type":"bool", "displayName": "Shorten relative time formatting"},
-		{"var": "layout", "type":"enum", "displayName": "Layout", "populatedValues": layoutNames}
-		# {"var": "displayName", "type":"strField", "displayName": "Local username", "default": "Player"} # Not for this commit!
+		{"var": "globalOffset",		"type":"intField",	"displayName": "Global offset (ms)", "isOffset": True, "snap": 0.001},
+		{"var": "lang",				"type":"enum", 		"displayName": "Language", "populatedValues": localeNames},
+		{"var": "nerdFont",			"type":"bool", 		"displayName": "Enable Nerd Font display"},
+		{"var": "textImages",		"type":"bool", 		"displayName": "Use images as thumbnails"},
+		{"var": "shortTimeFormat",	"type":"bool", 		"displayName": "Shorten relative time formatting"},
+		{"var": "layout", 			"type":"enum", 		"displayName": "Layout", "populatedValues": layoutNames},
+		{"var": "displayName", 		"type":"strField",	"displayName": "Local username", "default": "Player"}
 	]
 	enumInteracted = -1
 	curEnumValue = -1
 	suggestedOffset = 0
 	isPickingOffset = False
 	goBack = False
+
+	strInteracted = -1
+	curInput = ""
+	strCursor = 0
 
 	def populate_enum(self):
 		self.menuOptions[1]["populatedValues"] = localeNames
@@ -128,11 +132,13 @@ class Options:
 
 	def moveBy(self, x):
 		print(term.clear)
-		self.selectedItem = (self.selectedItem + x)%self.maxItem
+		self.selectedItem = (self.selectedItem + x)%len(self.menuOptions)
 	
+	# --- INTERACT FUNCTIONS ---
 	def interactBool(self, boolOption):
 		global options
 		options[boolOption["var"]] = not options[boolOption["var"]]
+
 	def interactEnum(self, enum, curChoice):
 		'''curChoice is an integer.'''
 		global options
@@ -142,6 +148,15 @@ class Options:
 			selectedLocale = enum["populatedValues"][curChoice]
 			print(term.clear)
 			self.translate()
+	
+	def interactStr(self, curChoice):
+		global options
+		global selectedLocale
+		self.strInteracted = curChoice
+		self.curInput = options[self.menuOptions[curChoice]["var"]]
+
+
+	# --- END INTERACT FUNC ---
 
 	def saveOptions(self):
 		f = open("./options.json", "w")
@@ -168,7 +183,7 @@ class Options:
 				print_at(0,i*2 + 3, term.normal + f" {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}  ")
 			if leType == "intField":
 				if self.selectedItem == i and self.menuOptions[i]["isOffset"]:
-					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + (" "*int(term.width*0.3)) + locales[selectedLocale]("options.calibrationTip") + term.clear_eol)
+					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + (" "*int(term.width*0.2)) + locales[selectedLocale]("options.calibrationTip") + term.clear_eol)
 				else:
 					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + term.clear_eol)
 			if leType == "enum":
@@ -176,7 +191,7 @@ class Options:
 					print_at(maxLength + 6, i*2+3, term.reverse + "{ " + options[leVar] + " }" +term.normal + (" "*6) + str(self.menuOptions[i]["populatedValues"]) + term.clear_eol)
 				else:
 					if self.selectedItem == i and self.menuOptions[i]["var"] == "layout":
-						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + (" "*int(term.width*0.3)) + locales[selectedLocale]("options.layoutTip") + term.clear_eol)
+						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + (" "*int(term.width*0.2)) + locales[selectedLocale]("options.layoutTip") + term.clear_eol)
 					else:
 						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + term.clear_eol)
 			if leType == "bool":
@@ -184,6 +199,14 @@ class Options:
 					print_at(maxLength + 6, i*2+3, "☑")
 				else:
 					print_at(maxLength + 6, i*2+3, "☐")
+			if leType == "strField":
+				if self.selectedItem == i:
+					if self.strInteracted == i:
+						print_at(maxLength + 6, i*2+3, term.underline + self.curInput + term.clear_eol + term.normal)
+					else:
+						print_at(maxLength + 6, i*2+3, term.reverse + options[leVar] + term.clear_eol + term.normal)
+				else:
+					print_at(maxLength + 6, i*2+3, term.normal + options[leVar])
 
 		if self.menuOptions[self.selectedItem]["var"] == "layout":
 			text = f"┌───{'┬───'*9}┐\n" + "".join(["".join([f"│ {key} " for key in layouts[options["layout"]]][10*i:10*(i+1)]) + f"│\n├───{'┼───'*9}┤\n" for i in range(2)]) + "".join([f"│ {key} " for key in layouts[options["layout"]]][20:30]) + f"│\n└───{'┴───'*9}┘\n"
@@ -202,6 +225,9 @@ class Options:
 		if selectedOption["type"] == "enum":
 			self.enumInteracted = self.selectedItem
 			self.curEnumValue = selectedOption["populatedValues"].index(options[selectedOption["var"]])
+		if selectedOption["type"] == "strField":
+			self.interactStr(self.selectedItem)
+			
 
 	def handle_input(self):
 		"""
@@ -213,7 +239,23 @@ class Options:
 		# debug_val(val)
 		global options
 
-		if self.isPickingOffset:
+		if self.strInteracted > -1:
+			leVar = self.menuOptions[self.strInteracted]["var"]
+			if val.name == "KEY_ENTER":
+				options[leVar] = self.curInput
+				self.strInteracted = -1
+				self.curInput = ""
+			elif val.name == "KEY_ESCAPE":
+				self.strInteracted = -1
+				self.curInput = ""
+			else:
+				self.curInput, self.strCursor = textbox_logic(self.curInput, self.strCursor, val)
+				if self.curInput == "":
+					if options[leVar] == "":
+						options[leVar] = self.menuOptions[self.strInteracted]["default"]
+					self.strInteracted = -1
+
+		elif self.isPickingOffset:
 			if val == "y":
 				leVar = self.menuOptions[self.selectedItem]["var"]
 				options[leVar] = round(self.suggestedOffset,3)
@@ -329,16 +371,15 @@ class ChartSelect:
 	funniSpeen = 0
 	goBack = False
 	resultsThing = ResultsScreen()
-	
+
 	def draw(self):
 		for i in range(len(chartData)):
-			if self.selectedTab == 0:
-				if i == self.selectedItem:
-					text = chartData[i]["metadata"]["artist"] + " - " + chartData[i]["metadata"]["title"] + " // "
-					print_cropped(0, i+1, 20, text, int(conduc.currentBeat), term.reverse)
-				else:
-					text = chartData[i]["metadata"]["artist"] + " - " + chartData[i]["metadata"]["title"]
-					print_cropped(0, i+1, 20, text, 0, term.normal, False)
+			if i == self.selectedItem:
+				text = chartData[i]["metadata"]["artist"] + " - " + chartData[i]["metadata"]["title"] + " // "
+				print_cropped(0, i+1, 20, text, int(conduc.currentBeat), term.reverse)
+			else:
+				text = chartData[i]["metadata"]["artist"] + " - " + chartData[i]["metadata"]["title"]
+				print_cropped(0, i+1, 20, text, 0, term.normal, False)
 			print_at(20,i,f"{term.normal}")
 		print_column(20, 0, 19, "┃")
 		print_column(20, 20, term.height - 22, "┃")
@@ -452,7 +493,7 @@ class ChartSelect:
 			toBeCheckSumd = dict((i,chartData[self.selectedItem][i]) for i in chartData[self.selectedItem] if i != "actualSong")
 			checksum = hashlib.sha256(json.dumps(toBeCheckSumd,skipkeys=True,ensure_ascii=False).encode("utf-8")).hexdigest()
 			global scores
-			scores[chartData[self.selectedItem]["foldername"]] = load_scores(chartData[self.selectedItem]["foldername"], checksum)
+			scores[chartData[self.selectedItem]["foldername"]] = load_scores(chartData[self.selectedItem]["foldername"], checksum, chartData[self.selectedItem])
 			self.goBack = True
 			conduc.play()
 		else:
@@ -596,6 +637,9 @@ class TitleScreen:
 			# sys.exit(0)
 	
 	def draw(self):
+		print_lines_at(0,1,self.logo,True)
+		print_at(int((term.width - len(self.curBottomText)) / 2), len(self.logo.splitlines()) + 2, self.curBottomText)
+
 		text_play = locales[selectedLocale]("titlescreen.play") #python be wack
 		text_edit = locales[selectedLocale]("titlescreen.edit") #python be wack
 		text_options = locales[selectedLocale]("titlescreen.options") #python be wack
@@ -655,7 +699,7 @@ class TitleScreen:
 		"""
 		val = ''
 		val = term.inkey(timeout=1/60, esc_delay=0)
-		debug_val(val)
+		# debug_val(val)
 
 		if val.name == "KEY_LEFT" or val == "h":
 			self.moveBy(0)
@@ -677,8 +721,6 @@ class TitleScreen:
 		# self.curBottomText = bottomTextLines[0]
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
 			print(term.clear)
-			print_lines_at(0,1,self.logo,True)
-			print_at(int((term.width - len(self.curBottomText)) / 2), len(self.logo.splitlines()) + 2, self.curBottomText)
 			while not self.turnOff:
 				self.deltatime = conduc.update()
 				self.draw()

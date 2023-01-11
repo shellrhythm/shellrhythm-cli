@@ -8,11 +8,11 @@ import hashlib
 if __name__ == "src.game":
 	from src.termutil import *
 	from src.conductor import *
-	from src.results import ResultsScreen
+	from src.results import *
 else:
 	from termutil import *
 	from conductor import *
-	from results import ResultsScreen
+	from results import *
 
 term = Terminal()
 
@@ -50,7 +50,7 @@ playfield_mode = "scale"
 maxScore = 1000000
 
 class Game:
-	version = 1
+	version = 1.1
 	localConduc = Conductor()
 	beatSound = Song("assets/clap.wav")
 	chart = {}
@@ -83,20 +83,9 @@ class Game:
 			else:
 				return output
 
-	def scoreCalc(self):
-		filteredJudgementCount = 0
-		for i in self.judgements:
-			if i != {}:
-				filteredJudgementCount += 1
-		totalNotes = 0
-		for i in self.chart["notes"]:
-			if i["type"] == "hit_object":
-				totalNotes += 1
-		return ((self.accuracy/100) * (maxScore*0.8) + ((1/(self.missesCount+1)) * (maxScore*0.2))) * (filteredJudgementCount/totalNotes)
-
 	def resultsFile(self):
 		global keys
-		self.score = self.scoreCalc()
+		self.score = scoreCalc(maxScore, self.judgements, self.accuracy, self.missesCount, self.chart)
 		toBeCheckSumd = dict((i,self.chart[i]) for i in self.chart if i != "actualSong")
 		output = {
 			"accuracy": self.accuracy,
@@ -139,7 +128,7 @@ class Game:
 					"judgement": judgement
 				}
 				self.accuracyUpdate()
-				self.score = int(self.scoreCalc())
+				self.score = int(scoreCalc(maxScore, self.judgements, self.accuracy, self.missesCount, self.chart))
 				calc_pos = []
 				if playfield_mode == "setSize":
 					calc_pos = [
@@ -190,7 +179,7 @@ class Game:
 					"judgement": judgement
 				}
 				self.accuracyUpdate()
-				self.score = int(self.scoreCalc())
+				self.score = int(scoreCalc(maxScore, self.judgements, self.accuracy, self.missesCount, self.chart))
 				calc_pos = []
 				if playfield_mode == "setSize":
 					calc_pos = [

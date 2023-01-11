@@ -35,7 +35,9 @@
         "nerdFont": "Enable Nerd Font display",
         "textImages": "Use images as thumbnails",
         "layout": "Keyboard layout",
-        "layoutTip": "Press L to create a custom layout!"
+        "layoutTip": "Press L to create a custom layout!",
+        "shortTimeFormat": "Shorten relative time formatting",
+        "displayName": "Local username"
     },
     "calibration":{
         "hit": "Hit on beat!",
@@ -101,6 +103,25 @@
             "artist": "Artist",
             "author": "Chart author",
             "description": "Description"
+        }
+    },
+    "datetime":{
+        "long":{
+            "now": "just now",
+            "secs": "{} seconds ago",
+            "min1": "1 minute ago",
+            "min": "{} minutes ago",
+            "hour1": "1 hour ago",
+            "hour": "{} hours ago",
+            "ystd": "yesterday",
+            "day": "{} days ago"
+        },
+        "short":{
+            "now": "now",
+            "secs": "{}s",
+            "mins": "{}m",
+            "hours": "{}h",
+            "days": "{}d"
         }
     }
 }

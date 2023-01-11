@@ -2,8 +2,9 @@ import os, json
 from pybass3 import Song
 from src.termutil import *
 from src.translate import Locale
+from src.results import *
 import hashlib
-from src.game import Game
+from src.game import *
 
 def load_options(options = {}):
 	if os.path.exists("./options.json"):
@@ -43,7 +44,7 @@ def load_locales():
 		locales[localeNames[i]] = newLoc
 	return locales, localeNames
 
-def load_scores(chartName, chartChecksum):
+def load_scores(chartName, chartChecksum, chart):
 	if not os.path.exists("./scores/"):
 		os.mkdir("./scores/")
 	scoreFiles = [f.name for f in os.scandir("./scores/") if f.is_file() and f.name.startswith(chartName+"-")]
@@ -53,6 +54,7 @@ def load_scores(chartName, chartChecksum):
 		print(f"Loading scores for map {chartName}: ({i+1}/{len(scoreFiles)})")
 		f = open("./scores/" + file)
 		leContent = f.read()
+		f.close()
 		leHash = hashlib.sha256(leContent.encode("utf-8")).hexdigest() 
 		leJson = json.loads(leContent)
 		if leHash != file[len(chartName)+1:]:
@@ -61,20 +63,28 @@ def load_scores(chartName, chartChecksum):
 		else:
 			leJson["checkPassed"] = True
 		if type(leJson["version"]) is str:
-			print(term.yellow+"[WARNING] Score " + leHash + " was made on an outdated version! (on game.py pre-version 1)" + term.normal)
-			leJson["isOutdated"] = True
+			print(term.yellow+f"[WARNING] Score {leHash} was made on an outdated version! (on game.py pre-version 1)" + term.normal)
+			leJson["toRecalculate"] = True
 		elif leJson["version"] < Game.version:
-			print(term.yellow+"[WARNING] Score " + leHash + " was made on an outdated version! (on game.py version " + leJson["version"] + ")" + term.normal)
-			leJson["isOutdated"] = True
+			print(term.yellow+f"[WARNING] Score {leHash} was made on an outdated version! (on game.py version {leJson['version']})" + term.normal)
+			leJson["toRecalculate"] = True
 		else:
-			leJson["isOutdated"] = False
+			leJson["toRecalculate"] = False
 
-		f.close()
+		if leJson["toRecalculate"]:
+			# miss count
+			missCount = 0
+			for i in range(len(leJson["judgements"])):
+				if leJson["judgements"][i] != {}:
+					if leJson["judgements"][i]["judgement"] > 4:
+						missCount += 1
+			leJson["score"] = scoreCalc(maxScore, leJson["judgements"], leJson["accuracy"], 0, chart)
 
 		if leJson["checksum"] != chartChecksum:
 			print(term.yellow+"[WARNING] Score " + leHash + " wasn't made on the current version of this chart!" + term.normal)
-			print(term.yellow+"[WARNING] Expected: " + chartChecksum + ", but got " + leJson["checksum"] + term.normal)
 			leJson["isOutdated"] = True
+		else:
+			leJson["isOutdated"] = False
 		output.append(leJson)
 
 	output.sort(key=lambda score:-score["score"] + (10**8 if score["isOutdated"] or not score["checkPassed"] else 0))
@@ -139,7 +149,7 @@ def load_charts():
 			jsonThing = check_chart(jsonThing, charts[i])
 			jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
 			chartData.append(jsonThing)
-			scores[charts[i]] = load_scores(charts[i], hashlib.sha256(f.encode("utf-8")).hexdigest())
+			scores[charts[i]] = load_scores(charts[i], hashlib.sha256(json.dumps(completelyNormalJson).encode("utf-8")).hexdigest(), completelyNormalJson)
 		print("All charts loaded successfully!")
 	else:
 		print(f"{term.yellow}[WARN] Chart folder inexistant!{term.normal}")

@@ -1,5 +1,6 @@
 from blessed import Terminal
-import os, sys
+import os
+import copy
 import json
 from pybass3 import Song
 import time
@@ -266,6 +267,7 @@ class Editor:
 			self.keyPanelJustDisabled = False
 
 		if self.mapToEdit["notes"] != []:
+			self.selectedNote %= len(self.mapToEdit["notes"])
 			note = self.mapToEdit["notes"][self.selectedNote]
 			if self.noteMenuEnabled:
 				self.draw_noteSettings(note, self.noteMenuSelected)
@@ -461,6 +463,32 @@ class Editor:
 				self.localConduc.bpm = int(commandSplit[1])
 				return True, ""
 			elif len(commandSplit) > 2:
+				return False, self.loc("editor.commandResults.common.tooManyArgs")
+			return False, self.loc("editor.commandResults.common.notEnoughArgs")
+
+		elif commandSplit[0] == "cp":
+			if len(commandSplit) == 3:
+				#XX-YY : Range of notes to copy
+				rangeToPick = commandSplit[1].split("-")
+				if len(rangeToPick) >= 2:
+					pass
+				else:
+					return False, self.loc("editor.commandResults.common.notEnoughArgs")
+
+				notesToCopy = [copy.deepcopy(self.mapToEdit["notes"][i]) for i in range(int(rangeToPick[0]), int(rangeToPick[1])+1)]
+				#BB : How many beats to offset it by?
+
+				for i in range(len(notesToCopy)):
+					notesToCopy[i]["beatpos"][1] += float(commandSplit[2])
+					notesToCopy[i]["beatpos"][0] += notesToCopy[i]["beatpos"][1]//4
+					notesToCopy[i]["beatpos"][1] %= 4
+					self.mapToEdit["notes"].append(notesToCopy[i])
+				self.mapToEdit["notes"] = sorted(self.mapToEdit["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
+				if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
+					self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
+				return True, ""
+				
+			elif len(commandSplit) > 3:
 				return False, self.loc("editor.commandResults.common.tooManyArgs")
 			return False, self.loc("editor.commandResults.common.notEnoughArgs")
 
