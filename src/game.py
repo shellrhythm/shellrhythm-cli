@@ -9,10 +9,14 @@ if __name__ == "src.game":
 	from src.termutil import *
 	from src.conductor import *
 	from src.results import *
+	from src.translate import Locale
 else:
 	from termutil import *
 	from conductor import *
 	from results import *
+	from translate import Locale
+
+from index import options
 
 term = Terminal()
 
@@ -66,6 +70,9 @@ class Game:
 	pauseOption = 0
 	resultsScreen = ResultsScreen()
 	playername = ""
+
+	#Locale
+	loc:Locale = Locale("en")
 
 	def setupKeys(self, layout):
 		if os.path.exists("./layout/" + layout):
@@ -204,35 +211,35 @@ class Game:
 		return out
 
 	def renderNote(self, atPos, color, key, approachedBeats, notes = {}, i = -1):
-		if int(approachedBeats*2) == 7:
+		if int(approachedBeats*2) == 8:
 			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═ {term.normal}")
+			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}   {term.normal}")
+			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}   {term.normal}")
+		elif int(approachedBeats*2) == 7:
+			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
 			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}   {term.normal}")
 			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}   {term.normal}")
 		elif int(approachedBeats*2) == 6:
 			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
-			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}   {term.normal}")
+			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
 			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}   {term.normal}")
 		elif int(approachedBeats*2) == 5:
 			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
 			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
-			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}   {term.normal}")
+			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}  ╝{term.normal}")
 		elif int(approachedBeats*2) == 4:
 			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
 			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
-			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}  ╝{term.normal}")
+			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color} ═╝{term.normal}")
 		elif int(approachedBeats*2) == 3:
 			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
 			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
-			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color} ═╝{term.normal}")
-		elif int(approachedBeats*2) == 2:
-			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
-			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
 			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}╚═╝{term.normal}")
-		elif int(approachedBeats*2) == 1:
+		elif int(approachedBeats*2) == 2:
 			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
 			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}║ ║{term.normal}")
 			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}╚═╝{term.normal}")
-		elif int(approachedBeats*2) == 0:
+		elif int(approachedBeats*2) == 1:
 			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color}╔═╗{term.normal}")
 			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}║ ║{term.normal}")
 			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}╚═╝{term.normal}")
@@ -431,11 +438,15 @@ class Game:
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
-			# print(term.clear)
+			print(term.clear)
 			while not self.turnOff:
 				self.deltatime = self.localConduc.update()
 				if not self.resultsScreen.isEnabled:
-					self.draw()
+					if not too_small(options["bypassSize"]):
+						self.draw()
+					else:
+						text = self.loc("screenTooSmall")
+						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
 					self.handle_input()
 				else:
 					self.resultsScreen.draw()

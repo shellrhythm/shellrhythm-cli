@@ -5,5 +5,6 @@
     "nerdFont": false,
     "textImages": true,
     "shortTimeFormat": false,
-    "displayName": "Player"
+    "displayName": "Player",
+    "bypassSize": false
 }

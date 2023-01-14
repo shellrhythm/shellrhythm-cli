@@ -62,14 +62,20 @@ class ResultsScreen:
 	oneRowIsThisMS = 0.05 #so max 18 rows to write everything
 	centerRow = 24
 	debug = False
+	grid = Grid(0,0,10,10)
 
 	def setup(self):
 		self.judgementCount = [0,0,0,0,0,0]
+		self.grid.x = 5
+		self.grid.y = self.centerRow - 8
+		self.grid.height = 20
 		self.offsets.clear()
 		for i in range(len(self.resultsData["judgements"])):
 			if self.resultsData["judgements"][i] != {}:
 				self.judgementCount[self.resultsData["judgements"][i]["judgement"]] += 1
 				self.offsets.append(self.resultsData["judgements"][i]["offset"])
+				self.grid.pointsToPlot.append(-self.resultsData["judgements"][i]["offset"])
+				self.grid.colors.append(ranks[self.resultsData["judgements"][i]["judgement"]][3])
 		self.render_accuracy_view()
 
 	def draw_debug_info(self):
@@ -86,30 +92,7 @@ class ResultsScreen:
 			print_at(3, self.centerRow, f"{ranks[0][2]+ranks[0][3]}0" + " "*(term.width-8)+ term.normal)
 			print_at(3, self.centerRow-10, "+")
 			print_at(3, self.centerRow+10, "-")
-			for i in range(cursorPos, min(len(self.offsets), cursorPos*2 + (term.width-9)), 2):
-				symbolLookup = [
-					["·", "⠁", "⠂", "⠄", "⡀"], 
-					["⠈", "⠉", "⠊", "⠌", "⡈"],
-					["⠐", "⠑", "⠒", "⠔", "⡐"],
-					["⠠", "⠡", "⠢", "⠤", "⡠"],
-					["⢀", "⢁", "⢂", "⢄", "⣀"]
-				]
-				var1 = int(self.offsets[i]/self.oneRowIsThisMS) * -1
-				var1_rest = 4 - (((self.offsets[i]/self.oneRowIsThisMS)%1) * 4)
-				var1_color = abs(int((var1+1)/2))
-				# print_at(5+int(i), self.centerRow+11, str(var1))
-				if i+1 < len(self.offsets):
-					var2 = int(self.offsets[i+1]/self.oneRowIsThisMS) * -1
-					var2_rest = 4 - (((self.offsets[i+1]/self.oneRowIsThisMS)%1) * 4)
-					var2_color = int((var2+1)/2)
-					# print_at(5+int(i), self.centerRow-11, str(var2))
-					if var1 == var2:
-						print_at(5+int(i/2), self.centerRow+var1, ranks[var1_color][3]+symbolLookup[int(var2_rest)][int(var1_rest)]+term.normal)
-					else:
-						print_at(5+int(i/2), self.centerRow+var1, ranks[var1_color][3]+symbolLookup[0][int(var1_rest)]+term.normal)
-						print_at(5+int(i/2), self.centerRow+var2, ranks[var2_color][3]+symbolLookup[int(var2_rest)][0]+term.normal)
-				else:
-					print_at(5+int(i/2), self.centerRow+var1, ranks[var1_color][3]+symbolLookup[0][int(var1_rest)]+term.normal)
+			self.grid.draw(cursorPos)
 
 
 	def draw(self):

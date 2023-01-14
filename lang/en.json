@@ -1,5 +1,6 @@
 {
     "lang": "English",
+    "screenTooSmall": "Sorry, your screen's too small...",
     "titlescreen":{
         "play": "Play",
         "edit": "Edit",
@@ -37,7 +38,8 @@
         "layout": "Keyboard layout",
         "layoutTip": "Press L to create a custom layout!",
         "shortTimeFormat": "Shorten relative time formatting",
-        "displayName": "Local username"
+        "displayName": "Local username",
+        "bypassSize": "Bypass minimum terminal size"
     },
     "calibration":{
         "hit": "Hit on beat!",

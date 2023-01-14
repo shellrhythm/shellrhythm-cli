@@ -87,3 +87,49 @@ def print_box(x,y,width, height, color, style):
 	print_at(x,y+height-1,color + curBoxStyle[5] + (curBoxStyle[6]*(width-2)) + curBoxStyle[7] + term.normal)
 	print_column(x,y+1,height-2,color + curBoxStyle[3])
 	print_column(x+width-1,y+1,height-2,color + curBoxStyle[4])
+
+def too_small(bypass = False):
+	"""Checks if the screen size is smaller than what the game requires.
+	Side note: having the bypass variable set to True will completely bypass this check"""
+	return (term.width < minWidth or term.height < minHeight) and not bypass
+
+
+class Grid:
+	x = 0
+	y = 0
+	width = 0
+	height = 0
+	pointsToPlot = []
+	colors = []
+	symbolLookup = [
+		[" ", "⠁", "⠂", "⠄", "⡀"], 
+		["⠈", "⠉", "⠊", "⠌", "⡈"],
+		["⠐", "⠑", "⠒", "⠔", "⡐"],
+		["⠠", "⠡", "⠢", "⠤", "⡠"],
+		["⢀", "⢁", "⢂", "⢄", "⣀"]
+	]
+	gridrange = [-0.4,0.4]
+	offset = 2
+	def processPoints(self, point1, point2):
+		if point1//4 == point2//4:
+			return [self.symbolLookup[int(point1)%4+1][int(point2)%4+1]]
+		else:
+			return [self.symbolLookup[int(point1)%4+1][0], self.symbolLookup[0][int(point1)%4+1]]
+
+	def draw(self, cursorPos = 0):
+		for i in range(max(0, (cursorPos*2)-len(self.pointsToPlot)), min(len(self.pointsToPlot), (cursorPos + self.width)*2), 2):
+			point1 = min(max(self.pointsToPlot[i],   self.gridrange[0]), self.gridrange[1])
+			point2 = min(max(self.pointsToPlot[i+1], self.gridrange[0]), self.gridrange[1])
+			firstpos = ((point1 / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]) * self.height*4 + self.offset
+			secpos   = ((point2 / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]) * self.height*4 + self.offset
+			points = self.processPoints(firstpos, secpos)
+			for j in range(len(points)):
+				atpos = ((self.pointsToPlot[i+j] / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]) * self.height + (self.offset/4)
+				print_at(self.x + (i//2), self.y + int(atpos), self.colors[i+j] + points[j] + term.normal)
+
+	def __init__(self, x, y, width, height) -> None:
+		self.x = x
+		self.y = y
+		self.width = width
+		self.height = height
+		pass

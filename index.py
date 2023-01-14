@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from blessed import Terminal
 import json
 from term_image.image import *
@@ -44,7 +46,8 @@ options = {
     "nerdFont": False,
     "textImages": True,
 	"shortTimeFormat": False,
-    "displayName": "Unknown"
+    "displayName": "Unknown",
+	"bypassSize": False
 }
 
 bottom_txt = open("./assets/bottom.txt")
@@ -58,7 +61,7 @@ conduc = Conductor()
 chartData = []
 scores = {}
 
-# ========================= [UTIL FUNCTIONS] =======================
+# ========================= [UTIL FUNCTIONS] =========================
 
 # adapted from https://stackoverflow.com/questions/410221/natural-relative-days-in-python#5164027
 import datetime
@@ -96,7 +99,8 @@ def prettydate(d, longFormat = False):
 		elif diff.days < 30:
 			output = locales[selectedLocale](f"datetime.short.days").format(int(diff.days))
 	return output
-# ========================= [MENU CLASSES] =========================
+
+# =========================  [MENU CLASSES]  =========================
 
 # Options menu
 class Options:
@@ -110,7 +114,8 @@ class Options:
 		{"var": "textImages",		"type":"bool", 		"displayName": "Use images as thumbnails"},
 		{"var": "shortTimeFormat",	"type":"bool", 		"displayName": "Shorten relative time formatting"},
 		{"var": "layout", 			"type":"enum", 		"displayName": "Layout", "populatedValues": layoutNames},
-		{"var": "displayName", 		"type":"strField",	"displayName": "Local username", "default": "Player"}
+		{"var": "displayName", 		"type":"strField",	"displayName": "Local username", "default": "Player"},
+		{"var": "bypassSize",		"type":"bool",		"displayName": "Bypass minimal terminal size"},
 	]
 	enumInteracted = -1
 	curEnumValue = -1
@@ -242,18 +247,19 @@ class Options:
 		if self.strInteracted > -1:
 			leVar = self.menuOptions[self.strInteracted]["var"]
 			if val.name == "KEY_ENTER":
-				options[leVar] = self.curInput
-				self.strInteracted = -1
+				if self.curInput == "":
+					if options[leVar] == "":
+						options[leVar] = self.menuOptions[self.strInteracted]["default"]
+					self.strInteracted = -1
+				else:
+					options[leVar] = self.curInput
+					self.strInteracted = -1
 				self.curInput = ""
 			elif val.name == "KEY_ESCAPE":
 				self.strInteracted = -1
 				self.curInput = ""
 			else:
 				self.curInput, self.strCursor = textbox_logic(self.curInput, self.strCursor, val)
-				if self.curInput == "":
-					if options[leVar] == "":
-						options[leVar] = self.menuOptions[self.strInteracted]["default"]
-					self.strInteracted = -1
 
 		elif self.isPickingOffset:
 			if val == "y":
@@ -276,7 +282,7 @@ class Options:
 				if val.name == "KEY_LEFT" and self.menuOptions[self.selectedItem]["type"] == "intField":
 					leVar = self.menuOptions[self.selectedItem]["var"]
 					options[leVar] -= self.menuOptions[self.selectedItem]["snap"]
-				if val.name == "KEY_RIGHT" and self.menuOptions[self.selectedItem]["var"]:
+				if val.name == "KEY_RIGHT" and self.menuOptions[self.selectedItem]["type"] == "intField":
 					leVar = self.menuOptions[self.selectedItem]["var"]
 					options[leVar] += self.menuOptions[self.selectedItem]["snap"]
 				if val.name == "KEY_ESCAPE":
@@ -341,7 +347,11 @@ class Options:
 			self.translate()
 			while not self.turnOff:
 				self.deltatime = conduc.update()
-				self.draw()
+				if not too_small(options["bypassSize"]):
+					self.draw()
+				else:
+					text = locales[selectedLocale]("screenTooSmall")
+					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
 
 				self.handle_input()
 
@@ -487,6 +497,7 @@ class ChartSelect:
 			self.turnOff = True
 			conduc.stop()
 			conduc.song.stop()
+			loadedGame.loc = locales[selectedLocale]
 			loadedGame.playername = options["displayName"]
 			loadedGame.play(chartData[self.selectedItem], options["layout"])
 			# print(term.clear)
@@ -560,14 +571,22 @@ class ChartSelect:
 			while not self.turnOff:
 				self.deltatime = conduc.update()
 				if self.resultsThing.isEnabled:
-					self.resultsThing.draw()
+					if not too_small(options["bypassSize"]):
+						self.resultsThing.draw()
+					else:
+						text = locales[selectedLocale]("screenTooSmall")
+						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
 					self.resultsThing.handle_input()
 
 					if self.resultsThing.gameTurnOff:
 						self.resultsThing.gameTurnOff = False
 						self.resultsThing.isEnabled = False
 				else:
-					self.draw()
+					if not too_small(options["bypassSize"]):
+						self.draw()
+					else:
+						text = locales[selectedLocale]("screenTooSmall")
+						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
 					self.handle_input()
 
 				if platform.system() == "Windows":
@@ -723,7 +742,11 @@ class TitleScreen:
 			print(term.clear)
 			while not self.turnOff:
 				self.deltatime = conduc.update()
-				self.draw()
+				if not too_small(options["bypassSize"]):
+					self.draw()
+				else:
+					text = locales[selectedLocale]("screenTooSmall")
+					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
 
 				self.handle_input()
 

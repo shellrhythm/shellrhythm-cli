@@ -1,5 +1,6 @@
 {
     "lang":"Français",
+    "screenTooSmall": "Désolé, ton écran est trop petit...",
     "titlescreen":{
         "play": "Jouer",
         "edit": "Éditer",
@@ -37,7 +38,8 @@
         "layout": "Disposition du clavier",
         "layoutTip": "Appuyez sur L pour créer votre propre disposition!",
         "shortTimeFormat": "Raccourcir les dates relatives",
-        "displayName": "Nom d'utilisateur local"
+        "displayName": "Nom d'utilisateur local",
+        "bypassSize": "Contourner la taille minimale de terminal"
     },
     "calibration":{
         "hit": "Tapez en rythme!",
