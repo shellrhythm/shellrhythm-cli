@@ -1,0 +1,36 @@
+Information alone is not enough. We also need the meaning of that information.
+There never was any funding for this program.
+rhythm is just a keystroke away!... isn't that how you say it?
+If I had a nickel every time I rewrote this program, I'd probably be rich.
+Also check out Pulsus!
+Who knows what else this 16 year old frenchman is capable of
+{bottom_text}
+bottom text
+30 key gaming
+This bad boy can fit so much polyrhythm
+Unsure if you can play this from the TTY. I never tested.
+To calibrate a song's offset, check out calibration.py.
+What's wrong? Never used a command prompt before?
+I don't use Arch, btw.
+Minimum requirements: python, a terminal, and being able to play back audio.
+i wonder how low we can push the minimum requirements
+blessed is a fun package
+We recommend you using Nerd Fonts.
+Who cares about the mouse in a game where you only use the keyboard?
+h
+average qwerty fan vs average azerty enjoyer
+if your layout isn't working, try changing/adding a layout file in /layout/.
+Everything's editable[citation needed].
+I wonder how much maps we can make using that.
+god knew i'd be too powerful if i could set up a server
+peak terminal gaming
+You can also use hjkl to navigate in menus.
+Feel free to contribute! (I don't bite)
+Sorry if my code is messy qwq
+hopefully the editor is usable
+i never tried making a 30k pseudo and i think if i did my pc would combust
+if you're running this with admin permissions, what is wrong with you???
+You want a change of color? Check out your terminal emulator's settings.
+If you don't have access to full color you're not missing out on much.
+sha256 this, sha256 that, how about you sha256 deez nuts in yo m-
+keep in mind you can also modify your options from the options.json file

@@ -1,298 +1,787 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+from blessed import Terminal
+import json
+from term_image.image import *
+import random
+# from src import *
+from src.conductor import *
+from src.calibration import *
+from src.loading import *
+from src.editor import *
+from src.layout import *
+from src.results import *
 
-import curses
-from curses import wrapper
-from time import sleep, time_ns
-from game import *
-import os
+import sys
+import platform
+# print(sys.stdout.encoding)
 
-charts = []
+__version__ = "1.0.0"
+
+term = Terminal()
+turnOff = False
+
+menu = None
+loadedMenus = {
+	"Titlescreen": None,
+	"ChartSelect": None,
+	"Options": None
+}
+loadedGame = None
+locales = {}
+localeNames = [
+	"en",
+	"fr",
+	"da"
+]
+selectedLocale = "en"
+
+layouts = {}
+layoutNames = []
+
+options = {
+    "layout": "qwerty",
+    "globalOffset": 0,
+    "lang": "en",
+    "nerdFont": False,
+    "textImages": True,
+	"shortTimeFormat": False,
+    "displayName": "Unknown"
+}
+
+bottom_txt = open("./assets/bottom.txt")
+bottomTextLines = bottom_txt.readlines()
+
+currentLoadedSong = 0
+
+import src.game as game
+
+conduc = Conductor()
 chartData = []
-chartIcons = []
-layouts = []
-logo = []
-screen = None
-killswitch = True
-menu = 0
-selected_option = 0
-max_option = 0
-y = 0
-x = 0
+scores = {}
 
-__version__ = "0.1.0"
+# ========================= [UTIL FUNCTIONS] =======================
 
-game = None
+# adapted from https://stackoverflow.com/questions/410221/natural-relative-days-in-python#5164027
+import datetime
+def prettydate(d, longFormat = False):
+	diff = datetime.datetime.fromtimestamp(time.time()) - d
+	output = d.strftime('%d %b %y, %H:%M:%S')
+	if longFormat:
+		if diff.days < 1:
+			if diff.seconds <= 1:
+				output = locales[selectedLocale](f"datetime.long.now")
+			elif diff.seconds < 60:
+				output = locales[selectedLocale](f"datetime.long.secs").format(int(diff.seconds))
+			elif diff.seconds < 120:
+				output = locales[selectedLocale](f"datetime.long.min1")
+			elif diff.seconds < 3600:
+				output = locales[selectedLocale](f"datetime.long.min").format(int(diff.seconds/60))
+			elif diff.seconds < 7200:
+				output = locales[selectedLocale](f"datetime.long.hour1")
+			else:
+				output = locales[selectedLocale](f"datetime.long.hour").format(int(diff.seconds/3600))
+		elif diff.days < 2:
+			output = locales[selectedLocale](f"datetime.long.ystd")
+		elif diff.days < 30:
+			output = locales[selectedLocale](f"datetime.long.day").format(int(diff.days))
+	else:
+		if diff.days < 1:
+			if diff.seconds <= 10:
+				output = locales[selectedLocale](f"datetime.short.now")
+			elif diff.seconds < 60:
+				output = locales[selectedLocale](f"datetime.short.secs").format(int(diff.seconds))
+			elif diff.seconds < 3600:
+				output = locales[selectedLocale](f"datetime.short.mins").format(int(diff.seconds/60))
+			else:
+				output = locales[selectedLocale](f"datetime.short.hours").format(int(diff.seconds/3600))
+		elif diff.days < 30:
+			output = locales[selectedLocale](f"datetime.short.days").format(int(diff.days))
+	return output
+# ========================= [MENU CLASSES] =========================
 
+# Options menu
+class Options:
+	turnOff = False
+	deltatime = 0
+	selectedItem = 0
+	menuOptions = [
+		{"var": "globalOffset",		"type":"intField",	"displayName": "Global offset (ms)", "isOffset": True, "snap": 0.001},
+		{"var": "lang",				"type":"enum", 		"displayName": "Language", "populatedValues": localeNames},
+		{"var": "nerdFont",			"type":"bool", 		"displayName": "Enable Nerd Font display"},
+		{"var": "textImages",		"type":"bool", 		"displayName": "Use images as thumbnails"},
+		{"var": "shortTimeFormat",	"type":"bool", 		"displayName": "Shorten relative time formatting"},
+		{"var": "layout", 			"type":"enum", 		"displayName": "Layout", "populatedValues": layoutNames},
+		{"var": "displayName", 		"type":"strField",	"displayName": "Local username", "default": "Player"}
+	]
+	enumInteracted = -1
+	curEnumValue = -1
+	suggestedOffset = 0
+	isPickingOffset = False
+	goBack = False
 
-def init_color():
-    curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-    curses.init_pair(4, curses.COLOR_BLUE, curses.COLOR_BLACK)
-    curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
-    curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
+	strInteracted = -1
+	curInput = ""
+	strCursor = 0
 
-    curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_WHITE)
-    curses.init_pair(8, curses.COLOR_BLACK, curses.COLOR_RED)
-    curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_GREEN)
-    curses.init_pair(10, curses.COLOR_BLACK, curses.COLOR_YELLOW)
-    curses.init_pair(11, curses.COLOR_BLACK, curses.COLOR_BLUE)
-    curses.init_pair(12, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
-    curses.init_pair(13, curses.COLOR_BLACK, curses.COLOR_CYAN)
+	def populate_enum(self):
+		self.menuOptions[1]["populatedValues"] = localeNames
+		self.menuOptions[4]["populatedValues"] = layoutNames
 
-def handle_pressed_keys(e):
-    global killswitch
-    global screen
-    global selected_option
-    global max_option
-    global menu
-    global game
-  # print(e.name)
-    if e.event_type == keyboard.KEY_DOWN:
-        if game is None:
-            if e.scan_code == 1:
-                if menu == 0:
-                    killswitch = False
-                    curses.endwin()
-                else:
-                    screen.clear()
-                    selected_option = menu - 1
-                    menu = 0
-                    for i in range(len(logo)):
-                        screen.addstr(2+i,int(x * 0.5)-int(len(logo[0])/2), logo[i])
-            if e.scan_code == 72:
-                #Up
-                selected_option -= 1
-                if menu == 1:
-                    screen.clear()
-                if selected_option < 0:
-                    selected_option += max_option
-            if e.scan_code == 80:
-                #Down
-                selected_option += 1
-                if menu == 1:
-                    screen.clear()
-                if selected_option >= max_option:
-                    selected_option -= max_option
-            if e.scan_code == 57 or e.scan_code == 28:
-                if menu == 0: #Title screen
-                    if   selected_option == 0:
-                        screen.clear()
-                        menu = 1
-                    elif selected_option == 1:
-                        screen.clear()
-                        menu = 2
-                        selected_option = 0
-                    elif selected_option == 2:
-                        killswitch = False
-                        curses.endwin()
-                elif menu == 1: #Chart select
-                    chartData[selected_option]["filename"] = charts[selected_option]
-                    game = Game(screen, exitMap, chartData[selected_option])
-                elif menu == 2:
-                    orig_f = open("options.json", "r")
-                    jsonfile = json.load(orig_f)
-                    orig_f.close()
-                    jsonfile["layout"] = layouts[selected_option]
-                    new_f = open("options.json", "w")
-                    new_f.write(json.dumps(jsonfile))
-                    new_f.close()
-                    screen.addstr(0,0, "Saved!")
-        if game is not None:
-            game.handle_pressed_keys(e)
+	def translate(self):
+		for optn in self.menuOptions:
+			optn["displayName"] = locales[selectedLocale](f"options.{optn['var']}")
 
-def exitMap():
-    screen.clear()
-    global menu
-    global game
-    global killswitch
-    menu = 1
-    if game is not None:
-        game.music.stop()
-    keyboard.unhook_all()
-    keyboard.hook(handle_pressed_keys)
-    game = None
+	def moveBy(self, x):
+		print(term.clear)
+		self.selectedItem = (self.selectedItem + x)%len(self.menuOptions)
+	
+	# --- INTERACT FUNCTIONS ---
+	def interactBool(self, boolOption):
+		global options
+		options[boolOption["var"]] = not options[boolOption["var"]]
+
+	def interactEnum(self, enum, curChoice):
+		'''curChoice is an integer.'''
+		global options
+		global selectedLocale
+		options[enum["var"]] = enum["populatedValues"][curChoice]
+		if enum["var"] == "lang":
+			selectedLocale = enum["populatedValues"][curChoice]
+			print(term.clear)
+			self.translate()
+	
+	def interactStr(self, curChoice):
+		global options
+		global selectedLocale
+		self.strInteracted = curChoice
+		self.curInput = options[self.menuOptions[curChoice]["var"]]
 
 
-def update():
-    global screen
-    global selected_option
-    global max_option
-    global y, x
-    global game
-    if game is None:
-        if menu == 0: # Title screen
-            max_option = 3
-            screen.addstr(20, int(x*0.5) - int(len(" > Select Keyboard Layout < ")*0.5), "        Select Charts       ")
-            screen.addstr(22, int(x*0.5) - int(len(" > Select Keyboard Layout < ")*0.5), "   Select Keyboard Layout   ")
-            screen.addstr(24, int(x*0.5) - int(len(" > Select Keyboard Layout < ")*0.5), "            Quit            ")
+	# --- END INTERACT FUNC ---
 
-            if selected_option == 0:
-                screen.addstr(20, int(x*0.5) - int(len(" > Select Keyboard Layout < ")*0.5), " >      Select Charts     < ", curses.color_pair(7))
-            if selected_option == 1:
-                screen.addstr(22, int(x*0.5) - int(len(" > Select Keyboard Layout < ")*0.5), " > Select Keyboard Layout < ", curses.color_pair(7))
-            if selected_option == 2:
-                screen.addstr(24, int(x*0.5) - int(len(" > Select Keyboard Layout < ")*0.5), " >          Quit          < ", curses.color_pair(7))
+	def saveOptions(self):
+		f = open("./options.json", "w")
+		f.write(json.dumps(options, indent=4))
+		
+	def draw(self):
+		maxLength = 0
 
-            screen.addstr(y-1, x-len("vX.X.X")-1, "v" + __version__)
-        if menu == 1: # Chart picker
-            max_option = max(len(charts), 1)
-            for i in range(y):
-                screen.addstr(i, 0, "|                   |")
-                if i < max_option:
-                    if selected_option == i:
-                        screen.addstr(i, 0, "|> " + charts[i], curses.color_pair(7))
-                    else:
-                        screen.addstr(i, 1, charts[i])
-                
+		for option in self.menuOptions:
+			if len(option["displayName"]) > maxLength:
+				maxLength = len(option["displayName"])
 
-            #metadata display
-            metadata = chartData[selected_option]["metadata"]
-            for i in range(len(chartIcons[selected_option])):
-                if len(chartIcons[selected_option]) > i:
-                    screen.addstr(2+i,int((x-22) * 0.5)+22-int(len(chartIcons[selected_option][0])/2), chartIcons[selected_option][i%len(chartIcons[selected_option])])
-                    screen.refresh()
+		for i in range(len(self.menuOptions)):
+			titleLen = len(self.menuOptions[i]['displayName'])
+			leType = self.menuOptions[i]["type"]
+			leVar = self.menuOptions[i]["var"]
+			#DisplayName
+			if self.selectedItem == i and not self.isPickingOffset:
+				if int(conduc.currentBeat) % 2 == 1:
+					print_at(0,i*2 + 3, term.reverse + f"- {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}>" + term.normal)
+				else:
+					print_at(0,i*2 + 3, term.normal  + f"- {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}>" + term.normal)
+			else:
+				print_at(0,i*2 + 3, term.normal + f" {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}  ")
+			if leType == "intField":
+				if self.selectedItem == i and self.menuOptions[i]["isOffset"]:
+					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + (" "*int(term.width*0.2)) + locales[selectedLocale]("options.calibrationTip") + term.clear_eol)
+				else:
+					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + term.clear_eol)
+			if leType == "enum":
+				if self.enumInteracted == i:
+					print_at(maxLength + 6, i*2+3, term.reverse + "{ " + options[leVar] + " }" +term.normal + (" "*6) + str(self.menuOptions[i]["populatedValues"]) + term.clear_eol)
+				else:
+					if self.selectedItem == i and self.menuOptions[i]["var"] == "layout":
+						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + (" "*int(term.width*0.2)) + locales[selectedLocale]("options.layoutTip") + term.clear_eol)
+					else:
+						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + term.clear_eol)
+			if leType == "bool":
+				if options[leVar] == True:
+					print_at(maxLength + 6, i*2+3, "☑")
+				else:
+					print_at(maxLength + 6, i*2+3, "☐")
+			if leType == "strField":
+				if self.selectedItem == i:
+					if self.strInteracted == i:
+						print_at(maxLength + 6, i*2+3, term.underline + self.curInput + term.clear_eol + term.normal)
+					else:
+						print_at(maxLength + 6, i*2+3, term.reverse + options[leVar] + term.clear_eol + term.normal)
+				else:
+					print_at(maxLength + 6, i*2+3, term.normal + options[leVar])
 
-            screen.addstr(15,22, (" "* int( (x-22) * 0.5 - len(metadata["title"] + " - " + metadata["author"] ) /2)) + metadata["title"] + " - " + metadata["author"] + (" "* int( (x-22) * 0.5 - len(metadata["title"] + " - " + metadata["author"] ) /2)))
-            screen.addstr(16,int((x-22) * 0.5)+22-int(len("Level by " + metadata["charter"])/2), "Level by " + metadata["charter"])
-            n = x-22
-            desc = [metadata["description"][i:i+n] for i in range(0, len(metadata["description"]), n)]
+		if self.menuOptions[self.selectedItem]["var"] == "layout":
+			text = f"┌───{'┬───'*9}┐\n" + "".join(["".join([f"│ {key} " for key in layouts[options["layout"]]][10*i:10*(i+1)]) + f"│\n├───{'┼───'*9}┤\n" for i in range(2)]) + "".join([f"│ {key} " for key in layouts[options["layout"]]][20:30]) + f"│\n└───{'┴───'*9}┘\n"
+			print_lines_at(int(term.width*0.5 - len(f"┌───{'┬───'*9}┐")/2), term.height-10, text)
 
-            screen.addstr(19,22, "-" * (x-22))
-            for i in range(len(desc)):
-                screen.addstr(20+i,22, desc[i] + (" " * (x - 22 - len(desc[i]))))
-            
-            if menu == 0:
-                screen.clear()
-                for i in range(len(logo)):
-                    screen.addstr(2+i,int(x * 0.5)-int(len(logo[0])/2), logo[i])
+		if self.isPickingOffset:
+			text_offsetConfirm = f"Do you want to use the new following offset: {int(self.suggestedOffset*(10**3))}ms?"
+			print_at(int((term.width - len(text_offsetConfirm)) * 0.5), int(term.height*0.5)-1, text_offsetConfirm)
+			print_at(int(term.width * 0.4)-3, int(term.height*0.5)+1, term.reverse+"Yes [Y]"+term.normal)
+			print_at(int(term.width * 0.6)-3, int(term.height*0.5)+1, term.reverse+"No [N] "+term.normal)
 
+	def enterPressed(self):
+		selectedOption = self.menuOptions[self.selectedItem]
+		if selectedOption["type"] == "bool":
+			self.interactBool(selectedOption)
+		if selectedOption["type"] == "enum":
+			self.enumInteracted = self.selectedItem
+			self.curEnumValue = selectedOption["populatedValues"].index(options[selectedOption["var"]])
+		if selectedOption["type"] == "strField":
+			self.interactStr(self.selectedItem)
+			
 
-            
-            
-                
+	def handle_input(self):
+		"""
+		This function is called every update cycle to get keyboard input.
+		(Note: it is called *after* the `draw()` function, and takes the entire frame to run.)
+		"""
+		val = ''
+		val = term.inkey(timeout=1/60, esc_delay=0)
+		# debug_val(val)
+		global options
 
-        if menu == 2: # Keyboard Layout Picker
-            max_option = max(len(layouts), 1)
-            screen.addstr(0,int(x*0.5) - int(len("Keyboard Layout Select") * 0.5), "Keyboard Layout Select")
-            
-            for i in range(len(layouts)):
-                screen.addstr(3+i, 0, "|")
-                if selected_option == i:
-                    screen.addstr(3+i, 1, "> " + layouts[i].upper() + "  ", curses.color_pair(7))
-                else:
-                    screen.addstr(3+i, 1, " " + layouts[i].upper() + "   ")
+		if self.strInteracted > -1:
+			leVar = self.menuOptions[self.strInteracted]["var"]
+			if val.name == "KEY_ENTER":
+				options[leVar] = self.curInput
+				self.strInteracted = -1
+				self.curInput = ""
+			elif val.name == "KEY_ESCAPE":
+				self.strInteracted = -1
+				self.curInput = ""
+			else:
+				self.curInput, self.strCursor = textbox_logic(self.curInput, self.strCursor, val)
+				if self.curInput == "":
+					if options[leVar] == "":
+						options[leVar] = self.menuOptions[self.strInteracted]["default"]
+					self.strInteracted = -1
 
-        screen.refresh()
+		elif self.isPickingOffset:
+			if val == "y":
+				leVar = self.menuOptions[self.selectedItem]["var"]
+				options[leVar] = round(self.suggestedOffset,3)
+				self.isPickingOffset = False
+				print(term.clear)
+			if val == "n":
+				self.isPickingOffset = False
+				self.suggestedOffset = 0
+				print(term.clear)
+		else:
+			if self.enumInteracted == -1:
+				if val.name == "KEY_DOWN" or val == "j":
+					self.moveBy(1)
+				if val.name == "KEY_UP" or val == "k":
+					self.moveBy(-1)
+				if (val.name == "KEY_RIGHT" and self.menuOptions[self.selectedItem]["type"] != "intField") or val.name == "KEY_ENTER":
+					self.enterPressed()
+				if val.name == "KEY_LEFT" and self.menuOptions[self.selectedItem]["type"] == "intField":
+					leVar = self.menuOptions[self.selectedItem]["var"]
+					options[leVar] -= self.menuOptions[self.selectedItem]["snap"]
+				if val.name == "KEY_RIGHT" and self.menuOptions[self.selectedItem]["var"]:
+					leVar = self.menuOptions[self.selectedItem]["var"]
+					options[leVar] += self.menuOptions[self.selectedItem]["snap"]
+				if val.name == "KEY_ESCAPE":
+					global menu
+					self.saveOptions()
+					self.turnOff = True
+					loadedMenus["Titlescreen"].turnOff = False
+					loadedMenus["Titlescreen"].loop()
+					menu = "Titlescreen"
+					print(term.clear)
+				if val == "c":
+					self.saveOptions()
+					self.turnOff = True
+					self.goBack = True
+					self.selectedItem = 0
+					conduc.stop()
+					# conduc.song.stop()
+					loadedMenus["Calibration"].loc = locales[selectedLocale]
+					loadedMenus["Calibration"].turnOff = False
+					self.suggestedOffset = loadedMenus["Calibration"].init()
+					self.isPickingOffset = True
+					loadedMenus["Calibration"].conduc.stop()
+					loadedMenus["Calibration"].hitCount = 0
+					loadedMenus["Calibration"].hits = []
+					loadedMenus["Calibration"].totalOffset = 0
+					conduc.startAt(0)
+					# print(term.clear)
+					# text_offsetConfirm = f"Do you want to use the new following offset: {int(newOffset*3)}ms?"
+					# print_at(int((term.width - len(text_offsetConfirm)) * 0.5), int(term.height*0.5), text_offsetConfirm)
+				if val == "l":
+					self.saveOptions()
+					self.turnOff = True
+					self.goBack = True
+					self.selectedItem = 4
 
+					loadedMenus["LayoutEditor"].loc = locales[selectedLocale]
+					result = False
+					error = ""
+					customLayout = ["╳" for _ in range(30)]
+					if "custom" in layouts:
+						customLayout = layouts["custom"]
+					while not result:
+						loadedMenus["LayoutEditor"].turnOff = False
+						result, error = loadedMenus["LayoutEditor"].loop(customLayout)
 
+					
 
-def main(stdscr):
-    curses.curs_set(0)
-    stdscr.clear()
-    stdscr.addstr(0,0,"Booting up shellrhythm...")
-    stdscr.refresh()
-
-    global screen
-    screen = stdscr
-
-    global charts
-    global chartData
-    global layouts
-    global killswitch
-    sleep(1)
-    charts = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts") if f.is_dir()]
-    for i in range(len(charts)):
-        f = open("./charts/" + charts[i] + "/data.json")
-        chartData.append(json.load(f))
-        f.close()
-        stdscr.addstr(1,0,"Loading maps... (" + str(i + 1) + "/" + str(len(charts)) + ")")
-        stdscr.refresh()
-        sleep(1/15)
-
-    print(charts)
-    layouts = [f.path[len("./layout\\"):len(f.path)] for f in os.scandir("./layout") if f.name != "CUSTOMLAYOUT.md"]
-    print(layouts)
-    for i in range(len(charts)):
-        stdscr.refresh()
-        sleep(1/30)
-    sleep(0.5)
-    stdscr.clear()
-    global y, x
-    y, x = stdscr.getmaxyx()
-
-    global logo
-    f = open("./assets/logo.txt", encoding="utf-8")
-    logo = f.read().split("\n")
-    f.close()
-
-    global chartIcons
-    for i in range(len(charts)):
-        if os.path.exists("./charts/" + charts[i] + "/icon.txt"):
-            f = open("./charts/" + charts[i] + "/icon.txt", encoding="utf-8")
-            chartIcons.append(f.read().split("\n"))
-            f.close()
-        else:
-            chartIcons.append("PLACEHOLDER\nERPLACEHOLD\nLDERPLACEHO\nHOLDERPLACE\nCEHOLDERPLA")
-    
-    keyboard.hook(handle_pressed_keys)
-    bpm = 120
-    steps = 4
-    startTime = time_ns()
-    offset = 0
-    # Clear screen
-    stdscr.clear()
-    curTime = time_ns()
-    startTime = curTime
-    # Check if screen was re-sized (True or False)
-    totalElapsed = 0
-    resize = curses.is_term_resized(y, x)
-
-    init_color()
-    
-    for i in range(len(logo)):
-        stdscr.addstr(2+i,int(x * 0.5)-int(len(logo[0])/2), logo[i])
-        stdscr.refresh()
-        sleep(1/30)
-
-    while killswitch:
-        duration_of_step = max(0, (60 / bpm / steps)) #length of 1/4 beat
-
-        #update stuff
-        elapsed = time_ns() - curTime
-        newTime = time_ns()
-        totalElapsed+=elapsed
-
-        # this is where the funny happens
-        if math.floor(((newTime-startTime)-offset)/duration_of_step) > math.floor(((curTime-startTime)-offset)/duration_of_step): #OnStepPassed
-            ts = math.floor(((newTime-startTime)-offset)/duration_of_step)
-            position = (int(ts/(4*steps)), (int(ts/4)%steps + 1))
-
-
-          # if ts%steps == 0: #OnBeatPassed
-          #     stdscr.addstr(0,0, "○○○○")
-          #     stdscr.addstr(0,int(ts/4)%steps, "●")
-          #     stdscr.addstr(5,0, str(position))
-
-
-        # calc offset
-        curTime = newTime# Action in loop if resize is True:
-        if resize is True:
-            y, x = stdscr.getmaxyx()
-            stdscr.clear()
-            curses.resizeterm(y, x)
-            stdscr.refresh()
-
-        # update code
-        update()
-
-        if game is not None:
-            game.loop(stdscr)
+			else:
+				if val.name == "KEY_DOWN" or val == "j":
+					self.curEnumValue = (self.curEnumValue-1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
+					self.interactEnum(self.menuOptions[self.enumInteracted], self.curEnumValue)
+				if val.name == "KEY_UP" or val == "k":
+					self.curEnumValue = (self.curEnumValue+1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
+					self.interactEnum(self.menuOptions[self.enumInteracted], self.curEnumValue)
+				if val.name == "KEY_ESCAPE" or val.name == "KEY_ENTER":
+					self.enumInteracted = -1
 
 
-        stdscr.refresh()
+	def loop(self):
+		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
+			print(term.clear)
+			self.translate()
+			while not self.turnOff:
+				self.deltatime = conduc.update()
+				self.draw()
 
+				self.handle_input()
+
+				if platform.system() == "Windows":
+					check_term_size()
+
+		if self.goBack == True:
+			self.goBack = False
+			self.turnOff = False
+			self.loop()
+
+	def __init__(self, boot = True):
+		"""
+		The base function, where everything happens. Call it to start the loop. It's never gonna stop. (unless you can somehow set `turnOff` to false)
+		"""
+		if boot:
+			self.loop()
+
+# Chart selection menu
+class ChartSelect:
+	turnOff = False
+	chartsize = 0
+	selectedItem = 0
+	selectedTab = 0
+	selectedScore = 0
+	scoreScrolledBy = []
+	funniSpeen = 0
+	goBack = False
+	resultsThing = ResultsScreen()
+
+	def draw(self):
+		for i in range(len(chartData)):
+			if i == self.selectedItem:
+				text = chartData[i]["metadata"]["artist"] + " - " + chartData[i]["metadata"]["title"] + " // "
+				print_cropped(0, i+1, 20, text, int(conduc.currentBeat), term.reverse)
+			else:
+				text = chartData[i]["metadata"]["artist"] + " - " + chartData[i]["metadata"]["title"]
+				print_cropped(0, i+1, 20, text, 0, term.normal, False)
+			print_at(20,i,f"{term.normal}")
+		print_column(20, 0, 19, "┃")
+		print_column(20, 20, term.height - 22, "┃")
+		# Actual chart info display
+		if len(chartData) == 0:
+			print_at(25,5, locales[selectedLocale]("chartSelect.no_charts"))
+		else:
+			if chartData[self.selectedItem]["icon"]["img"] != None:
+				fileExists = print_image(23, 1, 
+					"./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["img"], 
+					int(term.width * 0.2)
+				)
+				if not fileExists:
+					print_at(23, 1, "[NO IMAGE]")
+			else:
+				if os.path.exists("./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["txt"]):
+					txt = open("./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["txt"])
+					print_lines_at(23, 1, txt.read())
+				else:
+					print_at(23, 1, "[NO ICON]")
+			print_column(25 + int(term.width * 0.2), 0, 8, "┃")
+			#region metadata
+			print_at(27 + int(term.width * 0.2), 2, term.blue 
+				+ locales[selectedLocale]("chartSelect.metadata.song") 
+				+ term.normal 
+				+ ": " 
+				+ chartData[self.selectedItem]["metadata"]["title"]
+				+ term.clear_eol
+			)
+			print_at(27 + int(term.width * 0.2), 3, term.blue 
+				+ locales[selectedLocale]("chartSelect.metadata.artist") 
+				+ term.normal 
+				+ ": " 
+				+ chartData[self.selectedItem]["metadata"]["artist"]
+				+ term.clear_eol
+			)
+			print_at(27 + int(term.width * 0.2), 5, term.blue 
+				+ locales[selectedLocale]("chartSelect.metadata.author") 
+				+ term.normal 
+				+ ": " 
+				+ chartData[self.selectedItem]["metadata"]["author"]
+				+ term.clear_eol
+			)
+			print_at(27 + int(term.width * 0.2), 6, term.blue 
+				+ locales[selectedLocale]("chartSelect.difficulty") 
+				+ term.normal 
+				+ ": " 
+				+ str(chartData[self.selectedItem]["difficulty"])
+				+ term.clear_eol
+			)
+			#endregion
+			print_at(25 + int(term.width * 0.2), 8, "┠" + ("─"*(term.width - (26 + int(term.width * 0.2)))))
+			print_at(28 + int(term.width * 0.2), 8, term.reverse + locales[selectedLocale]("chartSelect.metadata.description") + term.normal)
+			print_column(25 + int(term.width * 0.2), 9, 10, "┃")
+			print_lines_at(26 + int(term.width * 0.2), 9, chartData[self.selectedItem]["metadata"]["description"])
+			print_at(25 + int(term.width * 0.2), 19, "┸" + ("─"*(term.width - (26 + int(term.width * 0.2)))))
+			print_at(20, 19, "┠" + ("─"*(4+int(term.width * 0.2))))
+			text_auto = locales[selectedLocale]("chartSelect.auto")
+			if loadedGame.auto:
+				print_at(23, 18, 
+					term.reverse + (" "*int((round(term.width*0.2)-len(text_auto))/2)) 
+					+ text_auto + (" "*int((int(term.width*0.2)-len(text_auto))/2)) 
+					+ term.normal
+				)
+			else:
+				print_at(23, 18, term.normal+(" "*int(term.width*0.2)))
+
+			#Scores!
+			maxRenderedScores = min(len(scores[chartData[self.selectedItem]["foldername"]]), term.height-23) 
+			offset = max(0, min(self.selectedScore - maxRenderedScores + 1, len(scores[chartData[self.selectedItem]["foldername"]]) - maxRenderedScores))
+			for i in range(maxRenderedScores):
+				score = scores[chartData[self.selectedItem]["foldername"]][i + offset]
+				rank = getRank(score["score"])
+				if score["checkPassed"]:
+					text_date_format = prettydate(datetime.datetime.fromtimestamp(score["time"]), not options["shortTimeFormat"])
+					if i+offset == self.selectedScore:
+						color = term.underline
+						if self.selectedTab == 1: color = term.reverse
+
+						if score["isOutdated"]:
+							print_at(23, 20+i, f"{term.grey}{color}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + term.clear_eol + term.normal)
+						else:
+							print_at(23, 20+i, f"{color}{rank[2]}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" + term.clear_eol + term.normal)
+						print_at(term.width - (len(text_date_format)+1), 20+i, term.reverse + text_date_format + term.normal)
+					else:
+						if score["isOutdated"]:
+							print_at(23, 20+i, f"{term.grey}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + term.clear_eol)
+						else: 
+							print_at(23, 20+i, f"{rank[2]}{rank[0]}{term.normal} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" + term.clear_eol)
+						print_at(term.width - (len(text_date_format)+1), 20+i, text_date_format)
+				else:
+					print_at(25, 20+i, "[INVALID SCORE]")
+			if len(scores[chartData[self.selectedItem]["foldername"]]) == 0:
+				print_at(35, int((term.height-18)/2)+17, "No scores yet!")
+		# Controls
+		print_at(1,term.height - 2, 
+		f"{term.reverse}[ENTER] {locales[selectedLocale]('chartSelect.controls.play')} {term.normal} "+
+		f"{term.reverse}[J/↓] {locales[selectedLocale]('chartSelect.controls.down')} {term.normal} "+
+		f"{term.reverse}[K/↑] {locales[selectedLocale]('chartSelect.controls.up')} {term.normal} "+
+		f"{term.reverse}[A] {locales[selectedLocale]('chartSelect.controls.auto')} {term.normal} "
+		)
+
+	def enterPressed(self):
+		if self.selectedTab == 0:
+			self.turnOff = True
+			conduc.stop()
+			conduc.song.stop()
+			loadedGame.playername = options["displayName"]
+			loadedGame.play(chartData[self.selectedItem], options["layout"])
+			# print(term.clear)
+			toBeCheckSumd = dict((i,chartData[self.selectedItem][i]) for i in chartData[self.selectedItem] if i != "actualSong")
+			checksum = hashlib.sha256(json.dumps(toBeCheckSumd,skipkeys=True,ensure_ascii=False).encode("utf-8")).hexdigest()
+			global scores
+			scores[chartData[self.selectedItem]["foldername"]] = load_scores(chartData[self.selectedItem]["foldername"], checksum, chartData[self.selectedItem])
+			self.goBack = True
+			conduc.play()
+		else:
+			print(term.clear)
+			self.resultsThing.resultsData = scores[chartData[self.selectedItem]["foldername"]][self.selectedScore]
+			self.resultsThing.setup()
+			self.resultsThing.isEnabled = True
+		
+	def handle_input(self):
+		"""
+		This function is called every update cycle to get keyboard input.
+		(Note: it is called *after* the `draw()` function, and takes the entire frame to run.)
+		"""
+		val = ''
+		val = term.inkey(timeout=1/60, esc_delay=0)
+		# debug_val(val)
+
+		if val.name == "KEY_DOWN" or val == "j":
+			if self.selectedTab == 0:
+				self.selectedItem = (self.selectedItem + 1)%self.chartsize
+				conduc.stop()
+				conduc.song.stop()
+				conduc.loadsong(chartData[self.selectedItem])
+				conduc.play()
+				print(term.clear)
+			else:
+				if len(scores[chartData[self.selectedItem]["foldername"]]) != 0:
+					self.selectedScore += 1
+					self.selectedScore = min(self.selectedScore, len(scores[chartData[self.selectedItem]["foldername"]])-1)
+					# self.selectedScore %= len(scores[chartData[self.selectedItem]["foldername"]])
+		if val.name == "KEY_UP" or val == "k":
+			if self.selectedTab == 0:
+				self.selectedItem = (self.selectedItem - 1)%self.chartsize
+				conduc.stop()
+				conduc.song.stop()
+				conduc.loadsong(chartData[self.selectedItem])
+				conduc.play()
+				print(term.clear)
+			else:
+				if len(scores[chartData[self.selectedItem]["foldername"]]) != 0:
+					self.selectedScore -= 1
+					self.selectedScore = max(self.selectedScore, 0)
+		if val.name == "KEY_LEFT" or val == "h":
+			self.selectedTab = max(self.selectedTab - 1, 0)
+		if val.name == "KEY_RIGHT" or val == "l":
+			if len(scores[chartData[self.selectedItem]["foldername"]]) > 0:
+				self.selectedTab = min(self.selectedTab + 1, 1)
+		if val == "a":
+			loadedGame.auto = not loadedGame.auto
+
+		if val.name == "KEY_ENTER":
+			self.enterPressed()
+
+		if val.name == "KEY_ESCAPE":
+			self.turnOff = True
+			loadedMenus["Titlescreen"].turnOff = False
+			loadedMenus["Titlescreen"].loop()
+			menu = "Titlescreen"
+			print(term.clear)
+
+	def loop(self):
+		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
+			print(term.clear)
+			while not self.turnOff:
+				self.deltatime = conduc.update()
+				if self.resultsThing.isEnabled:
+					self.resultsThing.draw()
+					self.resultsThing.handle_input()
+
+					if self.resultsThing.gameTurnOff:
+						self.resultsThing.gameTurnOff = False
+						self.resultsThing.isEnabled = False
+				else:
+					self.draw()
+					self.handle_input()
+
+				if platform.system() == "Windows":
+					check_term_size()
+		if self.goBack == True:
+			self.goBack = False
+			self.turnOff = False
+			self.loop()
+
+	def __init__(self, boot = True):
+		"""
+		The base function, where everything happens. Call it to start the loop. It's never gonna stop. (unless you can somehow set `turnOff` to false)
+		"""
+		self.chartsize = len(chartData)
+		if boot:
+			self.loop()
+
+# Title screen
+class TitleScreen:
+	logo = ""
+	turnOff = False
+	selectedItem = 0
+	maxItem = 4
+	curBottomText = 0
+	goBack = False
+
+	def moveBy(self, x):
+		self.selectedItem = (self.selectedItem + x)%self.maxItem
+
+	def enterPressed(self):
+		global loadedMenus
+		global menu
+		if self.selectedItem == 0:
+			# Play
+			self.turnOff = True
+			loadedMenus["ChartSelect"].turnOff = False
+			loadedMenus["ChartSelect"].loop()
+			menu = "ChartSelect"
+			print(term.clear)
+
+		if self.selectedItem == 1:
+			# Edit
+			conduc.stop()
+			conduc.song.stop()
+			loadedMenus["Editor"].turnOff = False
+			loadedMenus["Editor"].layout = Game.setupKeys(None, "qwerty")
+			loadedMenus["Editor"].loc = locales[selectedLocale]
+			loadedMenus["Editor"].loop()
+			print(term.clear)
+			print_lines_at(0,1,self.logo,True)
+			print_at(int((term.width - len(self.curBottomText)) / 2), len(self.logo.splitlines()) + 2, self.curBottomText)
+			self.turnOff = True
+			self.goBack = True
+			conduc.play()
+
+		if self.selectedItem == 2:
+			# Options
+			self.turnOff = True
+			loadedMenus["Options"].turnOff = False
+			loadedMenus["Options"].loop()
+			menu = "Options"
+			print(term.clear)
+		
+		if self.selectedItem == 3:
+			# Quit
+			self.turnOff = True
+			# sys.exit(0)
+	
+	def draw(self):
+		print_lines_at(0,1,self.logo,True)
+		print_at(int((term.width - len(self.curBottomText)) / 2), len(self.logo.splitlines()) + 2, self.curBottomText)
+
+		text_play = locales[selectedLocale]("titlescreen.play") #python be wack
+		text_edit = locales[selectedLocale]("titlescreen.edit") #python be wack
+		text_options = locales[selectedLocale]("titlescreen.options") #python be wack
+		text_quit = locales[selectedLocale]("titlescreen.quit") #python be wack
+		if self.selectedItem == 0:
+			if options["nerdFont"]:
+				print_at(0, term.height * 0.5 - 3, f"{term.reverse}   {text_play} {term.normal}\ue0b0")
+			else:
+				print_at(0, term.height * 0.5 - 3, f"{term.reverse}   {text_play} >{term.normal}")
+		else:
+			print_at(0, term.height * 0.5 - 3, f"  {text_play}   ")
+
+		if self.selectedItem == 1:
+			if options["nerdFont"]:
+				print_at(0, term.height * 0.5 - 1, f"{term.reverse}   {text_edit} {term.normal}\ue0b0")
+			else:
+				print_at(0, term.height * 0.5 - 1, f"{term.reverse}   {text_edit} >{term.normal}")
+		else:
+			print_at(0, term.height * 0.5 - 1, f"  {text_edit}   ")
+
+		if self.selectedItem == 2:
+			if options["nerdFont"]:
+				print_at(0, term.height * 0.5 + 1, f"{term.reverse}   {text_options} {term.normal}\ue0b0")
+			else:
+				print_at(0, term.height * 0.5 + 1, f"{term.reverse}   {text_options} >{term.normal}")
+		else:
+			print_at(0, term.height * 0.5 + 1, f"  {text_options}   ")
+
+		if self.selectedItem == 3:
+			if options["nerdFont"]:
+				print_at(0, term.height * 0.5 + 3, f"{term.reverse}   {text_quit} {term.normal}\ue0b0")
+			else:
+				print_at(0, term.height * 0.5 + 3, f"{term.reverse}   {text_quit} >{term.normal}")
+		else:
+			print_at(0, term.height * 0.5 + 3, f"  {text_quit}   ")
+
+		text_beat = "○ ○ ○ ○"
+		text_beat = text_beat[:int(conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(conduc.currentBeat)%4 * 2) + 1:]
+
+		print_at(0, 0, term.center(f"{text_beat}{term.clear_eol}"))
+		if len(chartData) != 0:
+			text_songTitle = chartData[currentLoadedSong]["metadata"]["artist"] + " - " + chartData[currentLoadedSong]["metadata"]["title"] + " // "
+		else:
+			text_songTitle = "[NO SONG PLAYING] // "
+		print_cropped(term.width - 31, 0, 30, text_songTitle, int(conduc.currentBeat), term.normal)
+
+		text_copyright = "© #Guigui, 2022-2023"
+		text_version = "v"+__version__
+		print_at(term.width-(len(text_version) + 1), term.height-3, text_version)
+		print_at(term.width-(len(text_copyright) + 1), term.height-2, text_copyright)
+
+	
+	def handle_input(self):
+		"""
+		This function is called every update cycle to get keyboard input.
+		(Note: it is called *after* the `draw()` function.)
+		"""
+		val = ''
+		val = term.inkey(timeout=1/60, esc_delay=0)
+		# debug_val(val)
+
+		if val.name == "KEY_LEFT" or val == "h":
+			self.moveBy(0)
+		if val.name == "KEY_DOWN" or val == "j":
+			self.moveBy(1)
+		if val.name == "KEY_UP" or val == "k":
+			self.moveBy(-1)
+		if val.name == "KEY_RIGHT" or val == "l":
+			self.moveBy(0)
+
+		if val.name == "KEY_ENTER":
+			self.enterPressed()
+
+		if val == "t":
+			conduc.metronome = not conduc.metronome
+
+	def loop(self):
+		self.curBottomText = bottomTextLines[random.randint(0, len(bottomTextLines)-1)]
+		# self.curBottomText = bottomTextLines[0]
+		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
+			print(term.clear)
+			while not self.turnOff:
+				self.deltatime = conduc.update()
+				self.draw()
+
+				self.handle_input()
+
+				if platform.system() == "Windows":
+					check_term_size()
+		if self.goBack == True:
+			self.goBack = False
+			self.turnOff = False
+			self.loop()
+		# print(term.clear)
+
+	def __init__(self, boot = True):
+		"""
+		The base function, where everything happens. Call it to start the loop. It's never gonna stop. (unless you can somehow set `turnOff` to false)
+		"""
+		f = open("./assets/logo.txt", encoding="utf-8")
+		self.logo = f.read()
+		f.close()
+
+		if boot:
+			self.loop()
 
 if __name__ == "__main__":
-    wrapper(main)
+	chartData, scores = load_charts()
+	locales, localeNames = load_locales()
+	options, selectedLocale = load_options(options)
+	layouts, layoutNames = load_layouts()
+	print("Everything loaded successfully!\n-----------------------------------------")
+	# print("Testing image rendering...")
+	# print("KittyImage: " + str(KittyImage.is_supported()))
+	# print("ITerm2Image: " + str(ITerm2Image.is_supported()))
+	# time.sleep(.5) # This is here to be able to see these values above. Everything goes so fast lmao
+	try:
+		if len(chartData) != 0:
+			songLoaded = random.randint(0, len(chartData)-1)
+			if chartData[songLoaded] != None:
+				conduc.loadsong(chartData[songLoaded])
+			conduc.play()
+		else:
+			songLoaded = 0
+		menu = "Titlescreen"
+		loadedMenus["ChartSelect"] = ChartSelect(False)
+		loadedMenus["Titlescreen"] = TitleScreen(False)
+		loadedMenus["Options"] = Options(False) # Sixty-sixteen megabytes- by-bytes 
+		loadedMenus["Editor"] = Editor()
+		loadedMenus["Calibration"] = Calibration("CalibrationGlobal")
+		loadedMenus["LayoutEditor"] = LayoutCreator()
+
+		loadedGame = game.Game()
+
+		loadedMenus["ChartSelect"].selectedItem = songLoaded
+		loadedMenus["Options"].populate_enum()
+
+		currentLoadedSong = songLoaded
+
+		loadedMenus[menu].loop()
+	except KeyboardInterrupt:
+		print('Keyboard Interrupt detected!')
+	# print(term.clear)
+	# print(f"Thanks for playing my game!")
+	print(term.move_xy(0,0))

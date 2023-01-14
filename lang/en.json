@@ -1,0 +1,127 @@
+{
+    "lang": "English",
+    "titlescreen":{
+        "play": "Play",
+        "edit": "Edit",
+        "options": "Options",
+        "quit": "Quit",
+        "version": "Version"
+    },
+    "chartSelect":{
+        "backTitle": "Back to Title",
+        "play": "Play",
+        "mods": "Modifiers",
+        "difficulty": "Difficulty",
+        "objs": "Hit objects",
+        "metadata": {
+            "author": "Chart author",
+            "song": "Song",
+            "artist": "Artist",
+            "description": "Description"
+        },
+        "no_charts": "Whoops, looks like you don't have any charts loaded!",
+        "auto": "[AUTO ENABLED]",
+        "controls":{
+            "play": "Play chart",
+            "down": "Scroll down",
+            "up": "Scroll up",
+            "auto": "Toggle auto mode"
+        }
+    },
+    "options":{
+        "globalOffset": "Global offset (ms)",
+        "calibrationTip": "Press C to open the calibration menu!",
+        "lang": "Language",
+        "nerdFont": "Enable Nerd Font display",
+        "textImages": "Use images as thumbnails",
+        "layout": "Keyboard layout",
+        "layoutTip": "Press L to create a custom layout!",
+        "shortTimeFormat": "Shorten relative time formatting",
+        "displayName": "Local username"
+    },
+    "calibration":{
+        "hit": "Hit on beat!",
+        "global": "Global offset calibration",
+        "perSong": "Song offset test",
+        "quit": "Quit",
+        "selectSong": "Select a song:"
+    },
+    "layout":{
+        "newKey":"Please input the key to replace this position to."
+    },
+    "gameplay":{
+        "pause": {
+            "title": "PAUSED",
+            "resume": "Resume",
+            "retry": "Retry",
+            "quit": "Quit to menu"
+        }
+    },
+    "editor":{
+        "emptyChart": "Wow, such empty.",
+        "timelineInfos":{
+            "bpm": "BPM",
+            "snap": "Snap",
+            "bar": "Bar",
+            "beat": "Beat",
+            "curNote": "Currently selected note",
+            "color": "Color",
+            "screenpos": "Screen position",
+            "beatpos": "Beat position",
+            "endpos": "End level pos"
+        },
+        "commandResults":{
+            "save": "Saved successfully!",
+            "open": {
+                "success": "Chart loaded successfully.",
+                "notFound": "This chart doesn't exist."
+            },
+            "common": {
+                "notEnoughArgs": "Too few arguments.",
+                "tooManyArgs": "Too many arguments.",
+                "notFound": "Command not found.",
+                "tooLong": "...what?"
+            },
+            "note": {
+                "success": "Successfully created a new note."
+            },
+            "meta": {
+                "success": "Successfully changed metadata \"{0}\" to \"{1}\"."
+            }
+        },
+        "newKey": {
+            "creating": "Select a key to go with the added note.",
+            "editing": "Select a key to change this note's key to."
+        },
+        "keyOptions": {
+            "key": "Change key",
+            "color": "Change color",
+            "delete": "Delete note"
+        },
+        "metadata": {
+            "title": "Title",
+            "artist": "Artist",
+            "author": "Chart author",
+            "description": "Description"
+        }
+    },
+    "datetime":{
+        "long":{
+            "now": "just now",
+            "secs": "{} seconds ago",
+            "min1": "1 minute ago",
+            "min": "{} minutes ago",
+            "hour1": "1 hour ago",
+            "hour": "{} hours ago",
+            "ystd": "yesterday",
+            "day": "{} days ago"
+        },
+        "short":{
+            "now": "now",
+            "secs": "{}s",
+            "mins": "{}m",
+            "hours": "{}h",
+            "days": "{}d"
+        }
+    }
+}

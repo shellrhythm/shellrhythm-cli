@@ -1,0 +1,9 @@
+{
+    "layout": "qwerty",
+    "globalOffset": 0,
+    "lang": "en",
+    "nerdFont": false,
+    "textImages": true,
+    "shortTimeFormat": false,
+    "displayName": "Player"
+}
