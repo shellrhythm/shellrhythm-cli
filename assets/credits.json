@@ -1,0 +1,21 @@
+[
+    {
+        "role": "Lead Developer, French Translation",
+        "name": "#Guigui",
+        "links": [
+            { "icon":"\ueb72", "label": "Twitter", "link": "https://twitter.com/_GuiguiYT" },
+            { "icon":" ",      "label": "Mastodon", "link": "https://twitter.com/_GuiguiYT" },
+            { "icon":"\uea84", "label": "GitHub", "link": "https://github.com/HastagGuigui" },
+            { "icon":"\uf173", "label": "Tumblr", "link": "https://hastagguigui.tumblr.com" },
+            { "icon":"\uf16a", "label": "YouTube", "link": "https://www.youtube.com/@_Guigui" }
+        ]
+    },
+    {
+        "role": "OST Composer",
+        "name": "NachoBIT",
+        "links": [
+            { "icon":"\ueb72", "label": "Twitter", "link": "https://twitter.com/TheNachoBIT" },
+            { "icon":"\uf16a", "label": "YouTube", "link": "https://www.youtube.com/@nachobit6716" }
+        ]
+    }
+]

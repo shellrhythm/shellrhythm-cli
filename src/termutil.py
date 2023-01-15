@@ -77,13 +77,16 @@ def print_cropped(x, y, maxsize, text, offset, color, isWrapAround = True):
 		actualText = text[offset%len(text):maxsize+(offset%len(text))]
 		print_at(x, y, color + actualText + term.normal + (" "*(maxsize - len(actualText))))
 
-def print_box(x,y,width, height, color, style):
+def print_box(x,y,width, height, color = term.normal, style = 0, caption = ""):
 	curBoxStyle = "????????"
 	if type(style) is int:
 		curBoxStyle = box_styles[style]
 	elif type(style) is str:
 		curBoxStyle = box_styles
-	print_at(x,y,color + curBoxStyle[0] + (curBoxStyle[1]*(width-2)) + curBoxStyle[2] + term.normal)
+	if caption != "":
+		print_at(x,y,color + curBoxStyle[0] + term.reverse + caption + term.normal + (curBoxStyle[1]*(width-(2+len(caption)))) + curBoxStyle[2] + term.normal)
+	else:
+		print_at(x,y,color + curBoxStyle[0] + (curBoxStyle[1]*(width-2)) + curBoxStyle[2] + term.normal)
 	print_at(x,y+height-1,color + curBoxStyle[5] + (curBoxStyle[6]*(width-2)) + curBoxStyle[7] + term.normal)
 	print_column(x,y+1,height-2,color + curBoxStyle[3])
 	print_column(x+width-1,y+1,height-2,color + curBoxStyle[4])

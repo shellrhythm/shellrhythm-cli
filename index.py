@@ -40,13 +40,13 @@ layouts = {}
 layoutNames = []
 
 options = {
-    "layout": "qwerty",
-    "globalOffset": 0,
-    "lang": "en",
-    "nerdFont": False,
-    "textImages": True,
+	"layout": "qwerty",
+	"globalOffset": 0,
+	"lang": "en",
+	"nerdFont": False,
+	"textImages": True,
 	"shortTimeFormat": False,
-    "displayName": "Unknown",
+	"displayName": "Unknown",
 	"bypassSize": False
 }
 
@@ -101,6 +101,61 @@ def prettydate(d, longFormat = False):
 	return output
 
 # =========================  [MENU CLASSES]  =========================
+
+class Credits:
+	turnOff = False
+	creditsOrSomething = []
+	creditsPath = "./assets/credits.json"
+	selectedItem = 0
+
+	def draw(self):
+		maxLength = 0
+
+		for option in self.creditsOrSomething:
+			if len(option["role"]) > maxLength:
+				maxLength = len(option["role"])
+				
+		for i in range(len(self.creditsOrSomething)):
+			if self.selectedItem == i:
+				print_at(0,(i*2)+3,term.reverse + term.bold + "    " + (" "*(maxLength-len(self.creditsOrSomething[i]["role"]))) + self.creditsOrSomething[i]["role"] + " " + term.normal + term.underline + self.creditsOrSomething[i]["name"] + term.normal)
+			else:
+				print_at(0,(i*2)+3,term.bold + "    " + (" "*(maxLength-len(self.creditsOrSomething[i]["role"]))) + self.creditsOrSomething[i]["role"] + " " + term.normal + self.creditsOrSomething[i]["name"] + term.normal)
+		pass
+
+	def handle_input(self):
+		val = ''
+		val = term.inkey(timeout=1/60, esc_delay=0)
+
+		if val.name == "KEY_ESCAPE":
+			global menu
+			self.saveOptions()
+			self.turnOff = True
+			loadedMenus["Titlescreen"].turnOff = False
+			loadedMenus["Titlescreen"].loop()
+			menu = "Titlescreen"
+			print(term.clear)
+
+	def loop(self):
+		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
+			print(term.clear)
+			f = open(self.creditsPath)
+			self.creditsOrSomething = json.loads(f.read())
+			f.close()
+			while not self.turnOff:
+				self.deltatime = conduc.update()
+				if not too_small(options["bypassSize"]):
+					self.draw()
+				else:
+					text = locales[selectedLocale]("screenTooSmall")
+					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+
+				self.handle_input()
+
+				if platform.system() == "Windows":
+					check_term_size()
+
+	def __init__(self) -> None:
+		pass
 
 # Options menu
 class Options:
@@ -609,12 +664,18 @@ class TitleScreen:
 	logo = ""
 	turnOff = False
 	selectedItem = 0
-	maxItem = 4
+	menuOptions = [
+		"titlescreen.play",
+		"titlescreen.edit",
+		"titlescreen.options",
+		"titlescreen.credits",
+		"titlescreen.quit",
+	]
 	curBottomText = 0
 	goBack = False
 
 	def moveBy(self, x):
-		self.selectedItem = (self.selectedItem + x)%self.maxItem
+		self.selectedItem = (self.selectedItem + x)%len(self.menuOptions)
 
 	def enterPressed(self):
 		global loadedMenus
@@ -649,8 +710,15 @@ class TitleScreen:
 			loadedMenus["Options"].loop()
 			menu = "Options"
 			print(term.clear)
-		
+
 		if self.selectedItem == 3:
+			self.turnOff = True
+			loadedMenus["Credits"].turnOff = False
+			loadedMenus["Credits"].loop()
+			menu = "Options"
+			print(term.clear)
+		
+		if self.selectedItem == 4:
 			# Quit
 			self.turnOff = True
 			# sys.exit(0)
@@ -659,41 +727,15 @@ class TitleScreen:
 		print_lines_at(0,1,self.logo,True)
 		print_at(int((term.width - len(self.curBottomText)) / 2), len(self.logo.splitlines()) + 2, self.curBottomText)
 
-		text_play = locales[selectedLocale]("titlescreen.play") #python be wack
-		text_edit = locales[selectedLocale]("titlescreen.edit") #python be wack
-		text_options = locales[selectedLocale]("titlescreen.options") #python be wack
-		text_quit = locales[selectedLocale]("titlescreen.quit") #python be wack
-		if self.selectedItem == 0:
-			if options["nerdFont"]:
-				print_at(0, term.height * 0.5 - 3, f"{term.reverse}   {text_play} {term.normal}\ue0b0")
+		for i in range(len(self.menuOptions)):
+			text = locales[selectedLocale](self.menuOptions[i])
+			if self.selectedItem == i:
+				if options["nerdFont"]:
+					print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"{term.reverse}   {text} {term.normal}\ue0b0")
+				else:
+					print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"{term.reverse}   {text} >{term.normal}")
 			else:
-				print_at(0, term.height * 0.5 - 3, f"{term.reverse}   {text_play} >{term.normal}")
-		else:
-			print_at(0, term.height * 0.5 - 3, f"  {text_play}   ")
-
-		if self.selectedItem == 1:
-			if options["nerdFont"]:
-				print_at(0, term.height * 0.5 - 1, f"{term.reverse}   {text_edit} {term.normal}\ue0b0")
-			else:
-				print_at(0, term.height * 0.5 - 1, f"{term.reverse}   {text_edit} >{term.normal}")
-		else:
-			print_at(0, term.height * 0.5 - 1, f"  {text_edit}   ")
-
-		if self.selectedItem == 2:
-			if options["nerdFont"]:
-				print_at(0, term.height * 0.5 + 1, f"{term.reverse}   {text_options} {term.normal}\ue0b0")
-			else:
-				print_at(0, term.height * 0.5 + 1, f"{term.reverse}   {text_options} >{term.normal}")
-		else:
-			print_at(0, term.height * 0.5 + 1, f"  {text_options}   ")
-
-		if self.selectedItem == 3:
-			if options["nerdFont"]:
-				print_at(0, term.height * 0.5 + 3, f"{term.reverse}   {text_quit} {term.normal}\ue0b0")
-			else:
-				print_at(0, term.height * 0.5 + 3, f"{term.reverse}   {text_quit} >{term.normal}")
-		else:
-			print_at(0, term.height * 0.5 + 3, f"  {text_quit}   ")
+				print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"  {text}   ")
 
 		text_beat = "○ ○ ○ ○"
 		text_beat = text_beat[:int(conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(conduc.currentBeat)%4 * 2) + 1:]
@@ -791,6 +833,7 @@ if __name__ == "__main__":
 		loadedMenus["ChartSelect"] = ChartSelect(False)
 		loadedMenus["Titlescreen"] = TitleScreen(False)
 		loadedMenus["Options"] = Options(False) # Sixty-sixteen megabytes- by-bytes 
+		loadedMenus["Credits"] = Credits() # Funding for this program was made possible by-by-by-by-by-
 		loadedMenus["Editor"] = Editor()
 		loadedMenus["Calibration"] = Calibration("CalibrationGlobal")
 		loadedMenus["LayoutEditor"] = LayoutCreator()
