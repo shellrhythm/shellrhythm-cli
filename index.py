@@ -107,6 +107,7 @@ class Credits:
 	creditsOrSomething = []
 	creditsPath = "./assets/credits.json"
 	selectedItem = 0
+	isViewingProfile = False
 
 	def draw(self):
 		maxLength = 0
@@ -120,20 +121,44 @@ class Credits:
 				print_at(0,(i*2)+3,term.reverse + term.bold + "    " + (" "*(maxLength-len(self.creditsOrSomething[i]["role"]))) + self.creditsOrSomething[i]["role"] + " " + term.normal + term.underline + self.creditsOrSomething[i]["name"] + term.normal)
 			else:
 				print_at(0,(i*2)+3,term.bold + "    " + (" "*(maxLength-len(self.creditsOrSomething[i]["role"]))) + self.creditsOrSomething[i]["role"] + " " + term.normal + self.creditsOrSomething[i]["name"] + term.normal)
-		pass
+		if self.isViewingProfile:
+			for i in range(len(self.creditsOrSomething[self.selectedItem]["links"])):
+				text = self.creditsOrSomething[self.selectedItem]["links"][i]["label"]
+				toPrint = term.link(self.creditsOrSomething[self.selectedItem]["links"][i]["link"], self.creditsOrSomething[self.selectedItem]["links"][i]["label"])
+				print_at(term.width - (len(text)+1), i+3, toPrint)
+				if options["nerdFont"]:
+					print_at(term.width - (len(text)+3), i+3, self.creditsOrSomething[self.selectedItem]["links"][i]["icon"])
+
+	def enter_pressed(self):
+		if not self.isViewingProfile:
+			self.isViewingProfile = True
 
 	def handle_input(self):
 		val = ''
 		val = term.inkey(timeout=1/60, esc_delay=0)
 
 		if val.name == "KEY_ESCAPE":
-			global menu
-			self.saveOptions()
-			self.turnOff = True
-			loadedMenus["Titlescreen"].turnOff = False
-			loadedMenus["Titlescreen"].loop()
-			menu = "Titlescreen"
-			print(term.clear)
+			if not self.isViewingProfile:
+				global menu
+				self.turnOff = True
+				loadedMenus["Titlescreen"].turnOff = False
+				loadedMenus["Titlescreen"].loop()
+				menu = "Titlescreen"
+				print(term.clear)
+			else:
+				self.isViewingProfile = False
+				print(term.clear)
+		
+		if val.name == "KEY_DOWN":
+			self.selectedItem += 1
+			self.selectedItem %= len(self.creditsOrSomething)
+		
+		if val.name == "KEY_UP":
+			self.selectedItem -= 1
+			self.selectedItem %= len(self.creditsOrSomething)
+		
+		if val.name == "KEY_ENTER":
+			self.enter_pressed()
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
@@ -184,7 +209,7 @@ class Options:
 
 	def populate_enum(self):
 		self.menuOptions[1]["populatedValues"] = localeNames
-		self.menuOptions[4]["populatedValues"] = layoutNames
+		self.menuOptions[5]["populatedValues"] = layoutNames
 
 	def translate(self):
 		for optn in self.menuOptions:
@@ -279,6 +304,7 @@ class Options:
 			print_at(int(term.width * 0.6)-3, int(term.height*0.5)+1, term.reverse+"No [N] "+term.normal)
 
 	def enterPressed(self):
+		self.populate_enum()
 		selectedOption = self.menuOptions[self.selectedItem]
 		if selectedOption["type"] == "bool":
 			self.interactBool(selectedOption)
@@ -357,6 +383,7 @@ class Options:
 					# conduc.song.stop()
 					loadedMenus["Calibration"].loc = locales[selectedLocale]
 					loadedMenus["Calibration"].turnOff = False
+					loadedMenus["Calibration"].startCalibGlobal()
 					self.suggestedOffset = loadedMenus["Calibration"].init()
 					self.isPickingOffset = True
 					loadedMenus["Calibration"].conduc.stop()
@@ -453,10 +480,12 @@ class ChartSelect:
 			print_at(25,5, locales[selectedLocale]("chartSelect.no_charts"))
 		else:
 			if chartData[self.selectedItem]["icon"]["img"] != None:
-				fileExists = print_image(23, 1, 
-					"./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["img"], 
-					int(term.width * 0.2)
-				)
+				fileExists = None
+				if chartData[self.selectedItem]["icon"]["img"] != "":
+					fileExists = print_image(23, 1, 
+						"./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["img"], 
+						int(term.width * 0.2)
+					)
 				if not fileExists:
 					print_at(23, 1, "[NO IMAGE]")
 			else:
@@ -609,6 +638,22 @@ class ChartSelect:
 				self.selectedTab = min(self.selectedTab + 1, 1)
 		if val == "a":
 			loadedGame.auto = not loadedGame.auto
+		if val == "e":
+			pass #load editor
+			conduc.stop()
+			conduc.song.stop()
+			loadedMenus["Editor"].turnOff = False
+			loadedMenus["Editor"].layout = Game.setupKeys(None, "qwerty")
+			loadedMenus["Editor"].loc = locales[selectedLocale]
+			loadedMenus["Editor"].mapToEdit = chartData[self.selectedItem]
+			loadedMenus["Editor"].localConduc.loadsong(chartData[self.selectedItem])
+			loadedMenus["Editor"].mapToEdit.pop("actualSong", None)
+			loadedMenus["Editor"].fileLocation = f"./charts/{chartData[self.selectedItem]['foldername']}/data.json"
+			loadedMenus["Editor"].loop()
+			print(term.clear)
+			self.turnOff = True
+			self.goBack = True
+			conduc.play()
 
 		if val.name == "KEY_ENTER":
 			self.enterPressed()
@@ -715,7 +760,7 @@ class TitleScreen:
 			self.turnOff = True
 			loadedMenus["Credits"].turnOff = False
 			loadedMenus["Credits"].loop()
-			menu = "Options"
+			menu = "Credits"
 			print(term.clear)
 		
 		if self.selectedItem == 4:

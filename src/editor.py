@@ -4,17 +4,22 @@ import copy
 import json
 from pybass3 import Song
 import time
+import shutil
 # from index import *
 if __name__ == "src.editor":
-	from src.game import *
+	from src.game import Game, colors
 	from src.conductor import *
 	from src.translate import Locale
 	from src.textbox import textbox_logic
+	from src.filebrowser import FileBrowser
+	from src.calibration import Calibration
 else:
-	from game import *
+	from game import Game, colors
 	from conductor import *
 	from translate import Locale
 	from textbox import textbox_logic
+	from filebrowser import FileBrowser
+	from calibration import Calibration
 
 term = Terminal()
 
@@ -76,6 +81,12 @@ class Editor:
 	metadataTyping = False
 	metadataString = ""
 	metadataTypingCursor = 0
+
+	#File Browser
+	fileBrwsr:FileBrowser = FileBrowser()
+
+	#Calibration
+	calib:Calibration = Calibration("CalibrationSong")
 
 	def autocomplete(self, command):
 		output = []
@@ -295,9 +306,9 @@ class Editor:
 						self.dontDrawList.remove(note)
 					if remBeats > -0.1 and remBeats < 4:
 						if self.selectedNote == j:
-							Game.renderNote(None, calculatedPos, colors[note["color"]]+term.reverse, characterDisplayed, remBeats)
+							Game.renderNote(None, calculatedPos, colors[note["color"]]+term.reverse, characterDisplayed, remBeats+1)
 						else:
-							Game.renderNote(None, calculatedPos, colors[note["color"]], characterDisplayed, remBeats)
+							Game.renderNote(None, calculatedPos, colors[note["color"]], characterDisplayed, remBeats+1)
 					elif remBeats < -0.1 and note not in self.dontDrawList:
 						print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 						print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
@@ -347,6 +358,8 @@ class Editor:
 		# :w - Write (Save) | 1 optional argument (where to save it)
 		elif commandSplit[0] == "w":
 			output = json.dumps(self.mapToEdit)
+			if len(commandSplit) > 1:
+				self.mapToEdit["foldername"] = commandSplit[1]
 			if len(commandSplit) == 2:
 				self.fileLocation = f"./charts/{commandSplit[1]}/data.json"
 			elif len(commandSplit) == 3:
@@ -409,6 +422,36 @@ class Editor:
 				self.keyPanelKey = 0
 				return True, ""
 			# return False, "Whoops, looks like you're in unimplemented territory!"
+
+		# :song - Change song
+		elif commandSplit[0] == "song":
+			if self.fileLocation == "":
+				return False, "You need to save this file first! To do that, type :w <some_chart_name>"
+			if len(commandSplit) > 1:
+				if os.path.exists(commandSplit[1]) and commandSplit[1].split(".")[-1] in ["ogg", "mp3", "wav"]:
+					soundFileLocation = commandSplit[1]
+					self.mapToEdit["sound"] = soundFileLocation.split('/')[-1]
+					shutil.copyfile(soundFileLocation, f"./charts/{self.mapToEdit['foldername']}/{soundFileLocation.split('/')[-1]}")
+					self.localConduc.loadsong(self.mapToEdit)
+			else:
+				self.fileBrwsr.fileExtFilter = "(?:\.ogg$)|(?:\.wav$)|(?:\.mp3$)"
+				self.fileBrwsr.load_folder(os.getcwd())
+				self.fileBrwsr.caption = "Select a song"
+				self.fileBrwsr.turnOff = False
+				soundFileLocation = self.fileBrwsr.loop()
+				self.mapToEdit["sound"] = soundFileLocation.split('/')[-1]
+				shutil.copyfile(soundFileLocation, f"./charts/{self.mapToEdit['foldername']}/{soundFileLocation.split('/')[-1]}")
+				self.localConduc.loadsong(self.mapToEdit)
+
+		# :off
+		elif commandSplit[0] == "off":
+			if len(commandSplit) > 1:
+				self.mapToEdit["offset"] = float(commandSplit[1])
+			else:
+				self.calib.startCalibSong(self.mapToEdit)
+				offset = self.calib.init(False)
+				self.mapToEdit["offset"] = offset
+
 
 		# :s - Snap
 		elif commandSplit[0] == "s":

@@ -128,6 +128,8 @@ class Calibration:
 				print_at(int((term.width - len(text_quit))*0.5)+2, int(term.height*0.5) + 2, "< " + text_quit + " >")
 
 	def startCalibGlobal(self):
+		self.chartData, _ = load_charts()
+		self.conduc.loadsong(self.chartData[0])
 		self.calibrationMenu = "CalibrationGlobal"
 		print(term.clear)
 		self.conduc.play()
@@ -139,13 +141,20 @@ class Calibration:
 		self.conduc.loadsong(chart)
 		self.conduc.play()
 		self.conduc.metronome = True
+		self.chartData.append(chart)
+		self.selecSong = len(self.chartData)-1
 
-	def init(self):
-		self.chartData = load_charts()
-		self.conduc.loadsong(self.chartData[0])
-		if self.calibrationMenu == "CalibrationGlobal":
-			self.startCalibGlobal()
-		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
+	def init(self, fullscreen = True):		
+		if fullscreen:
+			with term.fullscreen(), term.cbreak(), term.hidden_cursor():
+				print(term.clear)
+				while not self.turnOff:
+					if self.calibrationMenu != "CalibrationSelect":
+						deltatime = self.conduc.update()
+
+					self.draw()
+					self.handle_input()
+		else:
 			print(term.clear)
 			while not self.turnOff:
 				if self.calibrationMenu != "CalibrationSelect":
@@ -154,9 +163,11 @@ class Calibration:
 				self.draw()
 				self.handle_input()
 
+
 		if self.hitCount != 0:
 			print(round(self.totalOffset / self.hitCount, 3))
 			return self.totalOffset / self.hitCount
+		else: return 0
 	
 	def __init__(self, calibrationMenu) -> None:
 		self.calibrationMenu = calibrationMenu

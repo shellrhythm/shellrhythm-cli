@@ -16,7 +16,6 @@ else:
 	from results import *
 	from translate import Locale
 
-from index import options
 
 term = Terminal()
 
@@ -49,7 +48,7 @@ accMultiplier = [1, 0.95, 0.85, 0.75, 0.5, 0]
 # You can either use "setSize" or "scale"
 # setSize will use a set terminal size as playfield (By default, 80x24)
 # while scale will use the current terminal size with a small offset applied.
-playfield_mode = "scale"
+playfield_mode = "setSize"
 
 maxScore = 1000000
 
@@ -74,6 +73,9 @@ class Game:
 	#Locale
 	loc:Locale = Locale("en")
 
+	#Bypass size
+	bypassSize = False
+
 	def setupKeys(self, layout):
 		if os.path.exists("./layout/" + layout):
 			output = []
@@ -89,6 +91,19 @@ class Game:
 				keys = output
 			else:
 				return output
+	
+	def trueCalcPos(self, x, y):
+		calc_pos = []
+		topleft = [int((term.width-defaultSize[0]) * 0.5), int((term.height-defaultSize[1]) * 0.5)]
+		if playfield_mode == "setSize":
+			calc_pos = [
+				int(x*(defaultSize[0]))+topleft[0],
+				int(y*(defaultSize[1]))+topleft[1]]
+		else:
+			calc_pos = [
+				int(x*(term.width-12))+6,
+				int(y*(term.height-9))+4]
+		return calc_pos
 
 	def resultsFile(self):
 		global keys
@@ -136,15 +151,7 @@ class Game:
 				}
 				self.accuracyUpdate()
 				self.score = int(scoreCalc(maxScore, self.judgements, self.accuracy, self.missesCount, self.chart))
-				calc_pos = []
-				if playfield_mode == "setSize":
-					calc_pos = [
-						int(note["screenpos"][0]*(defaultSize[0]))+6,
-						int(note["screenpos"][1]*(defaultSize[1]))+4]
-				else:
-					calc_pos = [
-						int(note["screenpos"][0]*(term.width-12))+6,
-						int(note["screenpos"][1]*(term.height-9))+4]
+				calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
 				print_at(calc_pos[0], calc_pos[1], judgementShort[judgement])
 				print_at(10, 1, judgementNames[judgement])
 
@@ -159,15 +166,7 @@ class Game:
 						"judgement": judgement
 					}
 					self.accuracyUpdate()
-					calc_pos = []
-					if playfield_mode == "setSize":
-						calc_pos = [
-							int(note["screenpos"][0]*(defaultSize[0]))+6,
-							int(note["screenpos"][1]*(defaultSize[1]))+4]
-					else:
-						calc_pos = [
-							int(note["screenpos"][0]*(term.width-12))+6,
-							int(note["screenpos"][1]*(term.height-9))+4]
+					calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
 					print_at(calc_pos[0], calc_pos[1], judgementShort[judgement])
 					print_at(10, 1, judgementNames[judgement])
 					self.missesCount += 1
@@ -187,15 +186,7 @@ class Game:
 				}
 				self.accuracyUpdate()
 				self.score = int(scoreCalc(maxScore, self.judgements, self.accuracy, self.missesCount, self.chart))
-				calc_pos = []
-				if playfield_mode == "setSize":
-					calc_pos = [
-						int(note["screenpos"][0]*(defaultSize[0]))+6,
-						int(note["screenpos"][1]*(defaultSize[1]))+4]
-				else:
-					calc_pos = [
-						int(note["screenpos"][0]*(term.width-12))+6,
-						int(note["screenpos"][1]*(term.height-9))+4]
+				calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
 				print_at(calc_pos[0], calc_pos[1], judgementShort[judgement])
 				print_at(10, 1, judgementNames[judgement])
 				return True
@@ -272,15 +263,7 @@ class Game:
 			note = notes[len(notes) - (i+1)] #It's inverted so that the ones with the lowest remBeats are rendered on top of the others.
 			if note["type"] == "hit_object":
 				# print_at(40, term.height-2, str(note))
-				calc_pos = []
-				if playfield_mode == "setSize":
-					calc_pos = [
-						int(note["screenpos"][0]*(defaultSize[0]))+6,
-						int(note["screenpos"][1]*(defaultSize[1]))+4]
-				else:
-					calc_pos = [
-						int(note["screenpos"][0]*(term.width-12))+6,
-						int(note["screenpos"][1]*(term.height-9))+4]
+				calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
 				color = colors[note["color"]]
 				key = keys[note["key"]]
 				remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat - (self.localConduc.offset/(60/self.localConduc.bpm))
@@ -311,19 +294,13 @@ class Game:
 			print_at(0,0,term.normal + self.chart["metadata"]["artist"] + " - " + self.chart["metadata"]["title"])
 			print_at(term.width - (len(str(self.accuracy)) + 2), 0, str(self.accuracy) + "%")
 			print_at(term.width - (len(str(self.score)) + 1), 1, str(self.score))
+			
 			if playfield_mode == "scale":
 				print_box(4,2,term.width-7,term.height-4,term.normal,1)
-				# print_at(5,2,"-"* (term.width - 9))
-				# print_at(5,term.height - 3,"-"* (term.width - 9))
-				# print_column(4,3,term.height-6,"|")
-				# print_column(term.width-4,3,term.height-6, "|")
 			elif playfield_mode == "setSize":
-				print_box(4,2,defaultSize[0],defaultSize[1]-4,term.normal,1)
-				# print_at(5,2,"-"* (defaultSize[0]))
-				# print_at(5,defaultSize[1] + 3,"-"* (defaultSize[0]))
-				# print_column(4,3,defaultSize[1],"|")
-				# print_column(defaultSize[0]+5, 3, defaultSize[1], "|")
-
+				topleft = [int((term.width-defaultSize[0]) * 0.5)-1, int((term.height-defaultSize[1]) * 0.5)-1]
+				print_box(topleft[0],topleft[1],defaultSize[0]+2,defaultSize[1]+2,term.normal,1)
+			
 			self.actualKeysRendering(self.chart["notes"])
 		else:
 			global locales
@@ -442,7 +419,7 @@ class Game:
 			while not self.turnOff:
 				self.deltatime = self.localConduc.update()
 				if not self.resultsScreen.isEnabled:
-					if not too_small(options["bypassSize"]):
+					if not too_small(self.bypassSize):
 						self.draw()
 					else:
 						text = self.loc("screenTooSmall")

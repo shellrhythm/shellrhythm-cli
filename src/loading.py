@@ -147,7 +147,10 @@ def load_charts():
 			completelyNormalJson = json.loads(f)
 			jsonThing = json.loads(f)
 			jsonThing = check_chart(jsonThing, charts[i])
-			jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
+			if jsonThing["sound"] != None:
+				jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
+			else:
+				jsonThing["actualSong"] = Song("./assets/metronome.wav")
 			chartData.append(jsonThing)
 			scores[charts[i]] = load_scores(charts[i], hashlib.sha256(json.dumps(completelyNormalJson).encode("utf-8")).hexdigest(), completelyNormalJson)
 		print("All charts loaded successfully!")

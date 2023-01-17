@@ -3,11 +3,12 @@ if __name__ == "__main__":
 	from termutil import *
 else:
 	from src.termutil import *
+import re
 
 class FileBrowser:
 	curPath = "/"
 	turnOff = False
-	fileExtFilter = "*"
+	fileExtFilter = r"(?:.py$)"
 	curFilesInFolder = []
 	curSubFolders = []
 	selectedItem = 0
@@ -18,10 +19,12 @@ class FileBrowser:
 
 	def load_folder(self, path):
 		if os.path.exists(path):
-			self.curFilesInFolder = [file.name for file in os.scandir(path) if file.is_file()]
+			self.curFilesInFolder = [file.name for file in os.scandir(path) if file.is_file() and re.search(self.fileExtFilter, file.name)]
 			self.curSubFolders = [fold.name for fold in os.scandir(path) if fold.is_dir()]
 			self.curSubFolders.append("..")
 			self.curPath = os.path.abspath(path)
+			self.curSubFolders.sort()
+			self.curFilesInFolder.sort()
 		else:
 			return FileNotFoundError()
 
@@ -76,7 +79,7 @@ class FileBrowser:
 			print(term.clear)
 		if val.name == "KEY_ENTER":
 			if self.selectedItem >= len(self.curSubFolders):
-				self.output = self.curPath + "/" + self.curFilesInFolder[self.selectedItem]
+				self.output = self.curPath + "/" + self.curFilesInFolder[self.selectedItem - len(self.curSubFolders)]
 				self.turnOff = True
 				print(term.clear)
 			else:
@@ -90,6 +93,14 @@ class FileBrowser:
 			self.turnOff = True
 			print(term.clear)
 
+	def loop(self):
+		print(term.clear)
+		while not self.turnOff:
+			self.draw()
+			self.handle_input()
+
+		return self.output
+
 	def __init__(self) -> None:
 		pass
 
@@ -97,8 +108,7 @@ if __name__ == "__main__":
 	fileContext = FileBrowser()
 	fileContext.load_folder(os.getcwd())
 	fileContext.caption = "Hey, this is a test file browser!"
+
 	with term.fullscreen(), term.cbreak(), term.hidden_cursor():
-		print(term.clear)
-		while not fileContext.turnOff:
-			fileContext.draw()
-			fileContext.handle_input()
+		fileContext.loop()
+	print(fileContext.output)

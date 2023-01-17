@@ -6,7 +6,8 @@
         "edit": "Edit",
         "options": "Options",
         "quit": "Quit",
-        "version": "Version"
+        "version": "Version",
+        "credits": "Credits"
     },
     "chartSelect":{
         "backTitle": "Back to Title",
