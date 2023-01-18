@@ -7,14 +7,14 @@ import time
 import shutil
 # from index import *
 if __name__ == "src.editor":
-	from src.game import Game, colors
+	from src.game import Game, colors, defaultSize
 	from src.conductor import *
 	from src.translate import Locale
 	from src.textbox import textbox_logic
 	from src.filebrowser import FileBrowser
 	from src.calibration import Calibration
 else:
-	from game import Game, colors
+	from game import Game, colors, defaultSize
 	from conductor import *
 	from translate import Locale
 	from textbox import textbox_logic
@@ -88,8 +88,14 @@ class Editor:
 	#Calibration
 	calib:Calibration = Calibration("CalibrationSong")
 
-	def autocomplete(self, command):
+	def autocomplete(self, command = ""):
 		output = []
+		if command == "":
+			# return list of commands uhhh
+			return output
+		
+		commandSplit = command.split(" ")
+
 
 		#TODO where do i even begin
 
@@ -285,13 +291,17 @@ class Editor:
 			elif self.noteMenuJustDisabled:
 				self.clear_noteSettings(note)
 				self.noteMenuJustDisabled = False
+			
+			topleft = [int((term.width-defaultSize[0]) * 0.5)-1, int((term.height-defaultSize[1]) * 0.5)-1]
+			print_box(topleft[0],topleft[1]-1,defaultSize[0]+2,defaultSize[1]+2,term.normal,1)
 			for i in range(len(self.mapToEdit["notes"])):
 				j = len(self.mapToEdit["notes"]) - (i+1)
 				note = self.mapToEdit["notes"][j]
 				if self.mapToEdit["notes"][j]["type"] == "hit_object":
 					screenPos = note["screenpos"]
 					characterDisplayed = self.layout[note["key"]]
-					calculatedPos = Game.calculatePosition(screenPos, 5, 3, term.width-10, term.height-11)
+					calculatedPos = Game.trueCalcPos(None, screenPos[0], screenPos[1], "setSize")
+					calculatedPos[1] -= 1
 					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
 
 					#TIMELINE
@@ -421,7 +431,6 @@ class Editor:
 				self.keyPanelSelected = -1
 				self.keyPanelKey = 0
 				return True, ""
-			# return False, "Whoops, looks like you're in unimplemented territory!"
 
 		# :song - Change song
 		elif commandSplit[0] == "song":
@@ -443,7 +452,7 @@ class Editor:
 				shutil.copyfile(soundFileLocation, f"./charts/{self.mapToEdit['foldername']}/{soundFileLocation.split('/')[-1]}")
 				self.localConduc.loadsong(self.mapToEdit)
 
-		# :off
+		# :off - Change song offset
 		elif commandSplit[0] == "off":
 			if len(commandSplit) > 1:
 				self.mapToEdit["offset"] = float(commandSplit[1])
@@ -451,7 +460,6 @@ class Editor:
 				self.calib.startCalibSong(self.mapToEdit)
 				offset = self.calib.init(False)
 				self.mapToEdit["offset"] = offset
-
 
 		# :s - Snap
 		elif commandSplit[0] == "s":
@@ -509,6 +517,7 @@ class Editor:
 				return False, self.loc("editor.commandResults.common.tooManyArgs")
 			return False, self.loc("editor.commandResults.common.notEnoughArgs")
 
+		# :cp - Copy
 		elif commandSplit[0] == "cp":
 			if len(commandSplit) == 3:
 				#XX-YY : Range of notes to copy

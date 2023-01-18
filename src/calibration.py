@@ -1,7 +1,5 @@
-# from index import print_at, print_column, print_cropped, print_lines_at, Conductor, load_charts, chartData
 from blessed import Terminal
 import json, os
-print(__name__)
 if __name__ != "src.calibration":
 	from loading import check_chart, load_charts
 	from termutil import print_at

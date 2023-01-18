@@ -24,7 +24,7 @@ git clone https://github.com/HastagGuigui/shellrhythm.git
 pip install -r requirements.txt
 ```
 
-- And then finally, launch the program using the `run.bat` file or in a command prompt in the game's directory:
+- And then finally, launch the program using the `run.bat` file (or `./shellrhythm` on Linux) or in a command prompt in the game's directory:
 ```
 python ./index.py
 ```
@@ -44,7 +44,7 @@ Use the editor! It's the 2nd option on the titlescreen.
 
 ## Can I use this project for something?
 
-Sure! The entire codebase is under the ISC license, so honestly do whatever with it.
+Sure! The entire codebase is under the ISC license, so honestly do whatever with it. (Just don't claim to be behind the original project, obviously.)<br>
 However, one of the libraries this project uses, [pybass3](https://github.com/devdave/pybass3/), uses a library called BASS, which is a commercial product. While it is free for non-commercial use, please ensure to [obtain a valid licence](http://www.un4seen.com/bass.html#license) if you plan on distributing any application using it commercially.
 
 ## Known issues

@@ -1,6 +1,5 @@
 from pybass3 import Song
 import time
-print(__name__)
 if __name__ != "src.conductor":
 	from termutil import *
 else:

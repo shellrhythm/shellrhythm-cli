@@ -71,7 +71,6 @@ class LayoutCreator:
 			if val.name == "KEY_ENTER":
 				self.changingKey = True
 			if val.name == None and self.changingKey:
-				# self.changingKey = False
 				if str(val) in self.layout:
 					self.layout[self.layout.index(str(val))] = "╳"
 				self.layout[self.selectedKey] = str(val)

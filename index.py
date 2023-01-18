@@ -4,7 +4,7 @@ from blessed import Terminal
 import json
 from term_image.image import *
 import random
-# from src import *
+
 from src.conductor import *
 from src.calibration import *
 from src.loading import *
@@ -14,7 +14,6 @@ from src.results import *
 
 import sys
 import platform
-# print(sys.stdout.encoding)
 
 __version__ = "1.0.0"
 
@@ -322,7 +321,6 @@ class Options:
 		"""
 		val = ''
 		val = term.inkey(timeout=1/60, esc_delay=0)
-		# debug_val(val)
 		global options
 
 		if self.strInteracted > -1:
@@ -380,7 +378,6 @@ class Options:
 					self.goBack = True
 					self.selectedItem = 0
 					conduc.stop()
-					# conduc.song.stop()
 					loadedMenus["Calibration"].loc = locales[selectedLocale]
 					loadedMenus["Calibration"].turnOff = False
 					loadedMenus["Calibration"].startCalibGlobal()
@@ -391,9 +388,6 @@ class Options:
 					loadedMenus["Calibration"].hits = []
 					loadedMenus["Calibration"].totalOffset = 0
 					conduc.startAt(0)
-					# print(term.clear)
-					# text_offsetConfirm = f"Do you want to use the new following offset: {int(newOffset*3)}ms?"
-					# print_at(int((term.width - len(text_offsetConfirm)) * 0.5), int(term.height*0.5), text_offsetConfirm)
 				if val == "l":
 					self.saveOptions()
 					self.turnOff = True
@@ -584,7 +578,7 @@ class ChartSelect:
 			loadedGame.loc = locales[selectedLocale]
 			loadedGame.playername = options["displayName"]
 			loadedGame.play(chartData[self.selectedItem], options["layout"])
-			# print(term.clear)
+			
 			toBeCheckSumd = dict((i,chartData[self.selectedItem][i]) for i in chartData[self.selectedItem] if i != "actualSong")
 			checksum = hashlib.sha256(json.dumps(toBeCheckSumd,skipkeys=True,ensure_ascii=False).encode("utf-8")).hexdigest()
 			global scores
@@ -604,7 +598,6 @@ class ChartSelect:
 		"""
 		val = ''
 		val = term.inkey(timeout=1/60, esc_delay=0)
-		# debug_val(val)
 
 		if val.name == "KEY_DOWN" or val == "j":
 			if self.selectedTab == 0:
@@ -618,7 +611,6 @@ class ChartSelect:
 				if len(scores[chartData[self.selectedItem]["foldername"]]) != 0:
 					self.selectedScore += 1
 					self.selectedScore = min(self.selectedScore, len(scores[chartData[self.selectedItem]["foldername"]])-1)
-					# self.selectedScore %= len(scores[chartData[self.selectedItem]["foldername"]])
 		if val.name == "KEY_UP" or val == "k":
 			if self.selectedTab == 0:
 				self.selectedItem = (self.selectedItem - 1)%self.chartsize
@@ -639,7 +631,7 @@ class ChartSelect:
 		if val == "a":
 			loadedGame.auto = not loadedGame.auto
 		if val == "e":
-			pass #load editor
+			#load editor
 			conduc.stop()
 			conduc.song.stop()
 			loadedMenus["Editor"].turnOff = False
@@ -766,7 +758,6 @@ class TitleScreen:
 		if self.selectedItem == 4:
 			# Quit
 			self.turnOff = True
-			# sys.exit(0)
 	
 	def draw(self):
 		print_lines_at(0,1,self.logo,True)
@@ -805,7 +796,6 @@ class TitleScreen:
 		"""
 		val = ''
 		val = term.inkey(timeout=1/60, esc_delay=0)
-		# debug_val(val)
 
 		if val.name == "KEY_LEFT" or val == "h":
 			self.moveBy(0)
@@ -824,7 +814,6 @@ class TitleScreen:
 
 	def loop(self):
 		self.curBottomText = bottomTextLines[random.randint(0, len(bottomTextLines)-1)]
-		# self.curBottomText = bottomTextLines[0]
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
 			print(term.clear)
 			while not self.turnOff:
@@ -862,10 +851,6 @@ if __name__ == "__main__":
 	options, selectedLocale = load_options(options)
 	layouts, layoutNames = load_layouts()
 	print("Everything loaded successfully!\n-----------------------------------------")
-	# print("Testing image rendering...")
-	# print("KittyImage: " + str(KittyImage.is_supported()))
-	# print("ITerm2Image: " + str(ITerm2Image.is_supported()))
-	# time.sleep(.5) # This is here to be able to see these values above. Everything goes so fast lmao
 	try:
 		if len(chartData) != 0:
 			songLoaded = random.randint(0, len(chartData)-1)
@@ -893,6 +878,4 @@ if __name__ == "__main__":
 		loadedMenus[menu].loop()
 	except KeyboardInterrupt:
 		print('Keyboard Interrupt detected!')
-	# print(term.clear)
-	# print(f"Thanks for playing my game!")
 	print(term.move_xy(0,0))

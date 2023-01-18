@@ -2,9 +2,6 @@ def textbox_logic(curText, cursorPos, val, autocomplete = None):
 	if val.name == "KEY_BACKSPACE":
 		if curText != "":
 			curText = curText[:len(curText)-(cursorPos+1)] + curText[len(curText)-cursorPos:]
-		# else:
-		# 	self.commandMode = False
-		# 	print_at(0,term.height-2, term.clear_eol+term.normal)
 	elif val.name == "KEY_LEFT":
 		cursorPos += 1
 		if cursorPos > len(curText):

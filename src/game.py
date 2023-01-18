@@ -92,10 +92,12 @@ class Game:
 			else:
 				return output
 	
-	def trueCalcPos(self, x, y):
+	def trueCalcPos(self, x, y, mode = ""):
+		if mode == "":
+			mode = playfield_mode
 		calc_pos = []
 		topleft = [int((term.width-defaultSize[0]) * 0.5), int((term.height-defaultSize[1]) * 0.5)]
-		if playfield_mode == "setSize":
+		if mode == "setSize":
 			calc_pos = [
 				int(x*(defaultSize[0]))+topleft[0],
 				int(y*(defaultSize[1]))+topleft[1]]
@@ -131,7 +133,6 @@ class Game:
 		self.accuracy = round((judges / count) * 100, 2)
 
 	def checkJudgement(self, note, noteNum, notHit = False):
-		# print_at(10, 2, "idk man figure it out yourself")
 		remTime = ((note["beatpos"][0] * 4 + note["beatpos"][1]) * (60/self.localConduc.bpm)) - self.localConduc.currentTimeSec
 		if not self.auto:
 			if -0.6 < remTime < 0.6:
@@ -154,6 +155,7 @@ class Game:
 				calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
 				print_at(calc_pos[0], calc_pos[1], judgementShort[judgement])
 				print_at(10, 1, judgementNames[judgement])
+				print_at(25, 1, term.normal + str(round(remTime*1000, 4)) + "ms")
 
 				if judgement == 5:
 					self.missesCount += 1
@@ -189,6 +191,7 @@ class Game:
 				calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
 				print_at(calc_pos[0], calc_pos[1], judgementShort[judgement])
 				print_at(10, 1, judgementNames[judgement])
+				print_at(25, 1, term.normal + str(round(remTime*1000, 4)) + "ms")
 				return True
 
 	def getSongEndTime(self):
@@ -262,7 +265,6 @@ class Game:
 		for i in range(len(notes)):
 			note = notes[len(notes) - (i+1)] #It's inverted so that the ones with the lowest remBeats are rendered on top of the others.
 			if note["type"] == "hit_object":
-				# print_at(40, term.height-2, str(note))
 				calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
 				color = colors[note["color"]]
 				key = keys[note["key"]]
@@ -273,7 +275,6 @@ class Game:
 
 					Game.renderNote(self, calc_pos, color, key, approachedBeats, notes, i) # Say it, you didn't expect a call directly to the Game class. Frankly it's the same shit lmao
 
-					# print_at(calc_pos[0], calc_pos[1]+1, f"{term.normal}{int(remBeats)}{color}")
 				if note not in self.dontDraw and ((remTime <= -0.6) or (self.judgements[len(notes) - (i+1)] != {} and -0.2 > remTime > -0.6 )):
 					if note not in self.outOfHere:
 						self.outOfHere.append(note)
@@ -328,8 +329,6 @@ class Game:
 				print_at(int((term.width-len(text_quit)) * 0.5) - 1, int(term.height*0.5), term.normal+" "+text_quit+" "+term.normal)
 			
 
-		# self.localConduc.debugSound()
-
 	def retry(self):
 		print(term.clear)
 		self.localConduc.stop()
@@ -341,7 +340,6 @@ class Game:
 		if not self.localConduc.isPaused:
 			val = ''
 			val = term.inkey(timeout=1/inputFrequency, esc_delay=0)
-			# debug_val(val)
 
 			if val.name == "KEY_ESCAPE":
 				self.localConduc.pause()
@@ -362,9 +360,9 @@ class Game:
 					f2 = open("./scores/" + self.chart["foldername"] + "-" + hashlib.sha256(json.dumps(result).encode("utf-8")).hexdigest(), "x")
 					f2.write(json.dumps(result))
 					f2.close()
-				# raise NotImplementedError("Results screen missing!")
 				self.resultsScreen.resultsData = result
 				self.resultsScreen.isEnabled = True
+				print(term.clear)
 				self.resultsScreen.setup()
 
 			if val in keys and not self.auto and not self.localConduc.isPaused:
@@ -407,8 +405,6 @@ class Game:
 					self.localConduc.resume()
 				if self.pauseOption == 1:
 					self.retry()
-					# self.localConduc.resume()
-					# self.localConduc.song.move2position_bytes(0)
 				if self.pauseOption == 2:
 					self.turnOff = True
 					self.localConduc.resume()
@@ -429,7 +425,6 @@ class Game:
 					self.resultsScreen.draw()
 					self.resultsScreen.handle_input()
 					self.turnOff = self.resultsScreen.gameTurnOff
-		# print("On god? Just like that?")
 		self.localConduc.stop()
 		self.localConduc.song.stop()
 		self.turnOff = False
@@ -439,7 +434,6 @@ class Game:
 				
 
 	def play(self, chart = {}, layout = "qwerty"):
-		# print(chart)
 		self.setupKeys(layout)
 		self.judgements = []
 		self.dontDraw = []

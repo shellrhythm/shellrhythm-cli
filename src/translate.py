@@ -27,7 +27,7 @@ class Locale:
 		return f"Locale: {self('lang')} ({self.name})"
 
 	def __init__(self, lang:str) -> None:
-		# print(f"Loading locale \"{lang}\"...")
+		print(f"Loading locale \"{lang}\"...")
 		f = open("./lang/" + lang + ".json")
 		self.data = json.loads(f.read())
 		self.name = lang
