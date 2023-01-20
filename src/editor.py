@@ -7,14 +7,14 @@ import time
 import shutil
 # from index import *
 if __name__ == "src.editor":
-	from src.game import Game, colors, defaultSize
+	from src.game import *
 	from src.conductor import *
 	from src.translate import Locale
 	from src.textbox import textbox_logic
 	from src.filebrowser import FileBrowser
 	from src.calibration import Calibration
 else:
-	from game import Game, colors, defaultSize
+	from game import *
 	from conductor import *
 	from translate import Locale
 	from textbox import textbox_logic
@@ -145,6 +145,29 @@ class Editor:
 			if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
 				self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
 			
+	def create_text(self, atPos = 0, lasts = 1, text = "", anchor = CENTER, align = ALIGN_CENTER):
+		print(term.clear)
+		if "notes" in self.mapToEdit:
+			newNote = {
+				"type": "text",
+				"beatpos": [
+					int(atPos//4),
+					round(atPos%4, 5)
+				],
+				"stopAt": [
+					int((atPos+lasts)//4),
+					round((atPos+lasts)%4, 5)
+				],
+				"text": text,
+				"anchor": anchor,
+				"align": align,
+				"offset": [0,0]
+			}
+			self.mapToEdit["notes"].append(newNote)
+			self.mapToEdit["notes"] = sorted(self.mapToEdit["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
+			if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
+				self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
+
 
 	def set_end_note(self, atPos):
 		if self.endNote == -1:
@@ -297,7 +320,7 @@ class Editor:
 			for i in range(len(self.mapToEdit["notes"])):
 				j = len(self.mapToEdit["notes"]) - (i+1)
 				note = self.mapToEdit["notes"][j]
-				if self.mapToEdit["notes"][j]["type"] == "hit_object":
+				if note["type"] == "hit_object":
 					screenPos = note["screenpos"]
 					characterDisplayed = self.layout[note["key"]]
 					calculatedPos = Game.trueCalcPos(None, screenPos[0], screenPos[1], "setSize")
@@ -324,7 +347,34 @@ class Editor:
 						print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 						print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
 						self.dontDrawList.append(note)
+				elif note["type"] == "text":
+					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
+					stopAt = (note["stopAt"][0] * 4 + note["stopAt"][1]) - self.localConduc.currentBeat - (self.localConduc.offset/(60/self.localConduc.bpm))
+					
+					# TEXT - TIMELINE
+					if remBeats*8+(term.width*0.1) >= 0:
+						if self.options["nerdFont"]:
+							char = "\U000f150f"
+						else:
+							char = "#"
+						if self.selectedNote == j:
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.turquoise}{term.bold}{char}{term.normal}")
+						else:
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.normal}{term.turquoise}{term.bold}{char}{term.normal}")
+
+					# TEXT - ON SCREEN
+
+					if note in self.dontDrawList and stopAt < 0:
+						self.dontDrawList.remove(note)
+					if note not in self.dontDrawList:
+						if remBeats <= 0:
+							if stopAt > 0:
+								Game.renderText(None, note["text"], note["offset"], note["anchor"], note["align"])
+							else:
+								Game.renderText(None, " " * len(note["text"]), note["offset"], note["anchor"], note["align"])
+								self.dontDrawList.append(note)
 				else:
+					# END - TIMELINE
 					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
 					if remBeats*8+(term.width*0.1) >= 0:
 						if self.selectedNote == j:
@@ -543,6 +593,13 @@ class Editor:
 			elif len(commandSplit) > 3:
 				return False, self.loc("editor.commandResults.common.tooManyArgs")
 			return False, self.loc("editor.commandResults.common.notEnoughArgs")
+
+		elif commandSplit[0] == "t":
+			if len(commandSplit) > 1:
+				self.create_text(atPos=self.localConduc.currentBeat, text=" ".join(commandSplit[1:]))
+				return True, self.loc("editor.commandResults.note.success")
+			else:
+				return False, "[cannot create empty text]"
 
 		else:
 			if len(commandSplit[0]) > 128:

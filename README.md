@@ -50,6 +50,7 @@ However, one of the libraries this project uses, [pybass3](https://github.com/de
 ## Known issues
 
 - [Linux isn't fully compatible with pybass3 yet,](https://github.com/devdave/pybass3/issues/2) however [there is a workaround to get it working anyways.](./docs/PYBASS3_LINUX.md)
+- Windows' cmd and powershell suffer from huge input lag (roughly 6 update cycles per second, compared to >100 on bash), it is recommended to use another command line interpreter (like a WSL installation, or MSYS2 (but i haven't been able to run it from it yet)).
 
 ## Help! I'm having issues!
 

@@ -17,6 +17,20 @@ else:
 	from translate import Locale
 
 
+CENTER = 0
+LEFT = 1
+DOWN = 2
+UP = 3
+RIGHT = 4
+DOWN_LEFT = 5
+DOWN_RIGHT = 6
+UP_LEFT = 7
+UP_RIGHT = 8
+
+ALIGN_LEFT = 0
+ALIGN_CENTER = 1
+ALIGN_RIGHT = 2
+
 term = Terminal()
 
 colors = [
@@ -204,6 +218,59 @@ class Game:
 
 		return out
 
+	def renderText(self, text = "", offset = [0,0], anchor = CENTER, align = ALIGN_LEFT):
+		#calculate position
+		calculatedPosition = [0,0]
+
+		if anchor == CENTER:
+			calculatedPosition[0] = int(defaultSize[0]/2 + offset[0])
+			calculatedPosition[1] = int(defaultSize[1]/2 + offset[1])
+		elif anchor == LEFT:
+			calculatedPosition[0] = int(offset[0])
+			calculatedPosition[1] = int(defaultSize[1]/2 + offset[1])
+		elif anchor == DOWN:
+			calculatedPosition[0] = int(defaultSize[0]/2 + offset[0])
+			calculatedPosition[1] = int(defaultSize[1] + offset[1])
+		elif anchor == UP:
+			calculatedPosition[0] = int(defaultSize[0]/2 + offset[0])
+			calculatedPosition[1] = int(offset[1])
+		elif anchor == RIGHT:
+			calculatedPosition[0] = int(defaultSize[0] + offset[0])
+			calculatedPosition[1] = int(defaultSize[1]/2 + offset[1])
+		elif anchor == DOWN_LEFT:
+			calculatedPosition[0] = int(offset[0])
+			calculatedPosition[1] = int(defaultSize[1] + offset[1])
+		elif anchor == DOWN_RIGHT:
+			calculatedPosition[0] = int(defaultSize[0] + offset[0])
+			calculatedPosition[1] = int(defaultSize[1] + offset[1])
+		elif anchor == UP_LEFT:
+			calculatedPosition[0] = int(offset[0])
+			calculatedPosition[1] = int(offset[1])
+		elif anchor == UP_RIGHT:
+			calculatedPosition[0] = int(defaultSize[0] + offset[0])
+			calculatedPosition[1] = int(offset[1])
+
+		#check for aligns
+		if align == ALIGN_LEFT:
+			pass
+		elif align == ALIGN_CENTER:
+			calculatedPosition[0] += int(len(text)*0.5)
+		elif align == ALIGN_RIGHT:
+			calculatedPosition[0] += len(text)-1
+		#prevent clipping out of the playfield
+		renderedText = text
+
+		if calculatedPosition[0] < 0:
+			renderedText = text[-calculatedPosition[0]:]
+		if calculatedPosition[0] + len(renderedText) > defaultSize[0]:
+			renderedText = text[:calculatedPosition[0] - defaultSize[0]]
+		
+		topleft = [int((term.width-defaultSize[0]) * 0.5), int((term.height-defaultSize[1]) * 0.5)]
+
+		print_at(calculatedPosition[0] + topleft[0], calculatedPosition[1] + topleft[1], renderedText)
+
+		pass
+
 	def renderNote(self, atPos, color, key, approachedBeats, notes = {}, i = -1):
 		if int(approachedBeats*2) == 8:
 			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═ {term.normal}")
@@ -284,11 +351,24 @@ class Game:
 					print_at(calc_pos[0]-1, calc_pos[1],   f"{color}   ")
 					print_at(calc_pos[0]-1, calc_pos[1]+1, f"{color}   ")
 					self.dontDraw.append(note)
+			if note["type"] == "text":
+				renderAt = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat - (self.localConduc.offset/(60/self.localConduc.bpm))
+				stopAt = (note["stopAt"][0] * 4 + note["stopAt"][1]) - self.localConduc.currentBeat - (self.localConduc.offset/(60/self.localConduc.bpm))
+				if note not in self.dontDraw:
+					if renderAt <= 0:
+						if stopAt > 0:
+							self.renderText(note["text"], note["offset"], note["anchor"], note["align"])
+						else:
+							self.renderText(" " * len(note["text"]), note["offset"], note["anchor"], note["align"])
+							self.dontDraw.append(note)
+					
+				
 		text_beat = "○ ○ ○ ○"
 		text_beat = text_beat[:int(self.localConduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.localConduc.currentBeat)%4 * 2) + 1:]
 		print_at(int(term.width * 0.5)-3, 1, term.normal + text_beat)
 		
 	def draw(self):
+		print_at(0, term.height-2, str(int(1/self.deltatime)) + "fps" + term.clear_eol)
 		if not self.localConduc.isPaused:
 			timerText = str(format_time(int(self.localConduc.currentTimeSec))) + " / " + str(format_time(int(self.endTime)))
 			print_at(0,0, f"{term.normal}{term.center(timerText)}")
