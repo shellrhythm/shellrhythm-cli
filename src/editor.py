@@ -364,7 +364,7 @@ class Editor:
 
 					# TEXT - ON SCREEN
 
-					if note in self.dontDrawList and stopAt < 0:
+					if note in self.dontDrawList and stopAt > 0:
 						self.dontDrawList.remove(note)
 					if note not in self.dontDrawList:
 						if remBeats <= 0:
@@ -618,13 +618,14 @@ class Editor:
 
 		if self.playtest:
 			for note in self.mapToEdit["notes"]:
-				remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
-				if note not in self.dontBeat and remBeats <= 0:
-					self.beatSound.move2position_seconds(0)
-					self.beatSound.play()
-					self.dontBeat.append(note)
-				if note in self.dontBeat and remBeats > 0:
-					self.dontBeat.remove(note)
+				if note["type"] == "hit_object":
+					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
+					if note not in self.dontBeat and remBeats <= 0:
+						self.beatSound.move2position_seconds(0)
+						self.beatSound.play()
+						self.dontBeat.append(note)
+					if note in self.dontBeat and remBeats > 0:
+						self.dontBeat.remove(note)
 
 		if self.noteMenuEnabled:
 			if val:
