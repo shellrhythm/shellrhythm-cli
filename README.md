@@ -1,7 +1,7 @@
 # shellrhythm
 ![](./shellrhythm.png)
 
-![](https://img.shields.io/github/issues/HastagGuigui/shellrhythm?style=flat-square) ![](https://img.shields.io/github/forks/HastagGuigui/shellrhythm?style=flat-square) ![](https://img.shields.io/github/stars/HastagGuigui/shellrhythm?color=yellow&style=flat-square) ![](https://img.shields.io/github/license/HastagGuigui/shellrhythm?color=red&style=flat-square) ![](https://img.shields.io/badge/version-1.0-white?style=flat-square)
+![](https://img.shields.io/github/issues/HastagGuigui/shellrhythm?style=flat-square) ![](https://img.shields.io/github/forks/HastagGuigui/shellrhythm?style=flat-square) ![](https://img.shields.io/github/stars/HastagGuigui/shellrhythm?color=yellow&style=flat-square) ![](https://img.shields.io/github/license/HastagGuigui/shellrhythm?color=red&style=flat-square) ![](https://img.shields.io/badge/version-1.0-white?style=flat-square) ![](https://img.shields.io/discord/1071432733240332328?label=Join%20the%20Discord&logo=discord&style=flat-square)
 
 ## Gameplay
 
@@ -36,7 +36,7 @@ By default, there are no charts. Mostly because of copyright reasons, ~~but also
 
 ## Are there any charts I can download?
 
-You can check out the #shellrhythm-charts on my [Discord server](https://discord.gg/VGxqDahgvY), but I'll most likely update this part with, like, a chartpack or something. I'll just have to wait until charts are available.
+You can check out the #charts channel on the [shellrhythm Discord server](https://discord.gg/artQgD3Y8V), but I'll most likely update this part with, like, a chartpack or something. I'll just have to wait until more charts are available.
 
 ## How do I make a chart?
 
@@ -50,12 +50,12 @@ However, one of the libraries this project uses, [pybass3](https://github.com/de
 ## Known issues
 
 - [Linux isn't fully compatible with pybass3 yet,](https://github.com/devdave/pybass3/issues/2) however [there is a workaround to get it working anyways.](./docs/PYBASS3_LINUX.md)
-- Windows' cmd and powershell suffer from huge input lag (roughly 6 update cycles per second, compared to >100 on bash), it is recommended to use another command line interpreter (like a WSL installation, or MSYS2 (but i haven't been able to run it from it yet)).
+- The accuracy is bound to the framerate. It's why there's an fps counter at the bottom left of the screen in gameplay.
 
 ## Help! I'm having issues!
 
 If it's a crash or an unexpected behaviour (or even just a suggestion!), open an issue.
-If it's just struggle on how to make a chart (like, undocumented stuff), hit me up on [Twitter](https://twitter.com/_GuiguiYT) or on [Discord](https://discord.gg/VGxqDahgvY) (this is a link to my server).
+If it's just struggle on how to make a chart (like, undocumented stuff), hit me up on [Twitter](https://twitter.com/_GuiguiYT) or on [Discord](https://discord.gg/artQgD3Y8V) (this is a link to the shellrhythm discord server).
 
 ----
 © #Guigui 2022-2023
