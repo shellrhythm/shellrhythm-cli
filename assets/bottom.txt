@@ -34,3 +34,10 @@ You want a change of color? Check out your terminal emulator's settings.
 If you don't have access to full color you're not missing out on much.
 sha256 this, sha256 that, how about you sha256 deez nuts in yo m-
 keep in mind you can also modify your options from the options.json file
+imagine inverting early and late couldn't be me smh
+now with text decos!
+yes, there's an editor, y'all are blind.
+originally planned to release it on 10/1/23 but i forgor + it wasn't complete
+i need an install script or else im gonna die
+#Guigui: ok so it's a terminal rhythm game you don't have to go that hard | NachoBIT: 🎹🔥
+keyboard accuracy is bound to the framerate im too lazy to check key status on linux

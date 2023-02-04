@@ -65,11 +65,19 @@ class Editor:
 	loc:Locale = Locale("en")
 
 	#Note settings
-	noteMenu = [
-		{"name": "key", "keybind": 20},
-		{"name": "color", "keybind": 21},
-		{"name": "delete", "keybind": 22},
-	]
+	noteMenu = {
+		"hit_object":[
+			{"name": "key", "keybind": 20},
+			{"name": "color", "keybind": 21},
+			{"name": "delete", "keybind": 22},
+		],
+		"text":[
+			{"name": "text", "keybind": 20},
+			{"name": "color", "keybind": 21},
+			{"name": "anchor", "keybind": 22},
+			{"name": "delete", "keybind": 23},
+		]
+	}
 	noteMenuEnabled = False
 	noteMenuJustDisabled = False
 	noteMenuSelected = 0
@@ -154,10 +162,7 @@ class Editor:
 					int(atPos//4),
 					round(atPos%4, 5)
 				],
-				"stopAt": [
-					int((atPos+lasts)//4),
-					round((atPos+lasts)%4, 5)
-				],
+				"length": lasts,
 				"text": text,
 				"anchor": anchor,
 				"align": align,
@@ -189,8 +194,8 @@ class Editor:
 	def draw_noteSettings(self, note, selectedOption):
 		if note["type"] == "hit_object":
 			calculatedPos = Game.calculatePosition(note["screenpos"], 5, 3, term.width-10, term.height-11)
-			width = max(len(self.loc("editor.keyOptions." + option["name"])) for option in self.noteMenu)+4
-			height = len(self.noteMenu)+2
+			width = max(len(self.loc("editor.noteSettings.hit_object." + option["name"])) for option in self.noteMenu["hit_object"])+4
+			height = len(self.noteMenu["hit_object"])+2
 			anchorPoint = [calculatedPos[0]+2, min(calculatedPos[1]-1, term.height-(2+height))]
 			if anchorPoint[0] + width >=term.width:
 				anchorPoint[0] = calculatedPos[0]-(2+width)
@@ -198,34 +203,72 @@ class Editor:
 			print_at(anchorPoint[0], anchorPoint[1]+height-1,	"└"+("─"*(width-2))+"┘")
 			print_column(anchorPoint[0],		 anchorPoint[1]+1, height-2, "│")
 			print_column(anchorPoint[0]+width-1, anchorPoint[1]+1, height-2, "│")
-			for i in range(len(self.noteMenu)):
-				text = self.loc("editor.keyOptions." + self.noteMenu[i]["name"])
+			for i in range(len(self.noteMenu["hit_object"])):
+				text = self.loc("editor.noteSettings.hit_object." + self.noteMenu["hit_object"][i]["name"])
 				if i == selectedOption:
-					print_at(anchorPoint[0], 	anchorPoint[1]+1+i, ">"+term.reverse	+ text + (" "*(width-(len(text)+3))) + self.layout[self.noteMenu[i]["keybind"]].upper() + term.reverse	)
+					print_at(anchorPoint[0], 	anchorPoint[1]+1+i, ">"+term.reverse	+ text + (" "*(width-(len(text)+3))) + self.layout[self.noteMenu["hit_object"][i]["keybind"]].upper() + term.reverse	)
 				else:
-					print_at(anchorPoint[0]+1, 	anchorPoint[1]+1+i,		term.normal 	+ text + (" "*(width-(len(text)+3))) + self.layout[self.noteMenu[i]["keybind"]].upper() + term.normal	)
+					print_at(anchorPoint[0]+1, 	anchorPoint[1]+1+i,		term.normal 	+ text + (" "*(width-(len(text)+3))) + self.layout[self.noteMenu["hit_object"][i]["keybind"]].upper() + term.normal	)
+		elif note["type"] == "text":
+			width = max(len(self.loc("editor.noteSettings.text." + option["name"])) for option in self.noteMenu["text"])+4
+			height = len(self.noteMenu["text"])+2
+			anchorPoint = [0,0]
+
+			print_at(anchorPoint[0], anchorPoint[1], 			"┌"+("─"*(width-2))+"┐")
+			print_at(anchorPoint[0], anchorPoint[1]+height-1,	"└"+("─"*(width-2))+"┘")
+			print_column(anchorPoint[0],		 anchorPoint[1]+1, height-2, "│")
+			print_column(anchorPoint[0]+width-1, anchorPoint[1]+1, height-2, "│")
+			for i in range(len(self.noteMenu["text"])):
+				text = self.loc("editor.noteSettings.text." + self.noteMenu["text"][i]["name"])
+				if i == selectedOption:
+					print_at(anchorPoint[0], 	anchorPoint[1]+1+i, ">"+term.reverse	+ text + (" "*(width-(len(text)+3))) + self.layout[self.noteMenu["text"][i]["keybind"]].upper() + term.reverse	)
+				else:
+					print_at(anchorPoint[0]+1, 	anchorPoint[1]+1+i,		term.normal 	+ text + (" "*(width-(len(text)+3))) + self.layout[self.noteMenu["text"][i]["keybind"]].upper() + term.normal	)
 
 	def clear_noteSettings(self, note):
-		calculatedPos = Game.calculatePosition(note["screenpos"], 5, 3, term.width-10, term.height-11)
-		width = max(len(self.loc("editor.keyOptions." + option["name"])) for option in self.noteMenu)+4
-		height = len(self.noteMenu)+2
-		anchorPoint = [calculatedPos[0]+2, min(calculatedPos[1]-1, term.height-(2+height))]
-		print_lines_at(anchorPoint[0], anchorPoint[1], (" "*width+"\n")*height)
+		if note["type"] == "hit_object":
+			calculatedPos = Game.calculatePosition(note["screenpos"], 5, 3, term.width-10, term.height-11)
+			width = max(len(self.loc("editor.keyOptions." + option["name"])) for option in self.noteMenu)+4
+			height = len(self.noteMenu)+2
+			anchorPoint = [calculatedPos[0]+2, min(calculatedPos[1]-1, term.height-(2+height))]
+			print_lines_at(anchorPoint[0], anchorPoint[1], (" "*width+"\n")*height)
+		elif note["type"] == "text":
+			width = max(len(self.loc("editor.noteSettings.text." + option["name"])) for option in self.noteMenu["text"])+4
+			height = len(self.noteMenu["text"])+2
+			anchorPoint = [0,0]
+			print_lines_at(anchorPoint[0], anchorPoint[1], (" "*width+"\n")*height)
+
 
 	def run_noteSettings(self, note, noteID, option):
-		if option == 0:
-			self.keyPanelEnabled = True
-			self.keyPanelSelected = noteID
-			self.keyPanelKey = note["key"]
-			return True
-		elif option == 1:
-			#TODO better color picker
-			note["color"] += 1
-			note["color"] %= len(colors)
-			return False
-		elif option == 2:
-			self.mapToEdit["notes"].remove(note)
-			return True
+		if note["type"] == "hit_object":
+			if option == 0:
+				self.keyPanelEnabled = True
+				self.keyPanelSelected = noteID
+				self.keyPanelKey = note["key"]
+				return True
+			elif option == 1:
+				#TODO better color picker
+				note["color"] += 1
+				note["color"] %= len(colors)
+				return False
+			elif option == 2:
+				self.mapToEdit["notes"].remove(note)
+				return True
+		elif note["type"] == "text":
+			if option == 0:
+				#TODO add the ability to change text
+				return True
+			elif option == 1:
+				#TODO better color picker
+				note["color"] += 1
+				note["color"] %= len(colors)
+				return False
+			elif option == 2:
+				note["anchor"] += 1
+				note["anchor"] %= 9
+			elif option == 3:
+				self.mapToEdit["notes"].remove(note)
+				return True
 
 	def draw_changeKeyPanel(self, toptext = None, curKey = 0):
 		width = 40
@@ -349,7 +392,7 @@ class Editor:
 						self.dontDrawList.append(note)
 				elif note["type"] == "text":
 					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
-					stopAt = (note["stopAt"][0] * 4 + note["stopAt"][1]) - self.localConduc.currentBeat - (self.localConduc.offset/(60/self.localConduc.bpm))
+					stopAt = remBeats + note["length"]
 					
 					# TEXT - TIMELINE
 					if remBeats*8+(term.width*0.1) >= 0:
@@ -358,21 +401,26 @@ class Editor:
 						else:
 							char = "#"
 						if self.selectedNote == j:
-							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.turquoise}{term.bold}{char}{term.normal}")
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.turquoise}{term.bold}{char} {term.normal}")
+							print_at(int(stopAt*8+(term.width*0.1)), term.height-4, f"{term.turquoise}|{term.normal}")
 						else:
 							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.normal}{term.turquoise}{term.bold}{char}{term.normal}")
 
 					# TEXT - ON SCREEN
+					constOffset = [0,-1]
 
-					if note in self.dontDrawList and stopAt > 0:
+					if note in self.dontDrawList and stopAt > 0 and remBeats <= 0:
 						self.dontDrawList.remove(note)
 					if note not in self.dontDrawList:
 						if remBeats <= 0:
 							if stopAt > 0:
-								Game.renderText(None, note["text"], note["offset"], note["anchor"], note["align"])
+								Game.renderText(None, note["text"], note["offset"], note["anchor"], note["align"], constOffset)
 							else:
-								Game.renderText(None, " " * len(note["text"]), note["offset"], note["anchor"], note["align"])
+								Game.renderText(None, " " * len(note["text"]), note["offset"], note["anchor"], note["align"], constOffset)
 								self.dontDrawList.append(note)
+						else:
+							Game.renderText(None, " " * len(note["text"]), note["offset"], note["anchor"], note["align"], constOffset)
+							self.dontDrawList.append(note)
 				else:
 					# END - TIMELINE
 					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
@@ -632,7 +680,7 @@ class Editor:
 				note = self.mapToEdit["notes"][self.selectedNote]
 				goOff = False
 
-				keyBinds = [self.layout[note["keybind"]] for note in self.noteMenu]
+				keyBinds = [self.layout[setting["keybind"]] for setting in self.noteMenu[note["type"]]]
 				allowedSpKeys = ["KEY_UP", "KEY_DOWN", "KEY_ENTER"]
 				if val not in keyBinds and val.name not in allowedSpKeys:
 					goOff = True
@@ -641,10 +689,10 @@ class Editor:
 						goOff = self.run_noteSettings(note, self.selectedNote, self.noteMenuSelected)
 					elif val.name == "KEY_UP":
 						self.noteMenuSelected -= 1
-						self.noteMenuSelected %= len(self.noteMenu)
+						self.noteMenuSelected %= len(self.noteMenu[note["type"]])
 					elif val.name == "KEY_DOWN":
 						self.noteMenuSelected += 1
-						self.noteMenuSelected %= len(self.noteMenu)
+						self.noteMenuSelected %= len(self.noteMenu[note["type"]])
 					if val in keyBinds:
 						goOff = self.run_noteSettings(note, self.selectedNote, keyBinds.index(val))
 				if goOff == True:
@@ -772,6 +820,7 @@ class Editor:
 						print_at(0,term.height-4, term.clear_eol)
 						self.mapToEdit["notes"][self.selectedNote]["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
 
+
 					if self.mapToEdit["notes"][self.selectedNote]["type"] == "hit_object":
 						screenPos = self.mapToEdit["notes"][self.selectedNote]["screenpos"]
 						note = self.mapToEdit["notes"][self.selectedNote]
@@ -800,6 +849,26 @@ class Editor:
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
 							self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] = min(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][0] + 0.05, 2), 1)
+					if self.mapToEdit["notes"][self.selectedNote]["type"] == "text":
+						offset = self.mapToEdit["notes"][self.selectedNote]["offset"]
+						if val == "h":
+							print(term.clear)
+							self.mapToEdit["notes"][self.selectedNote]["offset"][0] -= 1
+						if val == "j":
+							print(term.clear)
+							self.mapToEdit["notes"][self.selectedNote]["offset"][1] += 1
+						if val == "k":
+							print(term.clear)
+							self.mapToEdit["notes"][self.selectedNote]["offset"][1] -= 1
+						if val == "l":
+							print(term.clear)
+							self.mapToEdit["notes"][self.selectedNote]["offset"][0] += 1
+						if val == "U":
+							print(term.clear)
+							self.mapToEdit["notes"][self.selectedNote]["length"] = max(self.mapToEdit["notes"][self.selectedNote]["length"] - (1/self.snap)*4, 0)
+						if val == "I":
+							print(term.clear)
+							self.mapToEdit["notes"][self.selectedNote]["length"] += (1/self.snap)*4
 
 		else:
 			if val.name == "KEY_ESCAPE":

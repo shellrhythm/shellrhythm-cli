@@ -67,7 +67,7 @@ playfield_mode = "setSize"
 maxScore = 1000000
 
 class Game:
-	version = 1.1
+	version = 1.2
 	localConduc = Conductor()
 	beatSound = Song("assets/clap.wav")
 	chart = {}
@@ -132,8 +132,8 @@ class Game:
 			"checksum": hashlib.sha256(json.dumps(toBeCheckSumd,skipkeys=True,ensure_ascii=False).encode("utf-8")).hexdigest(),
 			"version": self.version,
 			"time": time.time(),
-			"playername": self.playername
-			# "keys": keys
+			"playername": self.playername,
+			"keys": "".join(keys)
 		}
 		return output
 
@@ -147,7 +147,7 @@ class Game:
 		self.accuracy = round((judges / count) * 100, 2)
 
 	def checkJudgement(self, note, noteNum, notHit = False):
-		remTime = ((note["beatpos"][0] * 4 + note["beatpos"][1]) * (60/self.localConduc.bpm)) - self.localConduc.currentTimeSec
+		remTime = self.localConduc.currentTimeSec - ((note["beatpos"][0] * 4 + note["beatpos"][1]) * (60/self.localConduc.bpm))
 		if not self.auto:
 			if -0.6 < remTime < 0.6:
 				self.beatSound.move2position_seconds(0)
@@ -188,7 +188,7 @@ class Game:
 					self.missesCount += 1
 				return False
 		else:
-			if remTime <= 0:
+			if remTime >= 0:
 				self.beatSound.move2position_seconds(0)
 				self.beatSound.play()
 				judgement = 0
@@ -218,7 +218,7 @@ class Game:
 
 		return out
 
-	def renderText(self, text = "", offset = [0,0], anchor = CENTER, align = ALIGN_LEFT):
+	def renderText(self, text = "", offset = [0,0], anchor = CENTER, align = ALIGN_LEFT, renderOffset = [0,0]):
 		#calculate position
 		calculatedPosition = [0,0]
 
@@ -254,20 +254,23 @@ class Game:
 		if align == ALIGN_LEFT:
 			pass
 		elif align == ALIGN_CENTER:
-			calculatedPosition[0] += int(len(text)*0.5)
+			calculatedPosition[0] -= int(len(text)*0.5)
 		elif align == ALIGN_RIGHT:
-			calculatedPosition[0] += len(text)-1
+			calculatedPosition[0] -= len(text)-1
+
 		#prevent clipping out of the playfield
 		renderedText = text
 
 		if calculatedPosition[0] < 0:
 			renderedText = text[-calculatedPosition[0]:]
-		if calculatedPosition[0] + len(renderedText) > defaultSize[0]:
-			renderedText = text[:calculatedPosition[0] - defaultSize[0]]
+			calculatedPosition[0] = 0
+		if calculatedPosition[0] + len(text) > defaultSize[0]:
+			renderedText = text[:len(renderedText) - (calculatedPosition[0] + len(renderedText) - defaultSize[0])]
 		
-		topleft = [int((term.width-defaultSize[0]) * 0.5), int((term.height-defaultSize[1]) * 0.5)]
+		topleft = [int((term.width-defaultSize[0]) * 0.5) + renderOffset[0], int((term.height-defaultSize[1]) * 0.5) + renderOffset[1]]
 
-		print_at(calculatedPosition[0] + topleft[0], calculatedPosition[1] + topleft[1], renderedText)
+		if 0 <= calculatedPosition[1] < defaultSize[1]:
+			print_at(calculatedPosition[0] + topleft[0], calculatedPosition[1] + topleft[1], renderedText)
 
 		pass
 
@@ -353,7 +356,7 @@ class Game:
 					self.dontDraw.append(note)
 			if note["type"] == "text":
 				renderAt = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat - (self.localConduc.offset/(60/self.localConduc.bpm))
-				stopAt = (note["stopAt"][0] * 4 + note["stopAt"][1]) - self.localConduc.currentBeat - (self.localConduc.offset/(60/self.localConduc.bpm))
+				stopAt = renderAt + note["length"]
 				if note not in self.dontDraw:
 					if renderAt <= 0:
 						if stopAt > 0:
@@ -413,8 +416,10 @@ class Game:
 		print(term.clear)
 		self.localConduc.stop()
 		self.localConduc.song.move2position_seconds(0)
+		self.judgements = []
+		self.outOfHere = []
+		self.dontDraw = []
 		self.localConduc.play()
-		self.localConduc.resume()
 
 	def handle_input(self):
 		if not self.localConduc.isPaused:
@@ -440,6 +445,7 @@ class Game:
 					f2 = open("./scores/" + self.chart["foldername"] + "-" + hashlib.sha256(json.dumps(result).encode("utf-8")).hexdigest(), "x")
 					f2.write(json.dumps(result))
 					f2.close()
+				self.resultsScreen.hitWindows = hitWindows
 				self.resultsScreen.resultsData = result
 				self.resultsScreen.isEnabled = True
 				print(term.clear)

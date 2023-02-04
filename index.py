@@ -738,6 +738,8 @@ class TitleScreen:
 			print(term.clear)
 			print_lines_at(0,1,self.logo,True)
 			print_at(int((term.width - len(self.curBottomText)) / 2), len(self.logo.splitlines()) + 2, self.curBottomText)
+			global chartData, scores
+			chartData, scores = load_charts()
 			self.turnOff = True
 			self.goBack = True
 			conduc.play()

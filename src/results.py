@@ -42,13 +42,16 @@ def scoreCalc(maxScore, judgements, accuracy, missesCount, chart):
 	#1: Acc/100 * 80% of max score + 1/(misses+1) * 20% of max score
 	#1.1: Acc/100 * 80% of max score + notes hit / (notes hit + misses) * 20% of max score
 
-	theAccuracyPart = (accuracy/100) * (maxScore*0.8)
-	theFractionForThePointTwo = (filteredJudgementCount/(filteredJudgementCount+missesCount))
-	theMissDependent = theFractionForThePointTwo * (maxScore*0.2)
-	theJudgementPercent = (filteredJudgementCount/totalNotes)
+	if filteredJudgementCount != 0:
+		theAccuracyPart = (accuracy/100) * (maxScore*0.8)
+		theFractionForThePointTwo = (filteredJudgementCount/(filteredJudgementCount+missesCount))
+		theMissDependent = theFractionForThePointTwo * (maxScore*0.2)
+		theJudgementPercent = (filteredJudgementCount/totalNotes)
 
-	calculatedResult = (theAccuracyPart + theMissDependent) * theJudgementPercent
-	return calculatedResult
+		calculatedResult = (theAccuracyPart + theMissDependent) * theJudgementPercent
+		return calculatedResult
+	else:
+		return -1
 
 class ResultsScreen:
 	resultsData = {}
@@ -58,7 +61,7 @@ class ResultsScreen:
 	isEnabled = False
 	gameTurnOff = False
 	offsets = []
-	hitWindows = [0.05, 0.1, 0.2, 0.3, 0.4] #BAD IDEA TO PUT IT HERE, CHANGE IT LATER
+	hitWindows = [None] #I did in fact change it later
 	oneRowIsThisMS = 0.05 #so max 18 rows to write everything
 	centerRow = 24
 	debug = False

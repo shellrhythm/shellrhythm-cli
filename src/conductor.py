@@ -40,7 +40,8 @@ class Conductor:
 		if "actualSong" in chart:
 			self.song = chart["actualSong"]
 		else:
-			self.song = Song("./charts/" + chart["foldername"] + "/" + chart["sound"])
+			if chart["sound"] != "" and chart["sound"] is not None:
+				self.song = Song("./charts/" + chart["foldername"] + "/" + chart["sound"])
 		self.previewChart = chart
 
 	def onBeat(self):
@@ -51,6 +52,7 @@ class Conductor:
 		print_at(0, term.height-6, f"beat: {self.currentBeat} | time: {self.currentTimeSec} | start time: {self.startTime}")
 
 	def play(self):
+		self.skippedTimeWithPause = 0
 		self.startTimeNoOffset = (time.time_ns() / 10**9)
 		self.startTime = self.startTimeNoOffset + self.offset
 		self.song.play()
@@ -59,14 +61,16 @@ class Conductor:
 		self.bpm = 0
 		self.isPaused = True
 		self.pauseStartTime = (time.time_ns() / 10**9)
-		self.song.pause()
+		if self.song.is_playing:
+			self.song.pause()
 	
 	def resume(self):
-		self.isPaused = False
-		self.bpm = self.previewChart["bpm"]
-		self.skippedTimeWithPause = (time.time_ns() / 10**9) - self.pauseStartTime
-		self.song.move2position_seconds(max((time.time_ns() / 10**9) - (self.startTime + self.skippedTimeWithPause), 0))
-		self.song.resume()
+		if self.isPaused:
+			self.isPaused = False
+			self.bpm = self.previewChart["bpm"]
+			self.skippedTimeWithPause = (time.time_ns() / 10**9) - self.pauseStartTime
+			# self.song.move2position_seconds(max((time.time_ns() / 10**9) - (self.startTime + self.skippedTimeWithPause), 0))
+			self.song.resume()
 
 	def update(self):
 		if not self.isPaused and self.bpm > 0:
@@ -75,6 +79,13 @@ class Conductor:
 			self.currentBeat = self.currentTimeSec * (self.bpm/60)
 			self.prevTimeSec = self.currentTimeSec
 
+			if self.currentBeat < 0:
+				self.song.move2position_seconds(0)
+				self.currentBeat = 0
+				self.skippedTimeWithPause = 0
+				self.startTimeNoOffset = (time.time_ns() / 10**9)
+				self.startTime = self.startTimeNoOffset + self.offset
+
 			if int(self.currentBeat) > int(self.prevBeat):
 				self.onBeat()
 
@@ -82,6 +93,8 @@ class Conductor:
 
 			return self.deltatime
 		else:
+			if self.song.is_playing:
+				self.song.pause()
 			self.skippedTimeWithPause = (time.time_ns() / 10**9) - self.pauseStartTime
 			return 1/60
 

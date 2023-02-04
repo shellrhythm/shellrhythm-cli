@@ -90,10 +90,18 @@
             "creating": "Choisissez une touche pour aller avec la note ajoutée.",
             "editing": "Choisissez la nouvelle touche de cette note."
         },
-        "keyOptions": {
-            "key": "Changer de touche",
-            "color": "Changer de couleur",
-            "delete": "Supprimer la note"
+        "noteSettings": {
+            "hit_object":{
+                "key": "Changer de touche",
+                "color": "Changer de couleur",
+                "delete": "Supprimer la note"
+            },
+            "text":{
+                "text": "Éditer le texte",
+                "color": "Changer de couleur",
+                "anchor": "Changer l'ancre du texte",
+                "delete": "Supprimer le texte"
+            }
         },
         "metadata":{
             "title": "Titre",

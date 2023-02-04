@@ -96,10 +96,18 @@
             "creating": "Select a key to go with the added note.",
             "editing": "Select a key to change this note's key to."
         },
-        "keyOptions": {
-            "key": "Change key",
-            "color": "Change color",
-            "delete": "Delete note"
+        "noteSettings": {
+            "hit_object":{
+                "key": "Change key",
+                "color": "Change color",
+                "delete": "Delete note"
+            },
+            "text":{
+                "text": "Edit text",
+                "color": "Change text color",
+                "anchor": "Change text anchor",
+                "delete": "Delete text"
+            }
         },
         "metadata": {
             "title": "Title",
