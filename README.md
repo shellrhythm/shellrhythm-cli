@@ -32,6 +32,7 @@ python ./index.py
 
 ## Where are the charts?
 
+### Update: [There's a tutorial chart!](https://cdn.discordapp.com/attachments/1071443037198225508/1076085157586534472/tutorial.zip)
 By default, there are no charts. Mostly because of copyright reasons, ~~but also because I'm too lazy to finish a chart~~
 
 ## Are there any charts I can download?
