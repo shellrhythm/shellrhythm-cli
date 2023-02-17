@@ -1,8 +1,14 @@
 import os
 if __name__ == "__main__":
 	from termutil import *
+	from textbox import textbox_logic
 else:
-	from src.termutil import *
+	try:
+		from src.termutil import *
+		from src.textbox import textbox_logic
+	except ImportError:
+		from termutil import *
+		from textbox import textbox_logic
 import re
 
 class FileBrowser:
@@ -12,10 +18,15 @@ class FileBrowser:
 	curFilesInFolder = []
 	curSubFolders = []
 	selectedItem = 0
+	selectFolderMode = False
 	caption = "TODO: Come up with a better placeholder"
 	offset = 0
 
-	output = "/"
+	newFolderMode = False
+	newFolderName = ""
+	newFolderCaret = 0
+
+	output = "?"
 
 	def load_folder(self, path):
 		if os.path.exists(path):
@@ -35,6 +46,13 @@ class FileBrowser:
 		print_cropped(11,4,term.width-22,self.curPath,max(len(self.curPath)-(term.width-22), 0), term.normal, False)
 		print_at(11,5,"─"*(term.width-22))
 
+		if self.selectFolderMode:
+			print_at(11,term.height-2, term.reverse + "[SPACE] Select folder" + term.normal + " " + term.reverse + "[n] New Folder")
+
+		if self.newFolderMode:
+			print_at(11,term.height-3, term.reverse + self.newFolderName)
+		else:
+			print_at(11,term.height-3, term.clear_eol)
 		y = 0
 		for i in range(self.offset, len(self.curSubFolders)):
 			if y > term.height-11:
@@ -57,41 +75,63 @@ class FileBrowser:
 		val = ''
 		val = term.inkey(timeout=1/60, esc_delay=0)
 
-		if val.name == "KEY_UP":
-			self.selectedItem -= 1
-			self.selectedItem %= len(self.curFilesInFolder) + len(self.curSubFolders)
-			if self.selectedItem < self.offset + 1:
-				self.offset -= 1
-			print(term.clear)
-		if val.name == "KEY_DOWN":
-			self.selectedItem += 1
-			self.selectedItem %= len(self.curFilesInFolder) + len(self.curSubFolders)
+		if not self.newFolderMode:
+			if val.name == "KEY_UP":
+				self.selectedItem -= 1
+				self.selectedItem %= len(self.curFilesInFolder) + len(self.curSubFolders)
+				if self.selectedItem < self.offset + 1:
+					self.offset -= 1
+				print(term.clear)
+			if val.name == "KEY_DOWN":
+				self.selectedItem += 1
+				self.selectedItem %= len(self.curFilesInFolder) + len(self.curSubFolders)
 
-			if self.selectedItem > self.offset + term.height-12:
+				if self.selectedItem > self.offset + term.height-12:
+					self.offset += 1
+				print(term.clear)
+			if val == "J":
 				self.offset += 1
-			print(term.clear)
-		if val == "J":
-			self.offset += 1
-			print(term.clear)
-		if val == "K":
-			self.offset -= 1
-			self.offset = max(self.offset, 0)
-			print(term.clear)
-		if val.name == "KEY_ENTER":
-			if self.selectedItem >= len(self.curSubFolders):
-				self.output = self.curPath + "/" + self.curFilesInFolder[self.selectedItem - len(self.curSubFolders)]
+				print(term.clear)
+			if val == "K":
+				self.offset -= 1
+				self.offset = max(self.offset, 0)
+				print(term.clear)
+			if val == "n":
+				self.newFolderMode = True
+			if val.name == "KEY_ENTER":
+				if self.selectedItem >= len(self.curSubFolders):
+					self.output = self.curPath + "/" + self.curFilesInFolder[self.selectedItem - len(self.curSubFolders)]
+					self.turnOff = True
+					print(term.clear)
+				else:
+					self.load_folder(self.curPath + "/" + self.curSubFolders[self.selectedItem])
+					print(term.clear)
+					self.selectedItem = 0
+					self.offset = 0
+					pass
+			if val == " ":
+				if self.selectFolderMode:
+					self.output = self.curPath + "/" + self.curSubFolders[self.selectedItem]
+					self.turnOff = True
+					print(term.clear)
+
+
+			if val.name == "KEY_ESCAPE":
 				self.turnOff = True
 				print(term.clear)
-			else:
-				self.load_folder(self.curPath + "/" + self.curSubFolders[self.selectedItem])
+		else:
+			if val.name == "KEY_ESCAPE":
+				self.newFolderMode = False
 				print(term.clear)
+			elif val.name == "KEY_ENTER":
+				os.mkdir(self.curPath + "/" + self.newFolderName)
+				self.load_folder(self.curPath)
 				self.selectedItem = 0
 				self.offset = 0
-				pass
+				print(term.clear)
+			else:
+				self.newFolderName, self.newFolderCaret = textbox_logic(self.newFolderName, self.newFolderCaret, val)
 
-		if val.name == "KEY_ESCAPE":
-			self.turnOff = True
-			print(term.clear)
 
 	def loop(self):
 		print(term.clear)
@@ -99,6 +139,7 @@ class FileBrowser:
 			self.draw()
 			self.handle_input()
 
+		self.selectFolderMode = False
 		return self.output
 
 	def __init__(self) -> None:

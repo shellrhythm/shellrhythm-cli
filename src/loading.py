@@ -1,10 +1,16 @@
 import os, json
 from pybass3 import Song
-from src.termutil import *
-from src.translate import Locale
-from src.results import *
 import hashlib
-from src.game import *
+try:
+	from src.termutil import *
+	from src.translate import Locale
+	from src.results import *
+	from src.game import *
+except ImportError:
+	from termutil import *
+	from translate import Locale
+	from results import *
+	from game import *
 
 def load_options(options = {}):
 	if os.path.exists("./options.json"):

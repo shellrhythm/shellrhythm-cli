@@ -3,6 +3,7 @@ import os
 import copy
 import json
 from pybass3 import Song
+from zipfile import ZipFile
 import time
 import shutil
 # from index import *
@@ -60,6 +61,18 @@ class Editor:
 	keyPanelKey = -1
 	keyPanelSelected = -1 #Note: use -1 when creating a new note
 	keyPanelJustDisabled = False
+
+	pauseMenu = [
+		"resume",
+		"playtest",
+		"addimage",
+		"metadata",
+		"save",
+		"export",
+		"quit",
+	]
+	pauseMenuEnabled = False
+	pauseMenuSelected = 0
 	
 	#Locale
 	loc:Locale = Locale("en")
@@ -96,6 +109,10 @@ class Editor:
 	#Calibration
 	calib:Calibration = Calibration("CalibrationSong")
 
+	options = {
+		"nerdFont": True
+	}
+
 	def autocomplete(self, command = ""):
 		output = []
 		if command == "":
@@ -108,6 +125,23 @@ class Editor:
 		#TODO where do i even begin
 
 		return output
+	
+	def export(self):
+		file_paths = [] #this is where the paths go
+	
+		# crawling through directory and subdirectories
+		for root, directories, files in os.walk("./charts/" + self.mapToEdit["foldername"]):
+			for filename in files:
+				#gimme da full path plz :3
+				filepath = filename
+				file_paths.append(filepath)
+		
+		# actual exporting
+		with ZipFile("./charts/" + self.mapToEdit["foldername"] + '.zip','w') as zip:
+			# add in the files
+			for file in file_paths:
+				zip.write("./charts/" + self.mapToEdit["foldername"] + "/" + file, file)
+		pass
 
 	def setupMap(self):
 		self.mapToEdit = {
@@ -115,16 +149,16 @@ class Editor:
 			"sound": None,
 			"foldername": "",
 			"icon": {
-			    "img": "",
-			    "txt": ""
+				"img": "",
+				"txt": ""
 			},
 			"bpm": 120,
 			"offset": 0,
 			"metadata": {
-			    "title": "",
-			    "artist": "",
-			    "author": "",
-			    "description": ""
+				"title": "",
+				"artist": "",
+				"author": "",
+				"description": ""
 			},
 			"approachRate": 1,
 			"difficulty": 0,
@@ -190,6 +224,64 @@ class Editor:
 				self.endNote = len(self.mapToEdit["notes"])-1
 		else:
 			self.mapToEdit["notes"][self.endNote]["beatpos"] = [int(atPos//4), round(atPos%4, 5)]
+
+	def draw_pauseMenu(self):
+		width = max(len(self.loc("editor.pause." + option)) for option in self.pauseMenu)+4
+		print_box((term.width-width)//2 - 1, (term.height//2) - len(self.pauseMenu) - 1, width+2, len(self.pauseMenu) * 2 + 1)
+		for i in range(len(self.pauseMenu)):
+			if i == self.pauseMenuSelected:
+				print_at((term.width-width)//2, (term.height//2) - len(self.pauseMenu) + i*2, term.reverse + term.center(self.loc("editor.pause." + self.pauseMenu[i]), width) + term.normal)
+			else:
+				print_at((term.width-width)//2, (term.height//2) - len(self.pauseMenu) + i*2, term.center(self.loc("editor.pause." + self.pauseMenu[i]), width))
+			if i != len(self.pauseMenu)-1:
+				print_at((term.width-width)//2, (term.height//2) - len(self.pauseMenu) + i*2 + 1, " "*width)
+
+	def run_pauseMenu(self, option):
+		#what made you think this was a good idea
+		#- #Guigui, to himself, 16/2/2023 (DD/MM/YYYY the obviously better formatting)
+		if option == 0:
+			#resume
+			self.pauseMenuEnabled = False
+			print(term.clear)
+		if option == 1:
+			#playtest
+			pass
+			print_at(0,term.height-2, term.on_red+"Too lazy to implement, please try again later."+term.clear_eol+term.normal)
+			#TODO uhhhhhh
+		if option == 2:
+			#change image
+			self.fileBrwsr.fileExtFilter = "(?:\.png$)|(?:\.jpeg$)|(?:\.webp$)|(?:\.jpg$)|(?:\.apng$)|(?:\.gif$)"
+			self.fileBrwsr.load_folder(os.getcwd())
+			self.fileBrwsr.caption = "Select an image"
+			self.fileBrwsr.turnOff = False
+			imageFileLocation = self.fileBrwsr.loop()
+			try:
+				shutil.copyfile(imageFileLocation, f"./charts/{self.mapToEdit['foldername']}/{imageFileLocation.split('/')[-1]}")
+			except shutil.SameFileError:
+				pass
+			self.mapToEdit["icon"]["img"] = imageFileLocation.split("/")[-1]
+		if option == 3:
+			#metadata
+			self.metadataMenuEnabled = True
+			self.pauseMenuEnabled = False
+			print(term.clear)
+		if option == 4:
+			#save
+			self.run_command("w") #huge W
+			self.pauseMenuEnabled = False
+		if option == 5:
+			#export
+			self.run_command("w") #huge W
+			self.pauseMenuEnabled = False
+			self.export()
+			print(term.clear)
+			print_at(0,term.height-2, term.on_green+f"Exported successfully to ./charts/{self.mapToEdit['foldername']}.zip" +term.clear_eol+term.normal)
+			pass #TODO
+		if option == 6:
+			#quit
+			self.run_command("q")
+			self.pauseMenuEnabled = False
+
 
 	def draw_noteSettings(self, note, selectedOption):
 		if note["type"] == "hit_object":
@@ -338,6 +430,9 @@ class Editor:
 					print_at(1,1+i,f"{self.loc('editor.metadata.'+self.metadataParts[i])}{' '*(length-len(self.loc('editor.metadata.'+self.metadataParts[i]))+1)}: {self.mapToEdit['metadata'][self.metadataParts[i]]}")
 			pass
 			print_box(0,0,40,len(self.metadataParts) + 2,term.normal,0)
+		
+		if self.pauseMenuEnabled:
+			self.draw_pauseMenu()
 
 		if self.keyPanelEnabled:
 			if self.keyPanelSelected == -1:
@@ -473,14 +568,27 @@ class Editor:
 			elif len(commandSplit) == 3:
 				self.fileLocation = f"./charts/{commandSplit[1]}/{commandSplit[2]}.json"
 			elif self.fileLocation == "" and len(commandSplit) == 1:
-				return False, self.loc("editor.commandResults.common.notEnoughArgs")
+				self.fileBrwsr.fileExtFilter = "(?:\/$)"
+				self.fileBrwsr.load_folder(os.getcwd())
+				self.fileBrwsr.selectFolderMode = True
+				self.fileBrwsr.caption = "Select a folder"
+				self.fileBrwsr.turnOff = False
+				getFolderLocation = self.fileBrwsr.loop()
+
+				if getFolderLocation != "?":
+					self.fileLocation = getFolderLocation + "/data.json"
+					self.mapToEdit["foldername"] = getFolderLocation.split("/")[-1]
+					pass
+				# return False, getFolderLocation
+				# return False, self.loc("editor.commandResults.common.notEnoughArgs")
 			if os.path.exists(self.fileLocation):
 				f = open(self.fileLocation, "w")
 			else:
 				if not os.path.exists("./charts/"):
 					os.mkdir("./charts")
-				if not os.path.exists(f"./charts/{commandSplit[1]}"):
-					os.mkdir(f"./charts/{commandSplit[1]}")
+				if len(commandSplit) > 1:
+					if not os.path.exists(f"./charts/{commandSplit[1]}"):
+						os.mkdir(f"./charts/{commandSplit[1]}")
 				f = open(self.fileLocation, "x")
 			f.write(output)
 			f.close()
@@ -728,7 +836,16 @@ class Editor:
 						self.commandMode = False
 						# print_at(0,term.height-2, term.clear_eol+term.normal)
 					self.metadataString, self.metadataTypingCursor = textbox_logic(self.metadataString, self.metadataTypingCursor, val)
-
+		elif self.pauseMenuEnabled:
+			if val.name == "KEY_UP":
+				self.pauseMenuSelected -= 1
+				self.pauseMenuSelected %= len(self.pauseMenu)
+			if val.name == "KEY_DOWN":
+				self.pauseMenuSelected += 1
+				self.pauseMenuSelected %= len(self.pauseMenu)
+			if val.name == "KEY_ENTER":
+				self.run_pauseMenu(self.pauseMenuSelected)
+				pass
 
 		elif not self.commandMode:
 			# debug_val(val)
@@ -749,7 +866,6 @@ class Editor:
 				elif val:
 					if str(val) in self.layout:
 						self.keyPanelKey = self.layout.index(str(val))
-
 			else:
 				if val.name != "KEY_ENTER" and val:
 					print_at(0,term.height-2, term.clear_eol)
@@ -768,7 +884,7 @@ class Editor:
 						self.localConduc.currentBeat = round(self.localConduc.currentBeat/(self.snap/4)) * (self.snap/4)
 					self.playtest = not self.playtest
 				if val.name == "KEY_ESCAPE":
-					self.metadataMenuEnabled = True
+					self.pauseMenuEnabled = True
 				if val.name == "KEY_RIGHT":
 					self.localConduc.currentBeat += (1/self.snap)*4
 					print_at(0,term.height-4, term.clear_eol)
@@ -783,7 +899,7 @@ class Editor:
 				if val == "Z":
 					self.set_end_note(self.localConduc.currentBeat)
 				if val == "e":
-					#Note options
+					#Note settings
 					self.noteMenuJustDisabled = self.noteMenuEnabled
 					self.noteMenuEnabled = not self.noteMenuEnabled
 					pass

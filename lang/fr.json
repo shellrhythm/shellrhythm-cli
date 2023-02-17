@@ -6,6 +6,8 @@
         "edit": "Éditer",
         "options": "Options",
         "quit": "Quitter",
+        "discord": "Discord",
+        "github": "Github",
         "version": "Version",
         "credits": "Crédits"
     },
@@ -27,7 +29,8 @@
             "play": "Jouer au niveau",
             "down": "Défiler vers le bas",
             "up": "Défiler vers le haut",
-            "auto": "Activer mode auto"
+            "auto": "Activer mode auto",
+            "editor": "Ouvrir dans l'éditeur"
         }
     },
     "options":{
@@ -102,6 +105,15 @@
                 "anchor": "Changer l'ancre du texte",
                 "delete": "Supprimer le texte"
             }
+        },
+        "pause": {
+            "resume": "Continuer",
+            "playtest": "Jouer",
+            "addimage": "Changer la miniature",
+            "metadata": "Modifier les métadonnées",
+            "save": "Sauvegarder",
+            "export": "Exporter",
+            "quit": "Quitter"
         },
         "metadata":{
             "title": "Titre",

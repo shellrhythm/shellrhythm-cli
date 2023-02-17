@@ -6,6 +6,8 @@
         "edit": "Edit",
         "options": "Options",
         "quit": "Quit",
+        "discord": "Discord",
+        "github": "Github",
         "version": "Version",
         "credits": "Credits"
     },
@@ -27,7 +29,8 @@
             "play": "Play chart",
             "down": "Scroll down",
             "up": "Scroll up",
-            "auto": "Toggle auto mode"
+            "auto": "Toggle auto mode",
+            "editor": "Open in editor"
         }
     },
     "options":{
@@ -108,6 +111,15 @@
                 "anchor": "Change text anchor",
                 "delete": "Delete text"
             }
+        },
+        "pause": {
+            "resume": "Resume",
+            "playtest": "Playtest",
+            "addimage": "Change image thumbnail",
+            "metadata": "Edit metadata",
+            "save": "Save",
+            "export": "Export",
+            "quit": "Quit"
         },
         "metadata": {
             "title": "Title",

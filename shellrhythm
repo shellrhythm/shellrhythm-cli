@@ -2,4 +2,11 @@
 
 #Hi! If you're curious, this is a bash file. It's made to be run on bash, the "shell" (the thing that turns command lines into machine code) of Linux.
 #If you're on windows, try running "run.bat" instead.
-python ./index.py
+if [ $# -eq 0 ]
+  then
+    python ./index.py
+elif [ "$1" == "--import" ]
+  then
+    echo "Attempting to import $2..."
+    python ./src/import.py $2
+fi

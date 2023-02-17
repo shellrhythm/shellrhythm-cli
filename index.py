@@ -4,6 +4,7 @@ from blessed import Terminal
 import json
 from term_image.image import *
 import random
+import webbrowser
 
 from src.conductor import *
 from src.calibration import *
@@ -565,9 +566,10 @@ class ChartSelect:
 		# Controls
 		print_at(1,term.height - 2, 
 		f"{term.reverse}[ENTER] {locales[selectedLocale]('chartSelect.controls.play')} {term.normal} "+
-		f"{term.reverse}[J/↓] {locales[selectedLocale]('chartSelect.controls.down')} {term.normal} "+
-		f"{term.reverse}[K/↑] {locales[selectedLocale]('chartSelect.controls.up')} {term.normal} "+
-		f"{term.reverse}[A] {locales[selectedLocale]('chartSelect.controls.auto')} {term.normal} "
+		f"{term.reverse}[j/↓] {locales[selectedLocale]('chartSelect.controls.down')} {term.normal} "+
+		f"{term.reverse}[k/↑] {locales[selectedLocale]('chartSelect.controls.up')} {term.normal} "+
+		f"{term.reverse}[a] {locales[selectedLocale]('chartSelect.controls.auto')} {term.normal} "+
+		f"{term.reverse}[e] {locales[selectedLocale]('chartSelect.controls.editor')} {term.normal} "
 		)
 
 	def enterPressed(self):
@@ -707,10 +709,14 @@ class TitleScreen:
 		"titlescreen.edit",
 		"titlescreen.options",
 		"titlescreen.credits",
+		"titlescreen.discord",
+		"titlescreen.github",
 		"titlescreen.quit",
 	]
 	curBottomText = 0
 	goBack = False
+	discordLink = "https://discord.gg/artQgD3Y8V"
+	githubLink = "https://github.com/HastagGuigui/shellrhythm"
 
 	def moveBy(self, x):
 		self.selectedItem = (self.selectedItem + x)%len(self.menuOptions)
@@ -760,6 +766,11 @@ class TitleScreen:
 			print(term.clear)
 		
 		if self.selectedItem == 4:
+			webbrowser.open(self.discordLink)
+		if self.selectedItem == 5:
+			webbrowser.open(self.githubLink)
+		
+		if self.selectedItem == 6:
 			# Quit
 			self.turnOff = True
 	
