@@ -38,6 +38,7 @@ By default, there are no charts. Mostly because of copyright reasons, ~~but also
 ## Are there any charts I can download?
 
 You can check out the #charts channel on the [shellrhythm Discord server](https://discord.gg/artQgD3Y8V), but I'll most likely update this part with, like, a chartpack or something. I'll just have to wait until more charts are available.
+### Update: You can also use `shellrhythm --import [url]` to import a chart exported using shellrhythm!
 
 ## How do I make a chart?
 
