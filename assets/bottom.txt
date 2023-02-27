@@ -49,3 +49,4 @@ trans rights
 no sliders atm: too lazy to keep track of key presses
 as long as you're not modding game.py you're fine for submitting scores
 To change your hitsound locally, replace clap.wav. You can edit any file in ./assets/ btw.
+hi, r/commandline!

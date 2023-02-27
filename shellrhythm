@@ -1,7 +1,11 @@
 #!/usr/bin/bash
 
-#Hi! If you're curious, this is a bash file. It's made to be run on bash, the "shell" (the thing that turns command lines into machine code) of Linux.
-#If you're on windows, try running "run.bat" instead.
+#Hi! If you're curious, this is a bash file. It's made to be run on bash, the "shell" (the thing that turns command lines into machine instructions) of Linux.
+#If you're on Windows, try running "run.bat" instead.
+#So yeah, I'm sorry, --import is a linux exclusive... though you can run "python ./src/import.py <url>" as an alternative.
+
+cd "$(dirname "$(realpath "$0")")"
+
 if [ $# -eq 0 ]
   then
     python ./index.py

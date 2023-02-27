@@ -67,8 +67,8 @@ scores = {}
 import datetime
 def prettydate(d, longFormat = False):
 	diff = datetime.datetime.fromtimestamp(time.time()) - d
-	output = d.strftime('%d %b %y, %H:%M:%S')
 	if longFormat:
+		output = d.strftime('%d %b %y, %H:%M:%S')
 		if diff.days < 1:
 			if diff.seconds <= 1:
 				output = locales[selectedLocale](f"datetime.long.now")
@@ -87,6 +87,7 @@ def prettydate(d, longFormat = False):
 		elif diff.days < 30:
 			output = locales[selectedLocale](f"datetime.long.day").format(int(diff.days))
 	else:
+		output = d.strftime('%d %b %y')
 		if diff.days < 1:
 			if diff.seconds <= 10:
 				output = locales[selectedLocale](f"datetime.short.now")
@@ -713,7 +714,7 @@ class TitleScreen:
 		"titlescreen.github",
 		"titlescreen.quit",
 	]
-	curBottomText = 0
+	curBottomText = ""
 	goBack = False
 	discordLink = "https://discord.gg/artQgD3Y8V"
 	githubLink = "https://github.com/HastagGuigui/shellrhythm"
@@ -893,4 +894,4 @@ if __name__ == "__main__":
 		loadedMenus[menu].loop()
 	except KeyboardInterrupt:
 		print('Keyboard Interrupt detected!')
-	print(term.move_xy(0,0))
+	print(term.clear)

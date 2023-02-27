@@ -10,7 +10,13 @@ Simply press the displayed key when the corresponding hit object finishes drawin
 
 ## How to install
 
-At the moment, the only way to play this game is through the source code. **So, how do you play?**
+### Install from script (LINUX)
+
+Ever since 1.0, there's an install script for Linux to install the game easily! Simply download and run [the following script](https://raw.githubusercontent.com/HastagGuigui/shellrhythm/main/INSTALL.sh).
+
+### Install from source
+
+If you're unable to use the Linux install script (because you're on Windows, for example), feel free to directly download manually with the following tutorial:
 
 - First, make sure you have [Python 3](https://www.python.org/downloads/) and [git](https://git-scm.com/downloads) installed (If you're using Linux, you probably have these installed)
 
@@ -33,12 +39,12 @@ python ./index.py
 ## Where are the charts?
 
 ### Update: [There's a tutorial chart!](https://cdn.discordapp.com/attachments/1071443037198225508/1076085157586534472/tutorial.zip)
-By default, there are no charts. Mostly because of copyright reasons, ~~but also because I'm too lazy to finish a chart~~
+By default, there are no charts. I should really create a chart server or something but I'd need to rent a server... and I litterally have zero way of paying for one.
 
 ## Are there any charts I can download?
 
-You can check out the #charts channel on the [shellrhythm Discord server](https://discord.gg/artQgD3Y8V), but I'll most likely update this part with, like, a chartpack or something. I'll just have to wait until more charts are available.
-### Update: You can also use `shellrhythm --import [url]` to import a chart exported using shellrhythm!
+You can check out the #charts channel on the [shellrhythm Discord server](https://discord.gg/artQgD3Y8V).
+### Side note: You can also use `shellrhythm --import [url]` to download and import a chart! (Or python `./src/import.py [url]`. That works too.)
 
 ## How do I make a chart?
 
@@ -58,6 +64,10 @@ However, one of the libraries this project uses, [pybass3](https://github.com/de
 
 If it's a crash or an unexpected behaviour (or even just a suggestion!), open an issue.
 If it's just struggle on how to make a chart (like, undocumented stuff), hit me up on [Twitter](https://twitter.com/_GuiguiYT) or on [Discord](https://discord.gg/artQgD3Y8V) (this is a link to the shellrhythm discord server).
+
+## Extra credits:
+
+- NachoBIT: Made the song for the Tutorial chart.
 
 ----
 © #Guigui 2022-2023
