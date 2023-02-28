@@ -604,6 +604,9 @@ class ChartSelect:
 
 		if val.name == "KEY_DOWN" or val == "j":
 			if self.selectedTab == 0:
+				# Empty chart list (avoid division by zero)
+				if self.chartsize == 0:
+					return
 				self.selectedItem = (self.selectedItem + 1)%self.chartsize
 				conduc.stop()
 				conduc.song.stop()
@@ -616,6 +619,10 @@ class ChartSelect:
 					self.selectedScore = min(self.selectedScore, len(scores[chartData[self.selectedItem]["foldername"]])-1)
 		if val.name == "KEY_UP" or val == "k":
 			if self.selectedTab == 0:
+				# Empty chart list (avoid division by zero)
+				if self.chartsize == 0:
+					return
+				
 				self.selectedItem = (self.selectedItem - 1)%self.chartsize
 				conduc.stop()
 				conduc.song.stop()
@@ -629,6 +636,9 @@ class ChartSelect:
 		if val.name == "KEY_LEFT" or val == "h":
 			self.selectedTab = max(self.selectedTab - 1, 0)
 		if val.name == "KEY_RIGHT" or val == "l":
+			if self.chartsize == 0:
+				return
+			
 			if len(scores[chartData[self.selectedItem]["foldername"]]) > 0:
 				self.selectedTab = min(self.selectedTab + 1, 1)
 		if val == "a":
