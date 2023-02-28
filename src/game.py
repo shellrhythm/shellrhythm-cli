@@ -169,7 +169,7 @@ class Game:
 				calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
 				print_at(calc_pos[0], calc_pos[1], judgementShort[judgement])
 				print_at(10, 1, judgementNames[judgement])
-				print_at(25, 1, term.normal + str(round(remTime*1000, 4)) + "ms")
+				print_at(25, 1, term.normal + str(round(remTime*1000, 4)) + "ms    ")
 
 				if judgement == 5:
 					self.missesCount += 1
@@ -205,7 +205,7 @@ class Game:
 				calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
 				print_at(calc_pos[0], calc_pos[1], judgementShort[judgement])
 				print_at(10, 1, judgementNames[judgement])
-				print_at(25, 1, term.normal + str(round(remTime*1000, 4)) + "ms")
+				print_at(25, 1, term.normal + str(round(remTime*1000, 4)) + "ms    ")
 				return True
 
 	def getSongEndTime(self):

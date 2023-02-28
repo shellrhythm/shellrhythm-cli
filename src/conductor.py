@@ -103,7 +103,7 @@ class Conductor:
 		self.song.stop()
 
 	def getLength(self):
-		return self.song._length_seconds
+		return self.song.duration
 	
 	def setOffset(self, newOffset):
 		self.offset = newOffset
