@@ -13,4 +13,18 @@ elif [ "$1" == "--import" ]
   then
     echo "Attempting to import $2..."
     python ./src/import.py $2
+elif [ "$1" == "update" ]
+  then
+    read -p "Do you want to update shellrhythm? [Y/n]: " yn
+    case $yn in
+        [Yy]*) git pull origin main ;;  
+        [Nn]*) echo "Update aborted." ;;
+    esac
+elif [ "$1" == "help" ]
+  then
+    echo "Welcome to shellrhythm!"
+    echo ""
+    echo "   shellrhythm            Starts the game."
+    echo "   shellrhythm --import   Imports an online chart."
+    echo "   shellrhythm update     Checks for updates, then updates the game."
 fi
