@@ -1,3 +1,7 @@
+# THIS IS DEPRECATED!!!
+### I managed to fix it, there's now a fork to pybass3 that fixes that issue!
+If you want to update the required packages, run `pip install -r requirements.txt`.
+
 # PyBASS3 on Linux compatibility
 
 If you're a Linux user, you may have noticed that you cannot actually start the game. This is due to pybass3 not fully supporting Linux yet. 

@@ -7,12 +7,13 @@
 
 shellrhythm plays with **your entire keyboard**. (more precisely just the letter keys and aditional punctuation keys, so call that a 30k rhythm game!)<br/>
 Simply press the displayed key when the corresponding hit object finishes drawing!
+### TODO: Add a gif of the gameplay
 
 ## How to install
 
 ### Install from script (LINUX)
 
-Ever since 1.0, there's an install script for Linux to install the game easily! Simply download and run [the following script](https://raw.githubusercontent.com/HastagGuigui/shellrhythm/main/INSTALL.sh).
+Ever since 1.0, there's an install script for Linux to install the game easily! Simply download and run [the following script](https://raw.githubusercontent.com/HastagGuigui/shellrhythm/main/INSTALL.sh), this will install it as the `shellrhythm` command.
 
 ### Install from source
 
@@ -38,8 +39,7 @@ python ./index.py
 
 ## Where are the charts?
 
-### Update: [There's a tutorial chart!](https://cdn.discordapp.com/attachments/1071443037198225508/1076085157586534472/tutorial.zip)
-By default, there are no charts. I should really create a chart server or something but I'd need to rent a server... and I litterally have zero way of paying for one.
+By default, there's a tutorial chart built-in. You can try it out, if you want!
 
 ## Are there any charts I can download?
 
@@ -57,7 +57,7 @@ However, one of the libraries this project uses, [pybass3](https://github.com/de
 
 ## Known issues
 
-- [Linux isn't fully compatible with pybass3 yet,](https://github.com/devdave/pybass3/issues/2) however [there is a workaround to get it working anyways.](./docs/PYBASS3_LINUX.md)
+- Mac is untested.
 - The accuracy is bound to the framerate. It's why there's an fps counter at the bottom left of the screen in gameplay.
 
 ## Help! I'm having issues!
