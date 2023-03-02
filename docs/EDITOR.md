@@ -12,7 +12,7 @@ Jokes aside, let me introduce you to the basic controls of the editor.
 |Ctrl+Space|Preview from beginning|
 |T|Metronome On/Off|
 |Z|New note at position|
-|Shift+Z|Set end note position|
+|Shift+Z|Set end-of-level note position|
 |H/J/K/L|Move selected note left/down/up/right|
 |U/I|Move selected note earlier/later|
 |:|Command mode|
@@ -23,7 +23,7 @@ Jokes aside, let me introduce you to the basic controls of the editor.
 
 "Huh? Command mode? What's that?" <br>
 So, first up, remember vim? *...wait where did everybody go-*<br>
-Jokes aside, this editor has inspirations from vim, as in you can type different commands to achieve different things. Here are some basic examples:
+Jokes aside, this mode is inspired by vim commands, as in you can type different commands to achieve different things. Here are some basic examples:
 
 ```
 :q                  -> Quits the editor, if you're way too scared to try this out.
