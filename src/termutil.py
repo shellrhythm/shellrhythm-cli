@@ -65,7 +65,7 @@ def print_at(x, y, toPrint):
 			if realPrinted[count] not in ["\n", "\r", "\r\n"]: #screw line breaks in particular
 				try:
 					if term.strip_seqs(printedChar) == "":
-						printedChar = term.normal+term.strip_seqs(f.buffer[int(y+1) * f.width + int(x) + actualCount])
+						printedChar += term.strip_seqs(f.buffer[int(y+1) * f.width + int(x) + actualCount])
 					f.PrintAt(int(x) + actualCount, int(y+1),printedChar)
 				except:
 					pass
@@ -191,7 +191,7 @@ class Grid:
 			points = self.processPoints(firstpos, secpos)
 			for j in range(len(points)):
 				atpos = ((self.pointsToPlot[i+j] / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]) * self.height + (self.offset/4)
-				print_at(self.x + (i//2), self.y + int(atpos), self.colors[i+j] + points[j] + term.normal)
+				print_at(self.x + (i//2), self.y + int(atpos), self.colors[i+j] + points[j])
 
 	def __init__(self, x, y, width, height) -> None:
 		self.x = x

@@ -60,8 +60,11 @@ class Framebuffer:
 		self.buffer.clear()
 
 	def ClearScreen(self):
-		for x in range(self.width * self.height):
-			self.buffer[x] = ' '
+		try:
+			for x in range(self.width * self.height):
+				self.buffer[x] = ' '
+		except:
+			pass
 
 	def Draw(self):
 		print(''.join(self.buffer))

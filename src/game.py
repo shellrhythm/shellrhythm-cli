@@ -55,7 +55,7 @@ keys = [
 ]
 
 hitWindows = [0.05, 0.1, 0.2, 0.3, 0.4]
-judgementNames = ["MARV", "PERF", "EPIC", "GOOD", " EH ", "MISS"]
+judgementNames = [f"{term.purple}MARV", f"{term.aqua}PERF", f"{term.green}EPIC", f"{term.yellow}GOOD", f"{term.orange} EH ", f"{term.red}MISS"]
 judgementShort = [f"{term.purple}@", f"{term.aqua}#", f"{term.green}$", f"{term.yellow}*", f"{term.orange};", f"{term.red}/"]
 accMultiplier = [1, 0.95, 0.85, 0.75, 0.5, 0]
 
@@ -83,6 +83,7 @@ class Game:
 	pauseOption = 0
 	resultsScreen = ResultsScreen()
 	playername = ""
+	lastHit = {}
 
 	#Locale
 	loc:Locale = Locale("en")
@@ -164,12 +165,11 @@ class Game:
 					"offset": remTime,
 					"judgement": judgement
 				}
+				self.lastHit = self.judgements[noteNum]
 				self.accuracyUpdate()
 				self.score = int(scoreCalc(maxScore, self.judgements, self.accuracy, self.missesCount, self.chart))
 				calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
 				print_at(calc_pos[0], calc_pos[1], judgementShort[judgement])
-				print_at(10, 1, judgementNames[judgement])
-				print_at(25, 1, term.normal + str(round(remTime*1000, 4)) + "ms    ")
 
 				if judgement == 5:
 					self.missesCount += 1
@@ -181,6 +181,7 @@ class Game:
 						"offset": remTime,
 						"judgement": judgement
 					}
+					self.lastHit = self.judgements[noteNum]
 					self.accuracyUpdate()
 					calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
 					print_at(calc_pos[0], calc_pos[1], judgementShort[judgement])
@@ -200,12 +201,11 @@ class Game:
 					"offset": remTime,
 					"judgement": judgement
 				}
+				self.lastHit = self.judgements[noteNum]
 				self.accuracyUpdate()
 				self.score = int(scoreCalc(maxScore, self.judgements, self.accuracy, self.missesCount, self.chart))
 				calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
 				print_at(calc_pos[0], calc_pos[1], judgementShort[judgement])
-				print_at(10, 1, judgementNames[judgement])
-				print_at(25, 1, term.normal + str(round(remTime*1000, 4)) + "ms    ")
 				return True
 
 	def getSongEndTime(self):
@@ -378,6 +378,12 @@ class Game:
 			print_at(0,0,term.normal + self.chart["metadata"]["artist"] + " - " + self.chart["metadata"]["title"])
 			print_at(term.width - (len(str(self.accuracy)) + 2), 0, str(self.accuracy) + "%")
 			print_at(term.width - (len(str(self.score)) + 1), 1, str(self.score))
+
+			if self.auto:
+				print_at(0,1, f"{term.reverse}[AUTO ENABLED]{term.normal}")
+
+			if self.lastHit != {}:
+				print_at(15, 1, judgementNames[self.lastHit["judgement"]] + "   " + term.normal + str(round(self.lastHit["offset"]*1000, 4)) + "ms")
 			
 			if playfield_mode == "scale":
 				print_box(4,2,term.width-7,term.height-4,term.normal,1)
@@ -513,6 +519,8 @@ class Game:
 					refresh()
 					self.resultsScreen.handle_input()
 					self.turnOff = self.resultsScreen.gameTurnOff
+				if self.auto and not self.resultsScreen.auto: #displays the resultsScreen.auto message even if you somehow can disable it
+					self.resultsScreen.auto = self.auto
 		self.localConduc.stop()
 		self.localConduc.song.stop()
 		self.turnOff = False
@@ -522,6 +530,7 @@ class Game:
 				
 
 	def play(self, chart = {}, layout = "qwerty"):
+		self.resultsScreen.auto = self.auto
 		self.setupKeys(layout)
 		self.judgements = []
 		self.dontDraw = []
