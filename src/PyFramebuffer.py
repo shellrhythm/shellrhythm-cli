@@ -69,7 +69,7 @@ class Framebuffer:
 
 	def Draw(self, prefix = ""):
 		joined = [''.join(self.buffer[i*self.width:(i+1)*self.width]) for i in range(self.height)]
-		frame = ''.join(joined)
+		frame = ''.join(joined[1:])
 		# isLengthWidth = [len(i) for i in joined]
 		print(prefix + frame)
 		self.UpdateRes()
