@@ -18,6 +18,8 @@ box_styles = [
 term = Terminal()
 f = Framebuffer()
 
+screenOffset = [0, 0]
+
 # toDraw = ""
 
 beforeWidth = 0
@@ -46,6 +48,7 @@ def check_term_size():
 		on_resize(None, None)
 
 def print_at(x, y, toPrint):
+	global screenOffset
 	realPrinted = term.split_seqs(toPrint)
 	result = []
 	
@@ -65,8 +68,8 @@ def print_at(x, y, toPrint):
 			if realPrinted[count] not in ["\n", "\r", "\r\n"]: #screw line breaks in particular
 				try:
 					if term.strip_seqs(printedChar) == "":
-						printedChar += term.strip_seqs(f.buffer[int(y+1) * f.width + int(x) + actualCount])
-					f.PrintAt(int(x) + actualCount, int(y+1),printedChar)
+						printedChar += term.strip_seqs(f.buffer[int(y+1+screenOffset[1]) * f.width + int(x+screenOffset[0]) + actualCount])
+					f.PrintAt(int(x+screenOffset[0]) + actualCount, int(y+1+screenOffset[1]),printedChar)
 				except:
 					pass
 				result.append(printedChar)
@@ -74,7 +77,7 @@ def print_at(x, y, toPrint):
 		else:
 			if realPrinted[count] not in ["\n", "\r", "\r\n"]: #screw line breaks in particular
 				try:
-					f.PrintAt(int(x) + actualCount, int(y+1),realPrinted[count])
+					f.PrintAt(int(x+screenOffset[0]) + actualCount, int(y+1+screenOffset[1]),realPrinted[count])
 				except:
 					pass
 				result.append(realPrinted[count])
@@ -97,15 +100,15 @@ Pro tip: only call this at the end of a frame! Or else, this will reduce the fra
 	# global toDraw
 	# print(toDraw)
 	# toDraw = ""
-	f.Draw()
+	f.Draw(term.move_xy(0,0))
 
 def debug_val(val):
 		if not val:
-			print_at(0,term.height-2,term.move_up(1))
+			pass
 		elif val.is_sequence:
-			print_at(0,term.height-2,"got sequence: {0}.".format((str(val), val.name, val.code)) + term.clear_eol)
+			print_at(0,term.height-2,"got sequence: {0}.".format((str(val), val.name, val.code)))
 		elif val:
-			print_at(0,term.height-2,f"got {val}." + term.clear_eol)
+			print_at(0,term.height-2,f"got {val}.")
 
 def print_lines_at(x, y, text, center = False, eol = False, color = None):
 	if color is None:

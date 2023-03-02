@@ -48,7 +48,8 @@ class Framebuffer:
 
 	def PrintAt(self, x, y, char):
 		# print("Element: {0}, Size: {1}".format(len(self.buffer), x * self.width + y))
-		self.buffer[y * self.width + x] = char
+		if x < self.width:
+			self.buffer[y * self.width + x] = char
 
 	def PrintText(self, x, y, text):
 		count = 0
@@ -66,8 +67,11 @@ class Framebuffer:
 		except:
 			pass
 
-	def Draw(self):
-		print(''.join(self.buffer))
+	def Draw(self, prefix = ""):
+		joined = [''.join(self.buffer[i*self.width:(i+1)*self.width]) for i in range(self.height)]
+		frame = ''.join(joined)
+		# isLengthWidth = [len(i) for i in joined]
+		print(prefix + frame)
 		self.UpdateRes()
 
 	def FPS(self):

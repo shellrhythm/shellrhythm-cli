@@ -81,31 +81,31 @@ class FileBrowser:
 				self.selectedItem %= len(self.curFilesInFolder) + len(self.curSubFolders)
 				if self.selectedItem < self.offset + 1:
 					self.offset -= 1
-				print(term.clear)
+				# print(term.clear)
 			if val.name == "KEY_DOWN":
 				self.selectedItem += 1
 				self.selectedItem %= len(self.curFilesInFolder) + len(self.curSubFolders)
 
 				if self.selectedItem > self.offset + term.height-12:
 					self.offset += 1
-				print(term.clear)
+				# print(term.clear)
 			if val == "J":
 				self.offset += 1
-				print(term.clear)
+				# print(term.clear)
 			if val == "K":
 				self.offset -= 1
 				self.offset = max(self.offset, 0)
-				print(term.clear)
+				# print(term.clear)
 			if val == "n":
 				self.newFolderMode = True
 			if val.name == "KEY_ENTER":
 				if self.selectedItem >= len(self.curSubFolders):
 					self.output = self.curPath + "/" + self.curFilesInFolder[self.selectedItem - len(self.curSubFolders)]
 					self.turnOff = True
-					print(term.clear)
+					# print(term.clear)
 				else:
 					self.load_folder(self.curPath + "/" + self.curSubFolders[self.selectedItem])
-					print(term.clear)
+					# print(term.clear)
 					self.selectedItem = 0
 					self.offset = 0
 					pass
@@ -113,30 +113,31 @@ class FileBrowser:
 				if self.selectFolderMode:
 					self.output = self.curPath + "/" + self.curSubFolders[self.selectedItem]
 					self.turnOff = True
-					print(term.clear)
+					# print(term.clear)
 
 
 			if val.name == "KEY_ESCAPE":
 				self.turnOff = True
-				print(term.clear)
+				# print(term.clear)
 		else:
 			if val.name == "KEY_ESCAPE":
 				self.newFolderMode = False
-				print(term.clear)
+				# print(term.clear)
 			elif val.name == "KEY_ENTER":
 				os.mkdir(self.curPath + "/" + self.newFolderName)
 				self.load_folder(self.curPath)
 				self.selectedItem = 0
 				self.offset = 0
-				print(term.clear)
+				# print(term.clear)
 			else:
 				self.newFolderName, self.newFolderCaret = textbox_logic(self.newFolderName, self.newFolderCaret, val)
 
 
 	def loop(self):
-		print(term.clear)
+		# print(term.clear)
 		while not self.turnOff:
 			self.draw()
+			refresh()
 			self.handle_input()
 
 		self.selectFolderMode = False

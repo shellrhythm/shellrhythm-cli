@@ -145,10 +145,10 @@ class Credits:
 				loadedMenus["Titlescreen"].turnOff = False
 				loadedMenus["Titlescreen"].loop()
 				menu = "Titlescreen"
-				print(term.clear)
+				# print(term.clear)
 			else:
 				self.isViewingProfile = False
-				print(term.clear)
+				# print(term.clear)
 		
 		if val.name == "KEY_DOWN":
 			self.selectedItem += 1
@@ -218,7 +218,7 @@ class Options:
 			optn["displayName"] = locales[selectedLocale](f"options.{optn['var']}")
 
 	def moveBy(self, x):
-		print(term.clear)
+		# print(term.clear)
 		self.selectedItem = (self.selectedItem + x)%len(self.menuOptions)
 	
 	# --- INTERACT FUNCTIONS ---
@@ -233,7 +233,7 @@ class Options:
 		options[enum["var"]] = enum["populatedValues"][curChoice]
 		if enum["var"] == "lang":
 			selectedLocale = enum["populatedValues"][curChoice]
-			print(term.clear)
+			# print(term.clear)
 			self.translate()
 	
 	def interactStr(self, curChoice):
@@ -348,11 +348,11 @@ class Options:
 				leVar = self.menuOptions[self.selectedItem]["var"]
 				options[leVar] = round(self.suggestedOffset,3)
 				self.isPickingOffset = False
-				print(term.clear)
+				# print(term.clear)
 			if val == "n":
 				self.isPickingOffset = False
 				self.suggestedOffset = 0
-				print(term.clear)
+				# print(term.clear)
 		else:
 			if self.enumInteracted == -1:
 				if val.name == "KEY_DOWN" or val == "j":
@@ -374,7 +374,7 @@ class Options:
 					loadedMenus["Titlescreen"].turnOff = False
 					loadedMenus["Titlescreen"].loop()
 					menu = "Titlescreen"
-					print(term.clear)
+					# print(term.clear)
 				if val == "c":
 					self.saveOptions()
 					self.turnOff = True
@@ -422,7 +422,7 @@ class Options:
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
-			print(term.clear)
+			# print(term.clear)
 			self.translate()
 			while not self.turnOff:
 				self.deltatime = conduc.update()
@@ -591,7 +591,7 @@ class ChartSelect:
 			self.goBack = True
 			conduc.play()
 		else:
-			print(term.clear)
+			# print(term.clear)
 			self.resultsThing.resultsData = scores[chartData[self.selectedItem]["foldername"]][self.selectedScore]
 			self.resultsThing.setup()
 			self.resultsThing.isEnabled = True
@@ -614,7 +614,7 @@ class ChartSelect:
 				conduc.song.stop()
 				conduc.loadsong(chartData[self.selectedItem])
 				conduc.play()
-				print(term.clear)
+				# print(term.clear)
 			else:
 				if len(scores[chartData[self.selectedItem]["foldername"]]) != 0:
 					self.selectedScore += 1
@@ -630,7 +630,7 @@ class ChartSelect:
 				conduc.song.stop()
 				conduc.loadsong(chartData[self.selectedItem])
 				conduc.play()
-				print(term.clear)
+				# print(term.clear)
 			else:
 				if len(scores[chartData[self.selectedItem]["foldername"]]) != 0:
 					self.selectedScore -= 1
@@ -658,7 +658,7 @@ class ChartSelect:
 			loadedMenus["Editor"].mapToEdit.pop("actualSong", None)
 			loadedMenus["Editor"].fileLocation = f"./charts/{chartData[self.selectedItem]['foldername']}/data.json"
 			loadedMenus["Editor"].loop()
-			print(term.clear)
+			# print(term.clear)
 			self.turnOff = True
 			self.goBack = True
 			conduc.play()
@@ -671,11 +671,11 @@ class ChartSelect:
 			loadedMenus["Titlescreen"].turnOff = False
 			loadedMenus["Titlescreen"].loop()
 			menu = "Titlescreen"
-			print(term.clear)
+			# print(term.clear)
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
-			print(term.clear)
+			# print(term.clear)
 			while not self.turnOff:
 				self.deltatime = conduc.update()
 				if self.resultsThing.isEnabled:
@@ -747,7 +747,7 @@ class TitleScreen:
 			loadedMenus["ChartSelect"].turnOff = False
 			loadedMenus["ChartSelect"].loop()
 			menu = "ChartSelect"
-			print(term.clear)
+			# print(term.clear)
 
 		if self.selectedItem == 1:
 			# Edit
@@ -758,7 +758,7 @@ class TitleScreen:
 			loadedMenus["Editor"].layout = Game.setupKeys(None, "qwerty")
 			loadedMenus["Editor"].loc = locales[selectedLocale]
 			loadedMenus["Editor"].loop()
-			print(term.clear)
+			# print(term.clear)
 			print_lines_at(0,1,self.logo,True)
 			print_at(int((term.width - len(self.curBottomText)) / 2), len(self.logo.splitlines()) + 2, self.curBottomText)
 			global chartData, scores
@@ -773,14 +773,14 @@ class TitleScreen:
 			loadedMenus["Options"].turnOff = False
 			loadedMenus["Options"].loop()
 			menu = "Options"
-			print(term.clear)
+			# print(term.clear)
 
 		if self.selectedItem == 3:
 			self.turnOff = True
 			loadedMenus["Credits"].turnOff = False
 			loadedMenus["Credits"].loop()
 			menu = "Credits"
-			print(term.clear)
+			# print(term.clear)
 		
 		if self.selectedItem == 4:
 			webbrowser.open(self.discordLink)
@@ -847,7 +847,7 @@ class TitleScreen:
 	def loop(self):
 		self.curBottomText = bottomTextLines[random.randint(0, len(bottomTextLines)-1)]
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
-			print(term.clear)
+			# print(term.clear)
 			while not self.turnOff:
 				self.deltatime = conduc.update()
 				if not too_small(options["bypassSize"]):

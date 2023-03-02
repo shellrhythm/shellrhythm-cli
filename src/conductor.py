@@ -116,8 +116,8 @@ class Conductor:
 		self.currentTimeSec = secPos
 		self.prevTimeSec = 0
 		self.currentBeat = beatpos
-		if self.song._length_seconds is not None:
-			if self.song._length_seconds >= secPos:
+		if self.song.duration is not None:
+			if self.song.duration >= secPos:
 				self.song.stop()
 				self.song.play()
 				self.song.move2position_seconds(secPos)

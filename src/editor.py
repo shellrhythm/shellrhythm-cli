@@ -431,18 +431,6 @@ class Editor:
 			pass
 			print_box(0,0,40,len(self.metadataParts) + 2,term.normal,0)
 		
-		if self.pauseMenuEnabled:
-			self.draw_pauseMenu()
-
-		if self.keyPanelEnabled:
-			if self.keyPanelSelected == -1:
-				text_key = self.loc("editor.newKey.creating")
-			else:
-				text_key = self.loc("editor.newKey.editing")
-			self.draw_changeKeyPanel(text_key,self.keyPanelKey)
-		elif self.keyPanelJustDisabled:
-			self.draw_changeKeyPanel()
-			self.keyPanelJustDisabled = False
 
 		if self.mapToEdit["notes"] != []:
 			self.selectedNote %= len(self.mapToEdit["notes"])
@@ -539,7 +527,20 @@ class Editor:
 			if not self.keyPanelEnabled:
 				text_nomaploaded = self.loc("editor.emptyChart")
 				print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), term.normal+text_nomaploaded)
-			
+
+		if self.keyPanelEnabled:
+			if self.keyPanelSelected == -1:
+				text_key = self.loc("editor.newKey.creating")
+			else:
+				text_key = self.loc("editor.newKey.editing")
+			self.draw_changeKeyPanel(text_key,self.keyPanelKey)
+		elif self.keyPanelJustDisabled:
+			self.draw_changeKeyPanel()
+			self.keyPanelJustDisabled = False
+
+		if self.pauseMenuEnabled:
+			self.draw_pauseMenu()
+
 		if self.commandMode:
 			print_at(0,term.height-2, term.normal+":"+self.commandString+term.clear_eol)
 			chrAtCursor = ""
@@ -654,9 +655,12 @@ class Editor:
 				self.fileBrwsr.caption = "Select a song"
 				self.fileBrwsr.turnOff = False
 				soundFileLocation = self.fileBrwsr.loop()
-				self.mapToEdit["sound"] = soundFileLocation.split('/')[-1]
-				shutil.copyfile(soundFileLocation, f"./charts/{self.mapToEdit['foldername']}/{soundFileLocation.split('/')[-1]}")
-				self.localConduc.loadsong(self.mapToEdit)
+				if soundFileLocation != "?":
+					self.mapToEdit["sound"] = soundFileLocation.split('/')[-1]
+					shutil.copyfile(soundFileLocation, f"./charts/{self.mapToEdit['foldername']}/{soundFileLocation.split('/')[-1]}")
+					self.localConduc.loadsong(self.mapToEdit)
+				else:
+					return False, "File selection aborted."
 
 		# :off - Change song offset
 		elif commandSplit[0] == "off":
@@ -1033,6 +1037,8 @@ class Editor:
 			print(term.clear)
 			if self.mapToEdit == {}:
 				self.setupMap()
+			global screenOffset
+			screenOffset = [0, 10]
 			while not self.turnOff:
 				if self.playtest:
 					self.deltatime = self.localConduc.update()
