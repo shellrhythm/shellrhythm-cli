@@ -2,13 +2,11 @@ from blessed import Terminal
 import json, os
 # print(__name__)
 if __name__ != "src.layout":
-	from termutil import print_at, print_lines_at
+	from termutil import print_at, print_lines_at, refresh, term
 	from translate import Locale
 else:
-	from src.termutil import print_at, print_lines_at
+	from src.termutil import print_at, print_lines_at, refresh, term
 	from src.translate import Locale
-
-term = Terminal()
 
 class LayoutCreator:
 	turnOff = False
@@ -86,6 +84,8 @@ class LayoutCreator:
 			print(term.clear)
 			while not self.turnOff:
 				self.draw()
+
+				refresh()
 
 				self.handle_input()
 	

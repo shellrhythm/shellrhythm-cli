@@ -109,6 +109,7 @@
         "pause": {
             "resume": "Continuer",
             "playtest": "Jouer",
+            "song": "Changer la musique",
             "addimage": "Changer la miniature",
             "metadata": "Modifier les métadonnées",
             "save": "Sauvegarder",

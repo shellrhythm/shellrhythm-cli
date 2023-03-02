@@ -115,6 +115,7 @@
         "pause": {
             "resume": "Resume",
             "playtest": "Playtest",
+            "song": "Change song",
             "addimage": "Change image thumbnail",
             "metadata": "Edit metadata",
             "save": "Save",

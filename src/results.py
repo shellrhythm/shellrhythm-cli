@@ -66,6 +66,7 @@ class ResultsScreen:
 	centerRow = 24
 	debug = False
 	grid = Grid(0,0,10,10)
+	auto = False
 
 	def setup(self):
 		self.judgementCount = [0,0,0,0,0,0]
@@ -111,8 +112,11 @@ class ResultsScreen:
 			print_at(31, 7, f"{ranks[3][2]}Good:      {ranks[3][4]}{self.judgementCount[3]}{term.normal}")
 			print_at(31, 8, f"{ranks[4][2]}Eh:        {ranks[4][4]}{self.judgementCount[4]}{term.normal}")
 			print_at(31, 9, f"{ranks[5][2]}Misses:    {ranks[5][4]}{self.judgementCount[5]}{term.normal}")
+			if self.auto:
+				print_at(16, 8, f"{term.reverse}[AUTO ENABLED]{term.normal}")
 			if self.debug:
 				self.draw_debug_info()
+			self.render_accuracy_view()
 
 	def handle_input(self):
 		val = ''

@@ -16,7 +16,7 @@ from src.results import *
 import sys
 import platform
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 term = Terminal()
 turnOff = False
@@ -145,10 +145,10 @@ class Credits:
 				loadedMenus["Titlescreen"].turnOff = False
 				loadedMenus["Titlescreen"].loop()
 				menu = "Titlescreen"
-				print(term.clear)
+				# print(term.clear)
 			else:
 				self.isViewingProfile = False
-				print(term.clear)
+				# print(term.clear)
 		
 		if val.name == "KEY_DOWN":
 			self.selectedItem += 1
@@ -163,7 +163,7 @@ class Credits:
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
-			print(term.clear)
+			print(term.clear + term.move_xy(0,0))
 			f = open(self.creditsPath)
 			self.creditsOrSomething = json.loads(f.read())
 			f.close()
@@ -174,7 +174,8 @@ class Credits:
 				else:
 					text = locales[selectedLocale]("screenTooSmall")
 					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
-
+				refresh()
+				
 				self.handle_input()
 
 				if platform.system() == "Windows":
@@ -217,7 +218,7 @@ class Options:
 			optn["displayName"] = locales[selectedLocale](f"options.{optn['var']}")
 
 	def moveBy(self, x):
-		print(term.clear)
+		# print(term.clear)
 		self.selectedItem = (self.selectedItem + x)%len(self.menuOptions)
 	
 	# --- INTERACT FUNCTIONS ---
@@ -232,7 +233,7 @@ class Options:
 		options[enum["var"]] = enum["populatedValues"][curChoice]
 		if enum["var"] == "lang":
 			selectedLocale = enum["populatedValues"][curChoice]
-			print(term.clear)
+			# print(term.clear)
 			self.translate()
 	
 	def interactStr(self, curChoice):
@@ -347,11 +348,11 @@ class Options:
 				leVar = self.menuOptions[self.selectedItem]["var"]
 				options[leVar] = round(self.suggestedOffset,3)
 				self.isPickingOffset = False
-				print(term.clear)
+				# print(term.clear)
 			if val == "n":
 				self.isPickingOffset = False
 				self.suggestedOffset = 0
-				print(term.clear)
+				# print(term.clear)
 		else:
 			if self.enumInteracted == -1:
 				if val.name == "KEY_DOWN" or val == "j":
@@ -373,7 +374,7 @@ class Options:
 					loadedMenus["Titlescreen"].turnOff = False
 					loadedMenus["Titlescreen"].loop()
 					menu = "Titlescreen"
-					print(term.clear)
+					# print(term.clear)
 				if val == "c":
 					self.saveOptions()
 					self.turnOff = True
@@ -421,7 +422,7 @@ class Options:
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
-			print(term.clear)
+			# print(term.clear)
 			self.translate()
 			while not self.turnOff:
 				self.deltatime = conduc.update()
@@ -430,7 +431,8 @@ class Options:
 				else:
 					text = locales[selectedLocale]("screenTooSmall")
 					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
-
+				refresh()
+				
 				self.handle_input()
 
 				if platform.system() == "Windows":
@@ -468,19 +470,19 @@ class ChartSelect:
 			else:
 				text = chartData[i]["metadata"]["artist"] + " - " + chartData[i]["metadata"]["title"]
 				print_cropped(0, i+1, 20, text, 0, term.normal, False)
-			print_at(20,i,f"{term.normal}")
-		print_column(20, 0, 19, "┃")
-		print_column(20, 20, term.height - 22, "┃")
+			# print_at(20,i,f"{term.normal}")
+		print_column(20, 0, term.height-2, term.normal+"┃")
 		# Actual chart info display
 		if len(chartData) == 0:
 			print_at(25,5, locales[selectedLocale]("chartSelect.no_charts"))
 		else:
+			img_width = min(34, int(term.width*0.2))
 			if chartData[self.selectedItem]["icon"]["img"] != None:
 				fileExists = None
 				if chartData[self.selectedItem]["icon"]["img"] != "":
 					fileExists = print_image(23, 1, 
 						"./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["img"], 
-						int(term.width * 0.2)
+						img_width
 					)
 				if not fileExists:
 					print_at(23, 1, "[NO IMAGE]")
@@ -490,30 +492,30 @@ class ChartSelect:
 					print_lines_at(23, 1, txt.read())
 				else:
 					print_at(23, 1, "[NO ICON]")
-			print_column(25 + int(term.width * 0.2), 0, 8, "┃")
+			print_column(25 + img_width, 0, int(img_width/2)+2, "┃")
 			#region metadata
-			print_at(27 + int(term.width * 0.2), 2, term.blue 
+			print_at(27 + img_width, 2, term.blue 
 				+ locales[selectedLocale]("chartSelect.metadata.song") 
 				+ term.normal 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["title"]
 				+ term.clear_eol
 			)
-			print_at(27 + int(term.width * 0.2), 3, term.blue 
+			print_at(27 + img_width, 3, term.blue 
 				+ locales[selectedLocale]("chartSelect.metadata.artist") 
 				+ term.normal 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["artist"]
 				+ term.clear_eol
 			)
-			print_at(27 + int(term.width * 0.2), 5, term.blue 
+			print_at(27 + img_width, 5, term.blue 
 				+ locales[selectedLocale]("chartSelect.metadata.author") 
 				+ term.normal 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["author"]
 				+ term.clear_eol
 			)
-			print_at(27 + int(term.width * 0.2), 6, term.blue 
+			print_at(27 + img_width, 6, term.blue 
 				+ locales[selectedLocale]("chartSelect.difficulty") 
 				+ term.normal 
 				+ ": " 
@@ -521,12 +523,11 @@ class ChartSelect:
 				+ term.clear_eol
 			)
 			#endregion
-			print_at(25 + int(term.width * 0.2), 8, "┠" + ("─"*(term.width - (26 + int(term.width * 0.2)))))
-			print_at(28 + int(term.width * 0.2), 8, term.reverse + locales[selectedLocale]("chartSelect.metadata.description") + term.normal)
-			print_column(25 + int(term.width * 0.2), 9, 10, "┃")
-			print_lines_at(26 + int(term.width * 0.2), 9, chartData[self.selectedItem]["metadata"]["description"])
-			print_at(25 + int(term.width * 0.2), 19, "┸" + ("─"*(term.width - (26 + int(term.width * 0.2)))))
-			print_at(20, 19, "┠" + ("─"*(4+int(term.width * 0.2))))
+			print_at(25 + img_width, 8, "┠" + ("─"*(term.width - (26 + img_width))))
+			print_at(28 + img_width, 8, term.reverse + locales[selectedLocale]("chartSelect.metadata.description") + term.normal)
+			print_lines_at(26 + img_width, 9, chartData[self.selectedItem]["metadata"]["description"])
+			print_at(25 + img_width, 19, "┸" + ("─"*(term.width - (26 + img_width))))
+			print_at(20, 19, "┠" + ("─"*(4+img_width)))
 			text_auto = locales[selectedLocale]("chartSelect.auto")
 			if loadedGame.auto:
 				print_at(23, 18, 
@@ -589,7 +590,7 @@ class ChartSelect:
 			self.goBack = True
 			conduc.play()
 		else:
-			print(term.clear)
+			# print(term.clear)
 			self.resultsThing.resultsData = scores[chartData[self.selectedItem]["foldername"]][self.selectedScore]
 			self.resultsThing.setup()
 			self.resultsThing.isEnabled = True
@@ -612,7 +613,7 @@ class ChartSelect:
 				conduc.song.stop()
 				conduc.loadsong(chartData[self.selectedItem])
 				conduc.play()
-				print(term.clear)
+				# print(term.clear)
 			else:
 				if len(scores[chartData[self.selectedItem]["foldername"]]) != 0:
 					self.selectedScore += 1
@@ -628,7 +629,7 @@ class ChartSelect:
 				conduc.song.stop()
 				conduc.loadsong(chartData[self.selectedItem])
 				conduc.play()
-				print(term.clear)
+				# print(term.clear)
 			else:
 				if len(scores[chartData[self.selectedItem]["foldername"]]) != 0:
 					self.selectedScore -= 1
@@ -656,7 +657,7 @@ class ChartSelect:
 			loadedMenus["Editor"].mapToEdit.pop("actualSong", None)
 			loadedMenus["Editor"].fileLocation = f"./charts/{chartData[self.selectedItem]['foldername']}/data.json"
 			loadedMenus["Editor"].loop()
-			print(term.clear)
+			# print(term.clear)
 			self.turnOff = True
 			self.goBack = True
 			conduc.play()
@@ -669,11 +670,11 @@ class ChartSelect:
 			loadedMenus["Titlescreen"].turnOff = False
 			loadedMenus["Titlescreen"].loop()
 			menu = "Titlescreen"
-			print(term.clear)
+			# print(term.clear)
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
-			print(term.clear)
+			# print(term.clear)
 			while not self.turnOff:
 				self.deltatime = conduc.update()
 				if self.resultsThing.isEnabled:
@@ -682,6 +683,8 @@ class ChartSelect:
 					else:
 						text = locales[selectedLocale]("screenTooSmall")
 						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+					refresh()
+
 					self.resultsThing.handle_input()
 
 					if self.resultsThing.gameTurnOff:
@@ -693,6 +696,8 @@ class ChartSelect:
 					else:
 						text = locales[selectedLocale]("screenTooSmall")
 						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+					refresh()
+					
 					self.handle_input()
 
 				if platform.system() == "Windows":
@@ -741,7 +746,7 @@ class TitleScreen:
 			loadedMenus["ChartSelect"].turnOff = False
 			loadedMenus["ChartSelect"].loop()
 			menu = "ChartSelect"
-			print(term.clear)
+			# print(term.clear)
 
 		if self.selectedItem == 1:
 			# Edit
@@ -752,7 +757,7 @@ class TitleScreen:
 			loadedMenus["Editor"].layout = Game.setupKeys(None, "qwerty")
 			loadedMenus["Editor"].loc = locales[selectedLocale]
 			loadedMenus["Editor"].loop()
-			print(term.clear)
+			# print(term.clear)
 			print_lines_at(0,1,self.logo,True)
 			print_at(int((term.width - len(self.curBottomText)) / 2), len(self.logo.splitlines()) + 2, self.curBottomText)
 			global chartData, scores
@@ -767,14 +772,14 @@ class TitleScreen:
 			loadedMenus["Options"].turnOff = False
 			loadedMenus["Options"].loop()
 			menu = "Options"
-			print(term.clear)
+			# print(term.clear)
 
 		if self.selectedItem == 3:
 			self.turnOff = True
 			loadedMenus["Credits"].turnOff = False
 			loadedMenus["Credits"].loop()
 			menu = "Credits"
-			print(term.clear)
+			# print(term.clear)
 		
 		if self.selectedItem == 4:
 			webbrowser.open(self.discordLink)
@@ -841,7 +846,7 @@ class TitleScreen:
 	def loop(self):
 		self.curBottomText = bottomTextLines[random.randint(0, len(bottomTextLines)-1)]
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
-			print(term.clear)
+			# print(term.clear)
 			while not self.turnOff:
 				self.deltatime = conduc.update()
 				if not too_small(options["bypassSize"]):
@@ -850,6 +855,7 @@ class TitleScreen:
 					text = locales[selectedLocale]("screenTooSmall")
 					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
 
+				refresh()
 				self.handle_input()
 
 				if platform.system() == "Windows":

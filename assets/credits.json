@@ -11,11 +11,12 @@
         ]
     },
     {
-        "role": "OST Composer",
+        "role": "OST Composer, framebuffer",
         "name": "NachoBIT",
         "links": [
             { "icon":"\ueb72", "label": "Twitter", "link": "https://twitter.com/TheNachoBIT" },
-            { "icon":"\uf16a", "label": "YouTube", "link": "https://www.youtube.com/@nachobit6716" }
+            { "icon":"\uf16a", "label": "YouTube", "link": "https://www.youtube.com/@nachobit6716" },
+            { "icon":"\uea84", "label": "GitHub", "link": "https://github.com/TheNachoBIT" }
         ]
     }
 ]
