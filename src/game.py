@@ -46,7 +46,7 @@ colors = [
 
 defaultSize = [80, 24]
 
-inputFrequency = 200
+inputFrequency = 999
 
 keys = [
 	"a","z","e","r","t","y","u","i","o","p",
@@ -371,7 +371,7 @@ class Game:
 		print_at(int(term.width * 0.5)-3, 1, term.normal + text_beat)
 		
 	def draw(self):
-		print_at(0, term.height-2, str(int(1/self.deltatime)) + "fps" + term.clear_eol)
+		print_at(0, term.height-2, str(framerate()) + "fps" + term.clear_eol)
 		if not self.localConduc.isPaused:
 			timerText = str(format_time(int(self.localConduc.currentTimeSec))) + " / " + str(format_time(int(self.endTime)))
 			print_at(0,0, f"{term.normal}{term.center(timerText)}")
@@ -477,7 +477,7 @@ class Game:
 								break;
 		else:
 			val = ''
-			val = term.inkey(timeout=1/60, esc_delay=0)
+			val = term.inkey(timeout=1/inputFrequency, esc_delay=0)
 			
 			if val.name == "KEY_ESCAPE":
 				self.localConduc.resume()
@@ -506,9 +506,11 @@ class Game:
 					else:
 						text = self.loc("screenTooSmall")
 						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+					refresh()
 					self.handle_input()
 				else:
 					self.resultsScreen.draw()
+					refresh()
 					self.resultsScreen.handle_input()
 					self.turnOff = self.resultsScreen.gameTurnOff
 		self.localConduc.stop()

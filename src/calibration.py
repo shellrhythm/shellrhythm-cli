@@ -2,12 +2,12 @@ from blessed import Terminal
 import json, os
 if __name__ != "src.calibration":
 	from loading import check_chart, load_charts
-	from termutil import print_at
+	from termutil import *
 	from conductor import Conductor
 	from translate import Locale
 else:
 	from src.loading import check_chart, load_charts
-	from src.termutil import print_at
+	from src.termutil import *
 	from src.conductor import Conductor
 	from src.translate import Locale
 
@@ -151,6 +151,7 @@ class Calibration:
 						deltatime = self.conduc.update()
 
 					self.draw()
+					refresh()
 					self.handle_input()
 		else:
 			print(term.clear)
@@ -159,6 +160,7 @@ class Calibration:
 					deltatime = self.conduc.update()
 
 				self.draw()
+				refresh()
 				self.handle_input()
 
 

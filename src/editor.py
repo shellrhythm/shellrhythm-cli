@@ -1037,6 +1037,8 @@ class Editor:
 				if self.playtest:
 					self.deltatime = self.localConduc.update()
 				self.draw()
+
+				refresh()
 				
 				self.handle_input()
 

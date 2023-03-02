@@ -163,7 +163,7 @@ class Credits:
 
 	def loop(self):
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
-			print(term.clear)
+			print(term.clear + term.move_xy(0,0))
 			f = open(self.creditsPath)
 			self.creditsOrSomething = json.loads(f.read())
 			f.close()
@@ -174,7 +174,8 @@ class Credits:
 				else:
 					text = locales[selectedLocale]("screenTooSmall")
 					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
-
+				refresh()
+				
 				self.handle_input()
 
 				if platform.system() == "Windows":
@@ -430,7 +431,8 @@ class Options:
 				else:
 					text = locales[selectedLocale]("screenTooSmall")
 					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
-
+				refresh()
+				
 				self.handle_input()
 
 				if platform.system() == "Windows":
@@ -468,7 +470,7 @@ class ChartSelect:
 			else:
 				text = chartData[i]["metadata"]["artist"] + " - " + chartData[i]["metadata"]["title"]
 				print_cropped(0, i+1, 20, text, 0, term.normal, False)
-			print_at(20,i,f"{term.normal}")
+			# print_at(20,i,f"{term.normal}")
 		print_column(20, 0, 19, "┃")
 		print_column(20, 20, term.height - 22, "┃")
 		# Actual chart info display
@@ -682,6 +684,8 @@ class ChartSelect:
 					else:
 						text = locales[selectedLocale]("screenTooSmall")
 						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+					refresh()
+
 					self.resultsThing.handle_input()
 
 					if self.resultsThing.gameTurnOff:
@@ -693,6 +697,8 @@ class ChartSelect:
 					else:
 						text = locales[selectedLocale]("screenTooSmall")
 						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+					refresh()
+					
 					self.handle_input()
 
 				if platform.system() == "Windows":
@@ -850,6 +856,7 @@ class TitleScreen:
 					text = locales[selectedLocale]("screenTooSmall")
 					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
 
+				refresh()
 				self.handle_input()
 
 				if platform.system() == "Windows":
