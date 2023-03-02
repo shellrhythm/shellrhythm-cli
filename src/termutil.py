@@ -100,7 +100,7 @@ Pro tip: only call this at the end of a frame! Or else, this will reduce the fra
 	# global toDraw
 	# print(toDraw)
 	# toDraw = ""
-	f.Draw(term.move_xy(0,0))
+	f.Draw(term.move_xy(0,0) + term.normal)
 
 def debug_val(val):
 		if not val:

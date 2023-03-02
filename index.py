@@ -471,18 +471,18 @@ class ChartSelect:
 				text = chartData[i]["metadata"]["artist"] + " - " + chartData[i]["metadata"]["title"]
 				print_cropped(0, i+1, 20, text, 0, term.normal, False)
 			# print_at(20,i,f"{term.normal}")
-		print_column(20, 0, 19, "┃")
-		print_column(20, 20, term.height - 22, "┃")
+		print_column(20, 0, term.height-2, term.normal+"┃")
 		# Actual chart info display
 		if len(chartData) == 0:
 			print_at(25,5, locales[selectedLocale]("chartSelect.no_charts"))
 		else:
+			img_width = min(34, int(term.width*0.2))
 			if chartData[self.selectedItem]["icon"]["img"] != None:
 				fileExists = None
 				if chartData[self.selectedItem]["icon"]["img"] != "":
 					fileExists = print_image(23, 1, 
 						"./charts/" + chartData[self.selectedItem]["foldername"] + "/" + chartData[self.selectedItem]["icon"]["img"], 
-						int(term.width * 0.2)
+						img_width
 					)
 				if not fileExists:
 					print_at(23, 1, "[NO IMAGE]")
@@ -492,30 +492,30 @@ class ChartSelect:
 					print_lines_at(23, 1, txt.read())
 				else:
 					print_at(23, 1, "[NO ICON]")
-			print_column(25 + int(term.width * 0.2), 0, 8, "┃")
+			print_column(25 + img_width, 0, int(img_width/2)+2, "┃")
 			#region metadata
-			print_at(27 + int(term.width * 0.2), 2, term.blue 
+			print_at(27 + img_width, 2, term.blue 
 				+ locales[selectedLocale]("chartSelect.metadata.song") 
 				+ term.normal 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["title"]
 				+ term.clear_eol
 			)
-			print_at(27 + int(term.width * 0.2), 3, term.blue 
+			print_at(27 + img_width, 3, term.blue 
 				+ locales[selectedLocale]("chartSelect.metadata.artist") 
 				+ term.normal 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["artist"]
 				+ term.clear_eol
 			)
-			print_at(27 + int(term.width * 0.2), 5, term.blue 
+			print_at(27 + img_width, 5, term.blue 
 				+ locales[selectedLocale]("chartSelect.metadata.author") 
 				+ term.normal 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["author"]
 				+ term.clear_eol
 			)
-			print_at(27 + int(term.width * 0.2), 6, term.blue 
+			print_at(27 + img_width, 6, term.blue 
 				+ locales[selectedLocale]("chartSelect.difficulty") 
 				+ term.normal 
 				+ ": " 
@@ -523,12 +523,11 @@ class ChartSelect:
 				+ term.clear_eol
 			)
 			#endregion
-			print_at(25 + int(term.width * 0.2), 8, "┠" + ("─"*(term.width - (26 + int(term.width * 0.2)))))
-			print_at(28 + int(term.width * 0.2), 8, term.reverse + locales[selectedLocale]("chartSelect.metadata.description") + term.normal)
-			print_column(25 + int(term.width * 0.2), 9, 10, "┃")
-			print_lines_at(26 + int(term.width * 0.2), 9, chartData[self.selectedItem]["metadata"]["description"])
-			print_at(25 + int(term.width * 0.2), 19, "┸" + ("─"*(term.width - (26 + int(term.width * 0.2)))))
-			print_at(20, 19, "┠" + ("─"*(4+int(term.width * 0.2))))
+			print_at(25 + img_width, 8, "┠" + ("─"*(term.width - (26 + img_width))))
+			print_at(28 + img_width, 8, term.reverse + locales[selectedLocale]("chartSelect.metadata.description") + term.normal)
+			print_lines_at(26 + img_width, 9, chartData[self.selectedItem]["metadata"]["description"])
+			print_at(25 + img_width, 19, "┸" + ("─"*(term.width - (26 + img_width))))
+			print_at(20, 19, "┠" + ("─"*(4+img_width)))
 			text_auto = locales[selectedLocale]("chartSelect.auto")
 			if loadedGame.auto:
 				print_at(23, 18, 
