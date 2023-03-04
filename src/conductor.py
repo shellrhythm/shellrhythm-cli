@@ -1,4 +1,4 @@
-from pybass3 import Song
+from pybass3 import *
 import time
 if __name__ != "src.conductor":
 	from termutil import *
@@ -33,6 +33,17 @@ class Conductor:
 	isPaused = False
 	pauseStartTime = 0
 	skippedTimeWithPause = 0
+	volume = 1
+	metronomeVolume = 1
+	bass = Bass()
+
+	def setMetronomeVolume(self, volume):
+		self.metronomeVolume = volume
+		self.bass.SetChannelVolume(self.metroSound.handle, volume)
+
+	def setVolume(self, volume):
+		self.volume = volume
+		self.bass.SetChannelVolume(self.song.handle, volume)
 
 	def loadsong(self, chart = {}):
 		self.bpm = chart["bpm"]
@@ -55,6 +66,7 @@ class Conductor:
 		self.skippedTimeWithPause = 0
 		self.startTimeNoOffset = (time.time_ns() / 10**9)
 		self.startTime = self.startTimeNoOffset + self.offset
+		self.setVolume(self.volume)
 		self.song.play()
 
 	def pause(self):

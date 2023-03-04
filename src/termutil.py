@@ -8,6 +8,11 @@ import json
 from term_image.image import *
 import signal
 import platform
+import re
+
+def strip_seqs(text):
+	ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\([0-?]*[ -/]*[@-~])')
+	return ansi_escape.sub('', text)
 
 box_styles = [
 	"┌─┐││└─┘", #Base box
@@ -17,6 +22,17 @@ box_styles = [
 
 term = Terminal()
 f = Framebuffer()
+
+
+def split_seqs(text):
+	#apparently the part that needs to be optimized the *most*
+	pattern = term._caps_unnamed_any
+	result = []
+	matches = list(re.finditer(pattern, text))
+	for i in range(len(matches)):
+		result += [matches[i].group()]
+	return result
+
 
 screenOffset = [0, 0]
 
@@ -29,8 +45,6 @@ minWidth = 125
 minHeight = 32
 
 def on_resize(sig, action):
-	# print(term.clear)
-	# sys.stdout.write("\x1b[8;{rows};{cols}t".format(rows=max(term.height,minHeight), cols=max(term.width, minWidth)))
 	f.UpdateRes()
 	global beforeWidth, beforeHeight, hasBeenResized
 	beforeWidth = f.width
@@ -49,7 +63,9 @@ def check_term_size():
 
 def print_at(x, y, toPrint):
 	global screenOffset
-	realPrinted = term.split_seqs(toPrint)
+	x = int(x)
+	y = int(y)
+	realPrinted = split_seqs(toPrint)
 	result = []
 	
 	count = 0
@@ -58,33 +74,32 @@ def print_at(x, y, toPrint):
 		if len(realPrinted[count]) > 1:
 			printedChar = realPrinted[count]
 			nextOne = count+1
-			# lmao = term.strip_seqs(realPrinted[nextOne])
-			# notlmao = lmao != realPrinted[nextOne]
-			if len(realPrinted) > nextOne:
-				printedChar += realPrinted[nextOne]
-			while len(realPrinted) > nextOne+1 and term.strip_seqs(realPrinted[nextOne]) != realPrinted[nextOne]:
-				nextOne += 1
-				printedChar += realPrinted[nextOne]
-			if realPrinted[count] not in ["\n", "\r", "\r\n"]: #screw line breaks in particular
+
+			if realPrinted[count] not in ["\n", "\r"]: #screw line breaks in particular
+				if len(realPrinted) > nextOne:
+					printedChar += realPrinted[nextOne]
+				while len(realPrinted) > nextOne+1 and strip_seqs(realPrinted[nextOne]) != realPrinted[nextOne]:
+					nextOne += 1
+					printedChar += realPrinted[nextOne]
 				try:
-					if term.strip_seqs(printedChar) == "":
-						printedChar += term.strip_seqs(f.buffer[int(y+1+screenOffset[1]) * f.width + int(x+screenOffset[0]) + actualCount])
-					f.PrintAt(int(x+screenOffset[0]) + actualCount, int(y+1+screenOffset[1]),printedChar)
+					if strip_seqs(printedChar) == "":
+						printedChar += f.buffer[(y+screenOffset[1]+1) * f.width + (x+screenOffset[0]) + actualCount]
+					f.PrintAt(x+screenOffset[0] + actualCount, y+screenOffset[1]+1,printedChar)
 				except:
 					pass
 				result.append(printedChar)
 			count = nextOne+1
 		else:
-			if realPrinted[count] not in ["\n", "\r", "\r\n"]: #screw line breaks in particular
+			if realPrinted[count] not in ["\n", "\r"]: #screw line breaks in particular
 				try:
-					f.PrintAt(int(x+screenOffset[0]) + actualCount, int(y+1+screenOffset[1]),realPrinted[count])
+					f.PrintAt(x+screenOffset[0] + actualCount, y+screenOffset[1]+1,realPrinted[count])
 				except:
 					pass
 				result.append(realPrinted[count])
 			count += 1
 		
 		if count < len(realPrinted):
-			if realPrinted[count-1] not in ["\n", "\r", "\r\n"]: #screw line breaks in particular
+			if realPrinted[count-1] not in ["\n", "\r"]: #screw line breaks in particular
 				actualCount += 1
 	pass
 	# f.PrintText(int(x), int(y), toPrint)

@@ -42,6 +42,8 @@ layoutNames = []
 options = {
 	"layout": "qwerty",
 	"globalOffset": 0,
+	"songVolume": 1,
+	"hitSoundVolume": 1,
 	"lang": "en",
 	"nerdFont": False,
 	"textImages": True,
@@ -191,6 +193,8 @@ class Options:
 	selectedItem = 0
 	menuOptions = [
 		{"var": "globalOffset",		"type":"intField",	"displayName": "Global offset (ms)", "isOffset": True, "snap": 0.001},
+		{"var": "songVolume",		"type":"intSlider",	"displayName": "Song volume", "min": 0, "max": 100, "snap": 5, "mult": 100},
+		{"var": "hitSoundVolume",	"type":"intSlider",	"displayName": "Hitsound volume", "min": 0, "max": 100, "snap": 5, "mult": 100},
 		{"var": "lang",				"type":"enum", 		"displayName": "Language", "populatedValues": localeNames},
 		{"var": "nerdFont",			"type":"bool", 		"displayName": "Enable Nerd Font display"},
 		{"var": "textImages",		"type":"bool", 		"displayName": "Use images as thumbnails"},
@@ -220,6 +224,15 @@ class Options:
 	def moveBy(self, x):
 		# print(term.clear)
 		self.selectedItem = (self.selectedItem + x)%len(self.menuOptions)
+
+	def volume(self, volType=0, value = 1):
+		if volType == 0:
+			conduc.setVolume(value)
+			loadedGame.localConduc.setVolume(value)
+		elif volType == 1:
+			conduc.setMetronomeVolume(value)
+			conduc.bass.SetChannelVolume(loadedGame.beatSound.handle, value)
+			
 	
 	# --- INTERACT FUNCTIONS ---
 	def interactBool(self, boolOption):
@@ -273,6 +286,9 @@ class Options:
 					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + (" "*int(term.width*0.2)) + locales[selectedLocale]("options.calibrationTip") + term.clear_eol)
 				else:
 					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + term.clear_eol)
+			if leType == "intSlider":
+				print_at(maxLength + 6, i*2+3, f"{str(int(options[leVar] * 100))}%")
+				print_at(maxLength + 12, i*2+3, f"{'━'*int(max((term.width*0.7) - (maxLength + 16), 20)*options[leVar])}⏺")
 			if leType == "enum":
 				if self.enumInteracted == i:
 					print_at(maxLength + 6, i*2+3, term.reverse + "{ " + options[leVar] + " }" +term.normal + (" "*6) + str(self.menuOptions[i]["populatedValues"]) + term.clear_eol)
@@ -311,8 +327,11 @@ class Options:
 		if selectedOption["type"] == "bool":
 			self.interactBool(selectedOption)
 		if selectedOption["type"] == "enum":
-			self.enumInteracted = self.selectedItem
-			self.curEnumValue = selectedOption["populatedValues"].index(options[selectedOption["var"]])
+			if selectedOption["populatedValues"] != []:
+				self.enumInteracted = self.selectedItem
+				self.curEnumValue = selectedOption["populatedValues"].index(options[selectedOption["var"]])
+			else:
+				self.populate_enum()
 		if selectedOption["type"] == "strField":
 			self.interactStr(self.selectedItem)
 			
@@ -359,14 +378,35 @@ class Options:
 					self.moveBy(1)
 				if val.name == "KEY_UP" or val == "k":
 					self.moveBy(-1)
-				if (val.name == "KEY_RIGHT" and self.menuOptions[self.selectedItem]["type"] != "intField") or val.name == "KEY_ENTER":
+				if (val.name == "KEY_RIGHT" and self.menuOptions[self.selectedItem]["type"] not in ["intField", "intSlider"]) or val.name == "KEY_ENTER":
 					self.enterPressed()
-				if val.name == "KEY_LEFT" and self.menuOptions[self.selectedItem]["type"] == "intField":
+				if val.name == "KEY_LEFT" and self.menuOptions[self.selectedItem]["type"] in ["intField", "intSlider"]:
 					leVar = self.menuOptions[self.selectedItem]["var"]
-					options[leVar] -= self.menuOptions[self.selectedItem]["snap"]
-				if val.name == "KEY_RIGHT" and self.menuOptions[self.selectedItem]["type"] == "intField":
+
+					if "min" in self.menuOptions[self.selectedItem]:
+						options[leVar] *= self.menuOptions[self.selectedItem]["mult"]
+						options[leVar] -= self.menuOptions[self.selectedItem]["snap"]
+						options[leVar] = max(int(options[leVar]*100)/100, self.menuOptions[self.selectedItem]["min"])
+						options[leVar] /= self.menuOptions[self.selectedItem]["mult"]
+						volMode = 0
+						if leVar == "hitSoundVolume":
+							volMode = 1
+						self.volume(volMode, options[leVar])
+					else:
+						options[leVar] -= self.menuOptions[self.selectedItem]["snap"]
+				if val.name == "KEY_RIGHT" and self.menuOptions[self.selectedItem]["type"] in ["intField", "intSlider"]:
 					leVar = self.menuOptions[self.selectedItem]["var"]
-					options[leVar] += self.menuOptions[self.selectedItem]["snap"]
+					if "min" in self.menuOptions[self.selectedItem]:
+						options[leVar] *= self.menuOptions[self.selectedItem]["mult"]
+						options[leVar] += self.menuOptions[self.selectedItem]["snap"]
+						options[leVar] = min(int(options[leVar]*100)/100, self.menuOptions[self.selectedItem]["max"])
+						options[leVar] /= self.menuOptions[self.selectedItem]["mult"]
+						volMode = 0
+						if leVar == "hitSoundVolume":
+							volMode = 1
+						self.volume(volMode, options[leVar])
+					else:
+						options[leVar] += self.menuOptions[self.selectedItem]["snap"]
 				if val.name == "KEY_ESCAPE":
 					global menu
 					self.saveOptions()
@@ -904,6 +944,8 @@ if __name__ == "__main__":
 
 		loadedMenus["ChartSelect"].selectedItem = songLoaded
 		loadedMenus["Options"].populate_enum()
+		loadedMenus["Options"].volume(0, options["songVolume"])
+		loadedMenus["Options"].volume(1, options["hitSoundVolume"])
 
 		currentLoadedSong = songLoaded
 

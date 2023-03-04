@@ -68,10 +68,10 @@ class Framebuffer:
 			pass
 
 	def Draw(self, prefix = ""):
-		joined = [''.join(self.buffer[i*self.width:(i+1)*self.width]) for i in range(self.height)]
-		frame = ''.join(joined[1:])
+		# joined = [''.join(self.buffer[i*self.width:(i+1)*self.width]) for i in range(self.height)]
+		# frame = ''.join(self.buffer[self.width:])
 		# isLengthWidth = [len(i) for i in joined]
-		print(prefix + frame)
+		print(prefix + ''.join(self.buffer[self.width:]))
 		self.UpdateRes()
 
 	def FPS(self):

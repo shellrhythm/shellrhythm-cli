@@ -84,6 +84,7 @@ class Game:
 	resultsScreen = ResultsScreen()
 	playername = ""
 	lastHit = {}
+	options = {}
 
 	#Locale
 	loc:Locale = Locale("en")
@@ -111,15 +112,15 @@ class Game:
 		if mode == "":
 			mode = playfield_mode
 		calc_pos = []
-		topleft = [int((term.width-defaultSize[0]) * 0.5), int((term.height-defaultSize[1]) * 0.5)]
+		topleft = [int((f.width-defaultSize[0]) * 0.5), int((f.height-defaultSize[1]) * 0.5)]
 		if mode == "setSize":
 			calc_pos = [
 				int(x*(defaultSize[0]))+topleft[0],
 				int(y*(defaultSize[1]))+topleft[1]]
 		else:
 			calc_pos = [
-				int(x*(term.width-12))+6,
-				int(y*(term.height-9))+4]
+				int(x*(f.width-12))+6,
+				int(y*(f.height-9))+4]
 		return calc_pos
 
 	def resultsFile(self):
@@ -275,39 +276,26 @@ class Game:
 		pass
 
 	def renderNote(self, atPos, color, key, approachedBeats, notes = {}, i = -1):
-		if int(approachedBeats*2) == 8:
-			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═ {term.normal}")
-			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}   {term.normal}")
-			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}   {term.normal}")
-		elif int(approachedBeats*2) == 7:
-			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
-			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}   {term.normal}")
-			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}   {term.normal}")
-		elif int(approachedBeats*2) == 6:
-			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
-			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
-			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}   {term.normal}")
-		elif int(approachedBeats*2) == 5:
-			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
-			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
-			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}  ╝{term.normal}")
-		elif int(approachedBeats*2) == 4:
-			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
-			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
-			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color} ═╝{term.normal}")
-		elif int(approachedBeats*2) == 3:
-			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
-			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}  ║{term.normal}")
-			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}╚═╝{term.normal}")
-		elif int(approachedBeats*2) == 2:
-			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color} ═╗{term.normal}")
-			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}║ ║{term.normal}")
-			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}╚═╝{term.normal}")
-		elif int(approachedBeats*2) == 1:
-			print_at(atPos[0]-1, atPos[1]-1, f"{term.normal}{color}╔═╗{term.normal}")
-			print_at(atPos[0]-1, atPos[1],   f"{term.normal}{color}║ ║{term.normal}")
-			print_at(atPos[0]-1, atPos[1]+1, f"{term.normal}{color}╚═╝{term.normal}")
+		toPrint = "   \n   \n   \n"
+		val = int(approachedBeats*2)
+		if val == 8:
+			toPrint = f"{term.normal}{color} ═ \n{term.normal}{color}   \n{term.normal}{color}   {term.normal}"
+		elif val == 7:
+			toPrint = f"{term.normal}{color} ═╗\n{term.normal}{color}   \n{term.normal}{color}   {term.normal}"
+		elif val == 6:
+			toPrint = f"{term.normal}{color} ═╗\n{term.normal}{color}  ║\n{term.normal}{color}   {term.normal}"
+		elif val == 5:
+			toPrint = f"{term.normal}{color} ═╗\n{term.normal}{color}  ║\n{term.normal}{color}  ╝{term.normal}"
+		elif val == 4:
+			toPrint = f"{term.normal}{color} ═╗\n{term.normal}{color}  ║\n{term.normal}{color} ═╝{term.normal}"
+		elif val == 3:
+			toPrint = f"{term.normal}{color} ═╗\n{term.normal}{color}  ║\n{term.normal}{color}╚═╝{term.normal}"
+		elif val == 2:
+			toPrint = f"{term.normal}{color} ═╗\n{term.normal}{color}║ ║\n{term.normal}{color}╚═╝{term.normal}"
+		elif val == 1:
+			toPrint = f"{term.normal}{color}╔═╗\n{term.normal}{color}║ ║\n{term.normal}{color}╚═╝{term.normal}"
 		
+		print_lines_at(atPos[0]-1, atPos[1]-1, toPrint)
 		if self is not None:
 			if len(self.judgements) > len(notes) - (i+1):
 				if self.judgements[len(notes) - (i+1)] != {}:
@@ -529,7 +517,8 @@ class Game:
 
 				
 
-	def play(self, chart = {}, layout = "qwerty"):
+	def play(self, chart = {}, layout = "qwerty", options = {}):
+		self.options = options
 		self.resultsScreen.auto = self.auto
 		self.setupKeys(layout)
 		self.judgements = []
