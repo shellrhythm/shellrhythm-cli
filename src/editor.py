@@ -963,13 +963,13 @@ class Editor:
 							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-							self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = max(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] - 0.05, 2), 0)
+							self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = min(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] + 0.05, 2), 1)
 						if val == "k":
 							self.clear_noteSettings(note)
 							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-							self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = min(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] + 0.05, 2), 1)
+							self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] = max(round(self.mapToEdit["notes"][self.selectedNote]["screenpos"][1] - 0.05, 2), 0)
 						if val == "l":
 							self.clear_noteSettings(note)
 							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
