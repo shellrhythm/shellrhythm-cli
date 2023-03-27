@@ -63,6 +63,7 @@ class Editor:
 	selectedSnap = 2
 	snapPossible = [1, 2, 4, 8, 16, 3, 6, 12]
 	layout = []
+	layoutname = "qwerty"
 
 	#Key panel
 	keyPanelEnabled = False
@@ -117,6 +118,9 @@ class Editor:
 
 	#Calibration
 	calib:Calibration = Calibration("CalibrationSong")
+
+	#Playtest
+	game:Game = Game()
 
 	options = {
 		"nerdFont": True,
@@ -256,9 +260,8 @@ class Editor:
 			print(term.clear)
 		if option == 1:
 			#playtest
-			pass
-			print_at(0,term.height-2, term.on_red+"Too lazy to implement, please try again later."+term.clear_eol+term.normal)
-			#TODO uhhhhhh
+			self.game.play(self.mapToEdit, self.layoutname, self.options)
+			self.pauseMenuEnabled = False
 		if option == 2:
 			self.run_command("song") #uh yeah
 		if option == 3:
@@ -466,12 +469,13 @@ class Editor:
 
 					if note in self.dontDrawList and remBeats > -0.1:
 						self.dontDrawList.remove(note)
-					if remBeats > -0.1 and remBeats < 4:
+					appeoachedBeats = (remBeats * self.mapToEdit["approachRate"])
+					if appeoachedBeats > -0.1 and appeoachedBeats < 4:
 						if self.selectedNote == j:
-							Game.renderNote(None, calculatedPos, colors[note["color"]]+term.reverse, characterDisplayed, remBeats+1)
+							Game.renderNote(None, calculatedPos, colors[note["color"]]+term.reverse, characterDisplayed, appeoachedBeats+1)
 						else:
-							Game.renderNote(None, calculatedPos, colors[note["color"]], characterDisplayed, remBeats+1)
-					elif remBeats < -0.1 and note not in self.dontDrawList:
+							Game.renderNote(None, calculatedPos, colors[note["color"]], characterDisplayed, appeoachedBeats+1)
+					elif appeoachedBeats < -0.1 and note not in self.dontDrawList:
 						print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 						print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 						print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
@@ -985,10 +989,12 @@ class Editor:
 					if val.name == "KEY_DOWN" and not self.noteMenuEnabled:
 						print_at(0,term.height-4, term.clear_eol)
 						self.selectedNote = min(self.selectedNote + 1, len(self.mapToEdit["notes"])-1)
+						note = self.mapToEdit["notes"][self.selectedNote]
 						self.localConduc.currentBeat = (note["beatpos"][0] * 4 + note["beatpos"][1])
 					if val.name == "KEY_UP" and not self.noteMenuEnabled:
 						print_at(0,term.height-4, term.clear_eol)
 						self.selectedNote = max(self.selectedNote - 1, 0)
+						note = self.mapToEdit["notes"][self.selectedNote]
 						self.localConduc.currentBeat = (note["beatpos"][0] * 4 + note["beatpos"][1])
 
 					if val == "u":
@@ -1005,7 +1011,7 @@ class Editor:
 							note["beatpos"][0]*4 + note["beatpos"][1], 
 							note["key"]
 						)
-
+						self.mapToEdit["notes"][self.selectedNote] = copy.deepcopy(note)
 
 					if note["type"] == "hit_object":
 						screenPos = note["screenpos"]
@@ -1168,5 +1174,6 @@ class Editor:
 if __name__ == "__main__":
 	editor = Editor()
 	# loadedMenus["Editor"] = editor
-	editor.layout = Game.setupKeys(None, "qwerty")
+	editor.layoutname = "qwerty"
+	editor.layout = Game.setupKeys(None, editor.layoutname)
 	editor.loop()

@@ -690,7 +690,8 @@ class ChartSelect:
 			conduc.song.stop()
 			loadedMenus["Editor"].turnOff = False
 			loadedMenus["Editor"].options = options
-			loadedMenus["Editor"].layout = Game.setupKeys(None, "qwerty")
+			loadedMenus["Editor"].layoutname = options["layout"]
+			loadedMenus["Editor"].layout = Game.setupKeys(None, options["layout"])
 			loadedMenus["Editor"].loc = locales[selectedLocale]
 			loadedMenus["Editor"].mapToEdit = chartData[self.selectedItem]
 			loadedMenus["Editor"].localConduc.loadsong(chartData[self.selectedItem])
@@ -794,7 +795,8 @@ class TitleScreen:
 			conduc.song.stop()
 			loadedMenus["Editor"].options = options
 			loadedMenus["Editor"].turnOff = False
-			loadedMenus["Editor"].layout = Game.setupKeys(None, "qwerty")
+			loadedMenus["Editor"].layoutname = options["layout"]
+			loadedMenus["Editor"].layout = Game.setupKeys(None, options["layout"])
 			loadedMenus["Editor"].loc = locales[selectedLocale]
 			loadedMenus["Editor"].loop()
 			# print(term.clear)
