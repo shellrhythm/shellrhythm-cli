@@ -54,6 +54,9 @@ class Editor:
 	commandAutoPropositions = []
 	commandFooterMessage = ""
 	commandFooterEnabled = False
+	commandHistory = []
+	commandHistoryCursor = 0
+	cachedCommand = ""
 
 	#Editor settings
 	snap = 4
@@ -192,6 +195,7 @@ class Editor:
 			self.mapToEdit["notes"] = sorted(self.mapToEdit["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
 			if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
 				self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
+			return self.mapToEdit["notes"].index(newNote)
 			
 	def create_text(self, atPos = 0, lasts = 1, text = "", anchor = CENTER, align = ALIGN_CENTER):
 		print(term.clear)
@@ -454,7 +458,7 @@ class Editor:
 					#TIMELINE
 					if remBeats*8+(term.width*0.1) >= 0:
 						if self.selectedNote == j:
-							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{colors[note['color']]}{term.bold}{characterDisplayed.upper()}{term.normal}")
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{colors[note['color']]}{term.reverse}{term.bold}{characterDisplayed.upper()}{term.normal}")
 						else:
 							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.normal}{colors[note['color']]}{term.bold}{characterDisplayed.upper()}{term.normal}")
 
@@ -565,6 +569,14 @@ class Editor:
 		if commandSplit[0] == "q!" or (commandSplit[0] == "q" and not self.needsSaving):
 			self.turnOff = True
 			return True, ""
+		
+		elif commandSplit[0] == "loop" or commandSplit[0] == "lp":
+			if len(commandSplit) < 2:
+				commandSplit = "1"
+			return None, "START_LOOP:"+commandSplit[1]
+
+		elif commandSplit[0] == "cl":
+			return None, "END_LOOP"
 
 		# :w - Write (Save) | 1 optional argument (where to save it)
 		elif commandSplit[0] == "w":
@@ -638,7 +650,7 @@ class Editor:
 		elif commandSplit[0] == "p":
 			if len(commandSplit) > 1:
 				if commandSplit[1].isdigit():
-					self.create_note(self.localConduc.currentBeat, int(commandSplit[1]))
+					self.selectedNote = self.create_note(self.localConduc.currentBeat, int(commandSplit[1]))
 					return True, self.loc("editor.commandResults.note.success")
 			else:
 				self.keyPanelEnabled = True
@@ -687,8 +699,10 @@ class Editor:
 		# :m - Move cursor
 		elif commandSplit[0] == "m":
 			if len(commandSplit) > 1:
-				if commandSplit[1].replace('.', '', 1).isdigit():
-					self.localConduc.currentBeat += float(commandSplit[1])
+				if commandSplit[1].startswith("~"):
+					self.localConduc.currentBeat += float(commandSplit[1].replace("~", ""))
+				else:
+					self.localConduc.currentBeat = float(commandSplit[1])
 		
 		# :mt - Metadata
 		elif commandSplit[0] == "mt":
@@ -767,6 +781,22 @@ class Editor:
 				return True, self.loc("editor.commandResults.note.success")
 			else:
 				return False, "[cannot create empty text]"
+			
+		elif commandSplit[0] == "c":
+			note = self.mapToEdit["notes"][self.selectedNote]
+			note["color"] = int(commandSplit[1])
+
+		elif commandSplit[0] == "sel":
+			if commandSplit[1].startswith("~"):
+				self.selectedNote += int(commandSplit[1].replace("~", ""))
+			else:
+				self.selectedNote = int(commandSplit[1])
+
+		elif commandSplit[0] == "del":
+			if len(commandSplit) < 2:
+				self.mapToEdit["notes"].remove(self.mapToEdit["notes"][self.selectedNote])
+			else:
+				self.mapToEdit["notes"].remove(self.mapToEdit["notes"][int(commandSplit[1])])
 
 		else:
 			if len(commandSplit[0]) > 128:
@@ -894,6 +924,8 @@ class Editor:
 						self.localConduc.stop()
 						self.localConduc.currentBeat = round(self.localConduc.currentBeat/(self.snap/4)) * (self.snap/4)
 					self.playtest = not self.playtest
+				if val.name == "KEY_HOME":
+					self.localConduc.currentBeat = 0
 				if val.name == "KEY_ESCAPE":
 					self.pauseMenuEnabled = True
 				if val.name == "KEY_RIGHT":
@@ -998,18 +1030,58 @@ class Editor:
 							self.mapToEdit["notes"][self.selectedNote]["length"] += (1/self.snap)*4
 
 		else:
+			if val.name == "KEY_UP":
+				if self.commandHistoryCursor == 0:
+					self.cachedCommand = self.commandString
+				self.commandHistoryCursor+=1
+				self.commandString = self.commandHistory[len(self.commandHistory) - (self.commandHistoryCursor)]
+			if val.name == "KEY_DOWN":
+				if self.commandHistoryCursor > 0:
+					self.commandHistoryCursor-=1
+				if self.commandHistoryCursor == 0:
+					self.commandString = self.cachedCommand
+				else:
+					self.commandString = self.commandHistory[len(self.commandHistory) - (self.commandHistoryCursor)]
 			if val.name == "KEY_ESCAPE":
 				self.commandMode = False
 				self.commandString = ""
+				self.commandHistoryCursor = 0
+				self.cachedCommand = ""
 			elif val.name == "KEY_ENTER":
+				self.commandHistoryCursor = 0
+
+				#Add the command string to the front, remove it anywhere else if it already exists
+				if self.commandString in self.commandHistory:
+					self.commandHistory.remove(self.commandString)
+				self.commandHistory.append(self.commandString)
+				self.cachedCommand = ""
 				splitCommands = self.commandString.split(";;")
 				self.commandFooterMessage = ""
 				if len(splitCommands) > 1:
 					results = []
 					errors = []
+					index = 0
 					for comm in splitCommands:
 						isValid, errorStr = self.run_command(comm)
-						results.append([isValid, errorStr])
+						if isValid is None: #LOOP CHECK
+							if errorStr.split(":")[0] == "START_LOOP":
+								endLoop = index+1
+								for i in splitCommands[index+1:]:
+									endLoop += 1
+									if i == "cl": #CLOSE LOOP
+										# splitCommands = splitCommands[:endLoop]+splitCommands[endLoop+1:] #Remove cl
+										# endLoop -= 1
+										break
+								toLoop = splitCommands[index+1:endLoop]
+								for l in range(int(errorStr.split(":")[1]) - 1):
+									count = index
+									for loopcomm in toLoop:
+										if loopcomm != "cl":
+											splitCommands.insert(index+1+count, loopcomm)
+											count+=1
+						else:
+							results.append([isValid, errorStr])
+						index += 1
 					for i in range(len(results)):
 						col = term.on_green
 						if results[i][0] == False:
@@ -1026,13 +1098,14 @@ class Editor:
 					isValid, errorStr = self.run_command(self.commandString)
 					self.commandMode = False
 					self.commandString = ""
-					if isValid:
-						if errorStr != "":
-							self.commandFooterMessage = term.on_green+errorStr
-					else:
-						self.commandMode = False
-						self.commandString = ""
-						self.commandFooterMessage = term.on_red+errorStr
+					if isValid is not None:
+						if isValid:
+							if errorStr != "":
+								self.commandFooterMessage = term.on_green+errorStr
+						else:
+							self.commandMode = False
+							self.commandString = ""
+							self.commandFooterMessage = term.on_red+errorStr
 				self.commandFooterEnabled = True
 			else:
 				if self.commandString == "" and val.name == "KEY_BACKSPACE":

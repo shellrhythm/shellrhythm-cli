@@ -28,7 +28,7 @@ class Conductor:
 	song = Song("./assets/clap.wav")
 	previewChart = {}
 	metronome = False
-	metroSound = Song("./assets/clap.wav")
+	metroSound = Song("./assets/metronome.wav")
 	startTimeNoOffset = 0
 	isPaused = False
 	pauseStartTime = 0

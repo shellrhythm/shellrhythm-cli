@@ -9,7 +9,7 @@ Jokes aside, let me introduce you to the basic controls of the editor.
 |←/→|Move on the timeline|
 |↑/↓|Goto previous/next note|
 |Space|Preview from position|
-|Ctrl+Space|Preview from beginning|
+|Home|Move cursor to beginning of the timeline|
 |T|Metronome On/Off|
 |Z|New note at position|
 |Shift+Z|Set end-of-level note position|
@@ -30,16 +30,24 @@ Jokes aside, this mode is inspired by vim commands, as in you can type different
 :w                  -> Saves the file (will prompt you to select where you want to save it if it's a new file)
 :w <filename>       -> Same deal, except it saves it in this specific file
 :wq                 -> Combinaison of :w and :q
-:p                  -> Places a tile at current position (will prompt you for a key)
-:p <KeyNum>         -> Places a tile at current position (with a defined key)
+:p                  -> Places a note at current position (will prompt you for a key)
+:p <KeyNum>         -> Places a note at current position (with a defined key)
+:t <Text>           -> Creates a text object at current position
 :o <foldername>     -> Opens a chart
-:m <Beats>          -> Moves cursor by specified amount of beats
+:m ~<Beats>         -> Moves cursor by specified amount of beats
+:m <Beats>          -> Moves cursor to a specific point in the song
 :song               -> Opens the window dialog to search for a song
 :off                -> Sets offset (will open the song calibration menu)
 :mt <param> <value> -> Changes metadata
 :bpm <bpm>          -> Changes the song's BPM
 :s <snap>           -> Changes snapping to a specific value
 :cp <range> <by>    -> Copies note range (min-max) by defined number of beats
+:c <colorID>        -> Changes selected note color to the specified color ID
+:sel <objID>        -> Selects a specific object
+:sel ~<X>           -> Selects the Xth next object
+:del <objID>        -> Deletes object
+:loop <X>           -> Will loop the instructions afterwards X times
+:cl                 -> Closes current loop
 ```
 
 Something cool about this command mode is that you can chain multiple commands at once using `;;`<br>
