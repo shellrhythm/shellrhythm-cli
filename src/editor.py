@@ -1033,8 +1033,9 @@ class Editor:
 			if val.name == "KEY_UP":
 				if self.commandHistoryCursor == 0:
 					self.cachedCommand = self.commandString
-				self.commandHistoryCursor+=1
-				self.commandString = self.commandHistory[len(self.commandHistory) - (self.commandHistoryCursor)]
+				if self.commandHistoryCursor < len(self.commandHistory):
+					self.commandHistoryCursor+=1
+					self.commandString = self.commandHistory[len(self.commandHistory) - (self.commandHistoryCursor)]
 			if val.name == "KEY_DOWN":
 				if self.commandHistoryCursor > 0:
 					self.commandHistoryCursor-=1
