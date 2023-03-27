@@ -17,7 +17,8 @@ Jokes aside, let me introduce you to the basic controls of the editor.
 |U/I|Move selected note earlier/later|
 |:|Command mode|
 |E|Note options|
-|Escape|Change metadata settings|
+|D|Duplicate selected note|
+|Escape|Open pause menu|
 
 ## Command mode
 
@@ -40,6 +41,8 @@ Jokes aside, this mode is inspired by vim commands, as in you can type different
 :off                -> Sets offset (will open the song calibration menu)
 :mt <param> <value> -> Changes metadata
 :bpm <bpm>          -> Changes the song's BPM
+:ar <ar>            -> Changes the song's approach rate (Must be a number)
+:diff <diff>        -> Changes the difficulty (It is *recommended* that you set it as a number)
 :s <snap>           -> Changes snapping to a specific value
 :cp <range> <by>    -> Copies note range (min-max) by defined number of beats
 :c <colorID>        -> Changes selected note color to the specified color ID
