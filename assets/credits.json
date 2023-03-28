@@ -11,12 +11,20 @@
         ]
     },
     {
-        "role": "OST Composer, framebuffer",
+        "role": "OST Composer, framebuffer code",
         "name": "NachoBIT",
         "links": [
             { "icon":"\ueb72", "label": "Twitter", "link": "https://twitter.com/TheNachoBIT" },
             { "icon":"\uf16a", "label": "YouTube", "link": "https://www.youtube.com/@nachobit6716" },
             { "icon":"\uea84", "label": "GitHub", "link": "https://github.com/TheNachoBIT" }
+        ]
+    },
+    {
+        "role": "Estonian Translation and feedback on the editor",
+        "name": "Thego124",
+        "links": [
+            { "icon":"\ueb72", "label": "Twitter", "link": "https://twitter.com/thego124" },
+            { "icon":"\uea84", "label": "Github", "link": "https://github.com/thego124" }
         ]
     }
 ]

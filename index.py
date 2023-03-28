@@ -29,11 +29,7 @@ loadedMenus = {
 }
 loadedGame = None
 locales = {}
-localeNames = [
-	"en",
-	"fr",
-	"da"
-]
+localeNames = []
 selectedLocale = "en"
 
 layouts = {}
@@ -195,7 +191,7 @@ class Options:
 		{"var": "globalOffset",		"type":"intField",	"displayName": "Global offset (ms)", "isOffset": True, "snap": 0.001},
 		{"var": "songVolume",		"type":"intSlider",	"displayName": "Song volume", "min": 0, "max": 100, "snap": 5, "mult": 100},
 		{"var": "hitSoundVolume",	"type":"intSlider",	"displayName": "Hitsound volume", "min": 0, "max": 100, "snap": 5, "mult": 100},
-		{"var": "lang",				"type":"enum", 		"displayName": "Language", "populatedValues": localeNames},
+		{"var": "lang",				"type":"enum", 		"displayName": "Language", "populatedValues": localeNames, "displayedValues": localeNames},
 		{"var": "nerdFont",			"type":"bool", 		"displayName": "Enable Nerd Font display"},
 		{"var": "textImages",		"type":"bool", 		"displayName": "Use images as thumbnails"},
 		{"var": "shortTimeFormat",	"type":"bool", 		"displayName": "Shorten relative time formatting"},
@@ -214,8 +210,10 @@ class Options:
 	strCursor = 0
 
 	def populate_enum(self):
-		self.menuOptions[1]["populatedValues"] = localeNames
-		self.menuOptions[5]["populatedValues"] = layoutNames
+		displayedValues = [locales[loc]("lang") for loc in locales]
+		self.menuOptions[3]["populatedValues"] = localeNames
+		self.menuOptions[3]["displayedValues"] = displayedValues
+		self.menuOptions[7]["populatedValues"] = layoutNames
 
 	def translate(self):
 		for optn in self.menuOptions:
@@ -291,10 +289,12 @@ class Options:
 				print_at(maxLength + 12, i*2+3, f"{'━'*int(max((term.width*0.7) - (maxLength + 16), 20)*options[leVar])}⏺")
 			if leType == "enum":
 				if self.enumInteracted == i:
-					print_at(maxLength + 6, i*2+3, term.reverse + "{ " + options[leVar] + " }" +term.normal + (" "*6) + str(self.menuOptions[i]["populatedValues"]) + term.clear_eol)
+					print_at(maxLength + 6, i*2+3, term.reverse + "{ " + self.menuOptions[i]["displayedValues"][self.menuOptions[i]["populatedValues"].index(options[leVar])] + " }" +term.normal + (" "*6) + str(self.menuOptions[i]["displayedValues"]) + term.clear_eol)
 				else:
 					if self.selectedItem == i and self.menuOptions[i]["var"] == "layout":
 						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + (" "*int(term.width*0.2)) + locales[selectedLocale]("options.layoutTip") + term.clear_eol)
+					elif "displayedValues" in self.menuOptions[i]:
+						print_at(maxLength + 6, i*2+3, "[" + self.menuOptions[i]["displayedValues"][self.menuOptions[i]["populatedValues"].index(options[leVar])] + "] ⌄" + term.clear_eol)
 					else:
 						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + term.clear_eol)
 			if leType == "bool":
