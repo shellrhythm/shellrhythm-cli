@@ -1,0 +1,184 @@
+{
+    "lang": "Eesti",
+    "screenTooSmall": "Vabandust, teie ekraan on liiga väike...",
+    "titlescreen":{
+        "play": "Mängi",
+        "edit": "Muuda",
+        "options": "Seaded",
+        "quit": "Lahku",
+        "discord": "Discord",
+        "github": "Github",
+        "version": "Versioon",
+        "credits": "Tiitrid"
+    },
+    "chartSelect":{
+        "backTitle": "Tagasi tiitlisse",
+        "play": "Mängi",
+        "mods": "modifikaatorid",
+        "difficulty": "Raskus",
+        "objs": "esemed",
+        "metadata": {
+            "author": "tasemelooja",
+            "song": "Laul",
+            "artist": "Artist",
+            "description": "Kirjeldus"
+        },
+        "no_charts": "Oih, tundub, et teil pole ühtegi laulu laetud!",
+        "auto": "[AUTOMAAT. KÄIVITATUD]",
+        "controls":{
+            "play": "Mängi laulu",
+            "down": "Keri alla",
+            "up": "Keri ülesse",
+            "auto": "Lülita ümber automaatmängimist",
+            "editor": "Ava muutjas"
+        }
+    },
+    "options":{
+        "globalOffset": "üldnihe (ms)",
+        "calibrationTip": "kalibreerimismenüü avamiseks vajuta C!",
+        "lang": "Keel",
+        "nerdFont": "Käivita Nerd Font kuva",
+        "textImages": "Kasuta pisipilte",
+        "layout": "Klaviatuuri laotus",
+        "layoutTip": "Laotuse kohandamiseks vajuta L!",
+        "shortTimeFormat": "Lühendage suhtelist ajavormingut",
+        "displayName": "kohalik Kasutajanimi",
+        "bypassSize": "Eira minimaalset terminali suurust"
+    },
+    "calibration":{
+        "hit": "Vajuta rütmis!",
+        "global": "üldnihke kalibreerimine",
+        "perSong": "laulu nihke test",
+        "quit": "Lahku",
+        "selectSong": "Vali laulu:"
+    },
+    "layout":{
+        "newKey":"Palun sisetage klahvi millega seda positsiooni asendada."
+    },
+    "gameplay":{
+        "pause": {
+            "title": "PAUS",
+            "resume": "Jätka",
+            "retry": "Proovi uuesti",
+            "quit": "Lahku menüüsse"
+        }
+    },
+    "editor":{
+        "emptyChart": "Vau, see on tühi.",
+        "timelineInfos":{
+            "bpm": "BPM",
+            "snap": "Vahe",
+            "bar": "Takt",
+            "beat": "Löök",
+            "curNote": "Hetkel valitud noot",
+            "color": "Värv",
+            "screenpos": "Asend ekraanil",
+            "beatpos": "Asend ajateljel",
+            "endpos": "Taseme lõpp-punkt"
+        },
+        "commandResults":{
+            "save": "Salvestatud!",
+            "open": {
+                "success": "Tase laadis edukalt.",
+                "notFound": "Seda tasemet pole olemas."
+            },
+            "common": {
+                "notEnoughArgs": "Liiga vähe argumente.",
+                "tooManyArgs": "Liiga palju argumente.",
+                "notFound": "Käsklust ei leitud.",
+                "tooLong": "...Mida??"
+            },
+            "note": {
+                "success": "Loodud uus noot."
+            },
+            "meta": {
+                "success": "\"{0}\" muudetud \"{1}\"-ks."
+            }
+        },
+        "newKey": {
+            "creating": "Vali selle noodi jaoks klahvi.",
+            "editing": "Vali sellele noodile uus klahv."
+        },
+        "pause": {
+            "resume": "Jätka",
+            "playtest": "Mängutest",
+            "song": "Muuda laulu",
+            "addimage": "Muuda pisipilti",
+            "metadata": "Muuda metaandmeid",
+            "save": "Salvesta",
+            "export": "Ekspordi",
+            "quit": "Lahku"
+        },
+        "metadata": {
+            "title": "Pealkiri",
+            "artist": "Artist",
+            "author": "tasemelooja",
+            "description": "Kirjeldus"
+        },
+        "cheatsheet": {
+            "playtest": "Mänguproov",
+            "cheatsheet": "Spikker",
+            "pauseMenu": "Ava pausmenüü",
+            "goToBeginning": "Liigu laulu algusesse",
+            "moveCursor": "Liiguta Kursorit edasi/tagasi",
+            "placeNote": "Loo noot",
+            "setEndPoint": "Määra laulu lõppu",
+            "metronome": "Metronoom",
+            "changeSnap": "Muuda liikumise vahet",
+            "commandMode": "Alusta käsurida",
+
+            "selectNextObject": "Vali järgmist eset",
+            "moveObjectOnTimeline": "Liiguta eset ajateljel",
+            "moveObjectOnScreen": "liiguta eset ekraanil",
+            "duplicateObject": "Tee esest koopia",
+
+            "changeKey": "muuda noodi klahvi",
+            "changeColor": "muuda noodi värvi",
+            "changeText": "muuda teksti sisu",
+            "changeTextColor": "muuda teksti värvi",
+            "changeTextAnchor": "muuda teksti joondust",
+            "delete": "Eemalda ese",
+
+            "leaveCommand": "Lahku käsureast",
+            "runCommand": "Käivita käsku",
+
+            "save": "Salvesta",
+            "quit": "Lahku menüüsse",
+            "saveAndQuit": "Sakvesta ja lahku",
+            "openExistingChart": "Ava taseme",
+            "setSong": "Muuda laulu",
+            "setBPM": "Muuda tempot",
+            "setOffset": "Muuda nihet",
+            "setApproachRate": "muuda nootide lähenemiskiirust",
+            "setDiff": "säti raskust",
+            "setMetadata": "Säti metaandmeid",
+
+            "createText": "Loo tekstieseme",
+            "moveToPos": "Liiguta positsiooni",
+            "moveBy": "Liiguta kursorit X lööki",
+            "copyNotes": "Kopeeri vahemik noote",
+            "changeNoteColor": "Muuda valitud noodi värvi",
+            "selectNote": "Vali noodi",
+            "deleteNote": "Eemalda valitud nooti"
+        }
+    },
+    "datetime":{
+        "long":{
+            "now": "just Praegu",
+            "secs": "{} sekundit tagasi",
+            "min1": "1 minut tagasi",
+            "min": "{} minutit tagasi",
+            "hour1": "1 tund tagasi",
+            "hour": "{} tundi tagasi",
+            "ystd": "eile",
+            "day": "{} päeva tagasi"
+        },
+        "short":{
+            "now": "praegu",
+            "secs": "{}s",
+            "mins": "{}m",
+            "hours": "{}h",
+            "days": "{}p"
+        }
+    }
+}
