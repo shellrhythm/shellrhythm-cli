@@ -101,9 +101,6 @@ class Editor:
 			{"name": "delete", "keybind": 23},
 		]
 	}
-	# noteMenuEnabled = False
-	# noteMenuJustDisabled = False
-	# noteMenuSelected = 0
 
 	#Metadata settings
 	metadataParts = ["title", "artist", "author", "description"]
@@ -422,6 +419,8 @@ class Editor:
 		}
 	}
 	cheatsheetEnabled = False
+	hasCheatsheetBeenSeen = False
+	howManyTimesHasTabBeenPressed = 0
 	
 	def draw_cheatsheet(self):
 		# normal mode
@@ -479,8 +478,10 @@ class Editor:
 		for i in range(min(len(lines), 50)):
 			print_at(0, term.height-(6+min(len(lines)-1, 49)-i), 
 	    lines[i][0] + " " * (maxKeyLen-len(term.strip_seqs(lines[i][0]))+1) + 
-		lines[i][1] + " " * (maxValLen-len(term.strip_seqs(lines[i][1]))  ) + "│"
+		(" " * (maxValLen-len(term.strip_seqs(lines[i][1]))) + lines[i][1]   ) + "│"
 			)
+		if self.howManyTimesHasTabBeenPressed < 2:
+			print_at(0, term.height-(6+min(len(lines)+1,51)), "Tip: The cheatsheet can change depending on the context!")
 
 	def draw(self):
 		# print_at(0,term.height-5, term.normal+"-"*(term.width-1))
@@ -508,6 +509,7 @@ class Editor:
 		+f"{self.loc('editor.timelineInfos.bar')}: {int(self.localConduc.currentBeat//4)} | "
 		+f"{self.loc('editor.timelineInfos.beat')}: {round(self.localConduc.currentBeat%4, 5)} | "
 		+term.clear_eol)
+
 
 		if self.metadataMenuEnabled:
 			length = max(len(self.loc('editor.metadata.'+i)) for i in self.metadataParts)
@@ -648,6 +650,10 @@ class Editor:
 
 		if self.cheatsheetEnabled:
 			self.draw_cheatsheet()
+
+		if not self.hasCheatsheetBeenSeen:
+			cheatsheettip = "[TAB] " + self.loc("editor.cheatsheet.cheatsheet")
+			print_at(term.width-len(cheatsheettip), term.height-6, cheatsheettip)
 
 
 	def run_command(self, command = ""):
@@ -976,7 +982,9 @@ class Editor:
 
 		elif not self.commandMode:
 			if val.name == "KEY_TAB":
+				self.hasCheatsheetBeenSeen = True
 				self.cheatsheetEnabled = not self.cheatsheetEnabled
+				self.howManyTimesHasTabBeenPressed += 1
 			# debug_val(val)
 			if self.keyPanelEnabled:
 				if val.name == "KEY_ESCAPE":
