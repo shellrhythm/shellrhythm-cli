@@ -14,11 +14,11 @@
     "chartSelect":{
         "backTitle": "Tagasi tiitlisse",
         "play": "Mängi",
-        "mods": "modifikaatorid",
+        "mods": "Modifikaatorid",
         "difficulty": "Raskus",
-        "objs": "esemed",
+        "objs": "Esemed",
         "metadata": {
-            "author": "tasemelooja",
+            "author": "Taseme looja",
             "song": "Laul",
             "artist": "Artist",
             "description": "Kirjeldus"
@@ -34,21 +34,21 @@
         }
     },
     "options":{
-        "globalOffset": "üldnihe (ms)",
-        "calibrationTip": "kalibreerimismenüü avamiseks vajuta C!",
+        "globalOffset": "Üldnihe (ms)",
+        "calibrationTip": "Kalibreerimismenüü avamiseks vajuta C!",
         "lang": "Keel",
         "nerdFont": "Käivita Nerd Font kuva",
         "textImages": "Kasuta pisipilte",
         "layout": "Klaviatuuri laotus",
         "layoutTip": "Laotuse kohandamiseks vajuta L!",
         "shortTimeFormat": "Lühendage suhtelist ajavormingut",
-        "displayName": "kohalik Kasutajanimi",
+        "displayName": "Kohalik Kasutajanimi",
         "bypassSize": "Eira minimaalset terminali suurust"
     },
     "calibration":{
         "hit": "Vajuta rütmis!",
-        "global": "üldnihke kalibreerimine",
-        "perSong": "laulu nihke test",
+        "global": "Üldnihke kalibreerimine",
+        "perSong": ":aulu nihke test",
         "quit": "Lahku",
         "selectSong": "Vali laulu:"
     },
@@ -112,7 +112,7 @@
         "metadata": {
             "title": "Pealkiri",
             "artist": "Artist",
-            "author": "tasemelooja",
+            "author": "Taseme looja",
             "description": "Kirjeldus"
         },
         "cheatsheet": {
@@ -129,14 +129,14 @@
 
             "selectNextObject": "Vali järgmist eset",
             "moveObjectOnTimeline": "Liiguta eset ajateljel",
-            "moveObjectOnScreen": "liiguta eset ekraanil",
+            "moveObjectOnScreen": "Liiguta eset ekraanil",
             "duplicateObject": "Tee esest koopia",
 
-            "changeKey": "muuda noodi klahvi",
-            "changeColor": "muuda noodi värvi",
-            "changeText": "muuda teksti sisu",
-            "changeTextColor": "muuda teksti värvi",
-            "changeTextAnchor": "muuda teksti joondust",
+            "changeKey": "Muuda noodi klahvi",
+            "changeColor": "Muuda noodi värvi",
+            "changeText": "Muuda teksti sisu",
+            "changeTextColor": "Muuda teksti värvi",
+            "changeTextAnchor": "Muuda teksti joondust",
             "delete": "Eemalda ese",
 
             "leaveCommand": "Lahku käsureast",
@@ -149,8 +149,8 @@
             "setSong": "Muuda laulu",
             "setBPM": "Muuda tempot",
             "setOffset": "Muuda nihet",
-            "setApproachRate": "muuda nootide lähenemiskiirust",
-            "setDiff": "säti raskust",
+            "setApproachRate": "Muuda nootide lähenemiskiirust",
+            "setDiff": "Säti raskust",
             "setMetadata": "Säti metaandmeid",
 
             "createText": "Loo tekstieseme",
@@ -164,17 +164,17 @@
     },
     "datetime":{
         "long":{
-            "now": "just Praegu",
+            "now": "Just praegu",
             "secs": "{} sekundit tagasi",
             "min1": "1 minut tagasi",
             "min": "{} minutit tagasi",
             "hour1": "1 tund tagasi",
             "hour": "{} tundi tagasi",
-            "ystd": "eile",
+            "ystd": "Eile",
             "day": "{} päeva tagasi"
         },
         "short":{
-            "now": "praegu",
+            "now": "Praegu",
             "secs": "{}s",
             "mins": "{}m",
             "hours": "{}h",
