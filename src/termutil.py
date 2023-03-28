@@ -1,4 +1,5 @@
 from blessed import Terminal
+from wcwidth import wcwidth
 try:
 	from PyFramebuffer import *
 except ImportError:
@@ -34,7 +35,6 @@ def split_seqs(text):
 	return result
 
 
-screenOffset = [0, 0]
 
 # toDraw = ""
 
@@ -62,7 +62,6 @@ def check_term_size():
 		on_resize(None, None)
 
 def print_at(x, y, toPrint):
-	global screenOffset
 	x = int(x)
 	y = int(y)
 	realPrinted = split_seqs(toPrint)
@@ -83,8 +82,8 @@ def print_at(x, y, toPrint):
 					printedChar += realPrinted[nextOne]
 				try:
 					if strip_seqs(printedChar) == "":
-						printedChar += f.buffer[(y+screenOffset[1]+1) * f.width + (x+screenOffset[0]) + actualCount]
-					f.PrintAt(x+screenOffset[0] + actualCount, y+screenOffset[1]+1,printedChar)
+						printedChar += f.buffer[(y+1) * f.width + x + actualCount]
+					f.PrintAt(x+actualCount, y+1,printedChar)
 				except:
 					pass
 				result.append(printedChar)
@@ -92,10 +91,15 @@ def print_at(x, y, toPrint):
 		else:
 			if realPrinted[count] not in ["\n", "\r"]: #screw line breaks in particular
 				try:
-					f.PrintAt(x+screenOffset[0] + actualCount, y+screenOffset[1]+1,realPrinted[count])
+					f.PrintAt(x+actualCount, y+1,realPrinted[count])
 				except:
 					pass
 				result.append(realPrinted[count])
+			wclen = wcwidth(realPrinted[count])
+			if wclen > 1:
+				for i in range(1, wclen):
+					f.PrintAt(x+actualCount+i, y+1, "")
+				actualCount += wclen-1
 			count += 1
 		
 		if count < len(realPrinted):

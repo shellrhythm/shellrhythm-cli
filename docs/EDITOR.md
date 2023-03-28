@@ -16,9 +16,9 @@ Jokes aside, let me introduce you to the basic controls of the editor.
 |H/J/K/L|Move selected note left/down/up/right|
 |U/I|Move selected note earlier/later|
 |:|Command mode|
-|E|Note options|
 |D|Duplicate selected note|
 |Escape|Open pause menu|
+|Tab|Toggle cheatsheet, to display additional controls... and commands!|
 
 ## Command mode
 

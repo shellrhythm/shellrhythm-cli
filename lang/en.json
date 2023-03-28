@@ -99,19 +99,6 @@
             "creating": "Select a key to go with the added note.",
             "editing": "Select a key to change this note's key to."
         },
-        "noteSettings": {
-            "hit_object":{
-                "key": "Change key",
-                "color": "Change color",
-                "delete": "Delete note"
-            },
-            "text":{
-                "text": "Edit text",
-                "color": "Change text color",
-                "anchor": "Change text anchor",
-                "delete": "Delete text"
-            }
-        },
         "pause": {
             "resume": "Resume",
             "playtest": "Playtest",
@@ -127,6 +114,53 @@
             "artist": "Artist",
             "author": "Chart author",
             "description": "Description"
+        },
+        "cheatsheet": {
+            "playtest": "Playtest",
+            "cheatsheet": "Toggle cheatsheet",
+            "pauseMenu": "Open pause menu",
+            "goToBeginning": "Jump to beginning of the song",
+            "moveCursor": "Move cursor backwards/forwards",
+            "placeNote": "Create note",
+            "setEndPoint": "Set end of chart",
+            "metronome": "Toggle metronome",
+            "changeSnap": "Change movement snap",
+            "commandMode": "Open command line",
+
+            "selectNextObject": "Select next object",
+            "moveObjectOnTimeline": "Move object on the timeline",
+            "moveObjectOnScreen": "Move object on screen",
+            "duplicateObject": "Duplicate object",
+
+            "changeKey": "Change note key",
+            "changeColor": "Change color",
+            "changeText": "Change text's content",
+            "changeTextColor": "Change text color",
+            "changeTextAnchor": "Change text anchor",
+            "delete": "Delete object",
+
+            "leaveCommand": "Leave command mode",
+            "runCommand": "Run command",
+
+            "save": "Save",
+            "quit": "Quit to menu",
+            "saveAndQuit": "Save and quit",
+            "openExistingChart": "Open chart",
+            "setSong": "Change song",
+            "setBPM": "Change BPM",
+            "setOffset": "Change offset",
+            "setApproachRate": "Change approach rate",
+            "setDiff": "Set difficulty",
+            "setMetadata": "Set metadata",
+
+            "createText": "Create text object",
+            "moveToPos": "Move to position",
+            "moveBy": "Move cursor by X beats",
+            "copyNotes": "Copy note range",
+            "changeNoteColor": "Change selected note's color",
+
+            "selectNote": "Select note",
+            "deleteNote": "Delete selected note"
         }
     },
     "datetime":{

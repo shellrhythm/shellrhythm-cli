@@ -93,19 +93,6 @@
             "creating": "Choisissez une touche pour aller avec la note ajoutée.",
             "editing": "Choisissez la nouvelle touche de cette note."
         },
-        "noteSettings": {
-            "hit_object":{
-                "key": "Changer de touche",
-                "color": "Changer de couleur",
-                "delete": "Supprimer la note"
-            },
-            "text":{
-                "text": "Éditer le texte",
-                "color": "Changer de couleur",
-                "anchor": "Changer l'ancre du texte",
-                "delete": "Supprimer le texte"
-            }
-        },
         "pause": {
             "resume": "Continuer",
             "playtest": "Jouer",
@@ -121,6 +108,53 @@
             "artist": "Artiste",
             "author": "Auteur du niveau",
             "description": "Description"
+        },
+        "cheatsheet": {
+            "playtest": "Jouer",
+            "cheatsheet": "Basculer l'antisèche",
+            "pauseMenu": "Ouvrir le menu de pause",
+            "goToBeginning": "Placer le curseur au début du niveau",
+            "moveCursor": "Déplacer le curseur",
+            "placeNote": "Ajouter une note",
+            "setEndPoint": "Placer le point de fin du niveau",
+            "metronome": "Basculer le métronome",
+            "changeSnap": "Changer d'alignement",
+            "commandMode": "Ouvrir la ligne de commande",
+
+            "selectNextObject": "Sélectionner l'objet précédent/suivant",
+            "moveObjectOnTimeline": "Déplacer l'objet sur la ligne de temps",
+            "moveObjectOnScreen": "Déplacer l'objet sur l'écran",
+            "duplicateObject": "Dupliquer l'objet",
+
+            "changeKey": "Changer de touche",
+            "changeColor": "Changer de couleur",
+            "changeText": "Éditer le texte",
+            "changeTextColor": "Changer la couleur du texte",
+            "changeTextAnchor": "Changer l'ancre du texte",
+            "delete": "Supprimer le texte",
+
+            "leaveCommand": "Sortir du mode de commande",
+            "runCommand": "Éxécuter la commande",
+
+            "save": "Sauvegarder",
+            "quit": "Quitter",
+            "saveAndQuit": "Sauvegarder et quitter",
+            "openExistingChart": "Ouvrir niveau",
+            "setSong": "Changer la musique",
+            "setBPM": "Changer",
+            "setOffset": "Changer le décalage audio",
+            "setApproachRate": "Changer la vitesse d'approche",
+            "setDiff": "Changer la difficulté",
+            "setMetadata": "Changer les métadonnées",
+
+            "createText": "Créer un objet texte",
+            "moveToPos": "Aller à une position spécifique",
+            "moveBy": "Déplacer le curseur de X battements",
+            "copyNotes": "Copier une plage de notes",
+            "changeNoteColor": "Changer la couleur de la note sélectionnée",
+
+            "selectNote": "Sélectionner une note",
+            "deleteNote": "Supprimer la note sélectionnée"
         }
     },
     "datetime":{

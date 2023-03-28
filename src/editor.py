@@ -101,9 +101,9 @@ class Editor:
 			{"name": "delete", "keybind": 23},
 		]
 	}
-	noteMenuEnabled = False
-	noteMenuJustDisabled = False
-	noteMenuSelected = 0
+	# noteMenuEnabled = False
+	# noteMenuJustDisabled = False
+	# noteMenuSelected = 0
 
 	#Metadata settings
 	metadataParts = ["title", "artist", "author", "description"]
@@ -298,50 +298,6 @@ class Editor:
 			self.run_command("q")
 			self.pauseMenuEnabled = False
 
-
-	def draw_noteSettings(self, note, selectedOption):
-		if note["type"] == "hit_object":
-			screenPos = note["screenpos"]
-			calculatedPos = Game.trueCalcPos(None, screenPos[0], screenPos[1], "setSize")
-			width = max(len(self.loc("editor.noteSettings.hit_object." + option["name"])) for option in self.noteMenu["hit_object"])+4
-			height = len(self.noteMenu["hit_object"])+2
-			anchorPoint = [calculatedPos[0]+2, min(calculatedPos[1]-2, term.height-(2+height))]
-			if anchorPoint[0] + width >=term.width:
-				anchorPoint[0] = calculatedPos[0]-(2+width)
-			print_box(anchorPoint[0], anchorPoint[1], width, height)
-			for i in range(len(self.noteMenu["hit_object"])):
-				text = self.loc("editor.noteSettings.hit_object." + self.noteMenu["hit_object"][i]["name"])
-				if i == selectedOption:
-					print_at(anchorPoint[0], 	anchorPoint[1]+1+i, ">"+term.reverse	+ text + (" "*(width-(len(text)+3))) + self.layout[self.noteMenu["hit_object"][i]["keybind"]].upper() + term.normal	)
-				else:
-					print_at(anchorPoint[0]+1, 	anchorPoint[1]+1+i,		term.normal 	+ text + (" "*(width-(len(text)+3))) + self.layout[self.noteMenu["hit_object"][i]["keybind"]].upper() + term.normal	)
-		elif note["type"] == "text":
-			width = max(len(self.loc("editor.noteSettings.text." + option["name"])) for option in self.noteMenu["text"])+4
-			height = len(self.noteMenu["text"])+2
-			anchorPoint = [0,0]
-
-			print_box(anchorPoint[0], anchorPoint[1], width, height)
-			for i in range(len(self.noteMenu["text"])):
-				text = self.loc("editor.noteSettings.text." + self.noteMenu["text"][i]["name"])
-				if i == selectedOption:
-					print_at(anchorPoint[0], 	anchorPoint[1]+1+i, ">"+term.reverse	+ text + (" "*(width-(len(text)+3))) + self.layout[self.noteMenu["text"][i]["keybind"]].upper() + term.normal	)
-				else:
-					print_at(anchorPoint[0]+1, 	anchorPoint[1]+1+i,		term.normal 	+ text + (" "*(width-(len(text)+3))) + self.layout[self.noteMenu["text"][i]["keybind"]].upper() + term.normal	)
-
-	def clear_noteSettings(self, note):
-		if note["type"] == "hit_object":
-			calculatedPos = Game.calculatePosition(note["screenpos"], 5, 3, term.width-10, term.height-11)
-			width = max(len(self.loc("editor.keyOptions." + option["name"])) for option in self.noteMenu["hit_object"])+4
-			height = len(self.noteMenu["hit_object"])+2
-			anchorPoint = [calculatedPos[0]+2, min(calculatedPos[1]-1, term.height-(2+height))]
-			print_lines_at(anchorPoint[0], anchorPoint[1], (" "*width+"\n")*height)
-		elif note["type"] == "text":
-			width = max(len(self.loc("editor.noteSettings.text." + option["name"])) for option in self.noteMenu["text"])+4
-			height = len(self.noteMenu["text"])+2
-			anchorPoint = [0,0]
-			print_lines_at(anchorPoint[0], anchorPoint[1], (" "*width+"\n")*height)
-
-
 	def run_noteSettings(self, note, noteID, option):
 		if note["type"] == "hit_object":
 			if option == 0:
@@ -401,6 +357,130 @@ class Editor:
 			return True
 		else:
 			return False
+
+	cheatsheet = {
+		"basic": {
+			"playtest": "Space",
+			"cheatsheet": "Tab",
+			"pauseMenu": "Escape",
+			"goToBeginning": "Home",
+			"moveCursor": "←/→",
+			"placeNote": "Z",
+			"setEndPoint": "Shift+Z",
+			"metronome": "T",
+			"changeSnap": "1/2",
+			"commandMode": ":",
+		},
+		"objects": {
+			"selectNextObject": "↓/↑",
+			"moveObjectOnTimeline": "U/I",
+			"moveObjectOnScreen": "H/J/K/L",
+			"duplicateObject": "d"
+		},
+		"note": {
+			"changeKey": 20,
+			"changeColor": 21,
+			"delete": 22
+		},
+		"text": {
+			"changeText": 20,
+			"changeTextColor": 21,
+			"changeTextAnchor": 22,
+			"delete": 23
+		},
+		"command": {
+			"cheatsheet": "Tab",
+			"leaveCommand": "Escape",
+			"runCommand": "Enter",
+
+			# "commandfunction": ["command", [Argument1Needed, "ArgumentName", "Prefix"]]
+			"[line_0]": " ",
+			"save": [":w", [False, "FilePath"]],
+			"quit": [":q"],
+			"saveAndQuit": [":wq", [False, "FilePath"]],
+			"openExistingChart": [":o", [True, "ChartID"]],
+			"setSong": [":song", [False, "SongLocation"]],
+			"setBPM": [":bpm", [True, "NewBPM"]],
+			"setOffset": [":off", [False, "NewOffset"]],
+			"setApproachRate": [":ar", [True, "NewAR"]],
+			"setDiff": [":diff", [True, "NewDiff"]],
+			"setMetadata": [":mt", [True, "MetadataField"], [True, "Value"]],
+
+			"[line_1]": " ",
+			"placeNote": [":p", [False, "NoteID"]],
+			"createText": [":t", [True, "TextContent"]],
+			"changeSnap": [":s", [True, "Snap"]],
+			"moveToPos": [":m", [True, "Position"]],
+			"moveBy": [":m", [True, "ByAmount", "~"]],
+			"copyNotes": [":cp", [True, "XX-YY Range"], [True, "ByNBeats"]],
+			"changeNoteColor": [":c", [True, "NewColor"]],
+
+			"[line_2]": " ",
+			"selectNote": [":sel", [True, "SelectNote"]],
+			"deleteNote": [":del", [False, "NoteToDelete"]],
+
+		}
+	}
+	cheatsheetEnabled = False
+	
+	def draw_cheatsheet(self):
+		# normal mode
+		sections = []
+		if not self.commandMode:
+			sections.append("basic")
+			if self.mapToEdit["notes"] != []:
+				sections.append("objects")
+				if self.mapToEdit["notes"][self.selectedNote]["type"] == "hit_object":
+					sections.append("note")
+				elif self.mapToEdit["notes"][self.selectedNote]["type"] == "text":
+					sections.append("text")
+		else:
+			sections.append("command")
+		# ypos = 0
+		lines = []
+		
+		# check max
+		maxKeyLen = 0
+		maxValLen = 0
+		for section in sections:
+			for k,v in self.cheatsheet[section].items():
+				if k.startswith("[line"): 
+					lines.append((v,v))
+				else:
+					key = self.loc(f"editor.cheatsheet.{k}")
+					val = str(v)
+					if type(v) is int:
+						val = self.layout[v].upper()
+					if type(v) is list:
+						val = v[0]
+						for arg in v[1:]: #Parse command line arguments
+							# Thank you, random stackoverflow post!
+							# https://stackoverflow.com/questions/21503865/how-to-denote-that-a-command-line-argument-is-optional-when-printing-usage
+							val += " "
+							if arg[0] == True: 			#Required arguments
+								val += "<"
+								if len(arg) > 2: #Prefix
+									val += arg[2]
+								val += term.italic + arg[1] + term.normal + ">"
+							else: 						#Optional arguments
+								val += "["
+								if len(arg) > 2: #Prefix
+									val += arg[2]
+								val += term.italic + arg[1] + term.normal + "]"
+					if len(term.strip_seqs(key)) > maxKeyLen: maxKeyLen = len(term.strip_seqs(key))
+					if len(term.strip_seqs(val)) > maxValLen: maxValLen = len(term.strip_seqs(val))
+
+					lines.append((key, val)) #probably the only use of tuples in the entire code?
+
+		# lines.insert(0, ("─"*(maxKeyLen+1), "─"*(maxValLen)))
+		print_at(0, term.height-(7+min(len(lines)-1, 49)), "─"*(maxKeyLen+maxValLen+1) + "┐")
+
+		# actual line writing
+		for i in range(min(len(lines), 50)):
+			print_at(0, term.height-(6+min(len(lines)-1, 49)-i), 
+	    lines[i][0] + " " * (maxKeyLen-len(term.strip_seqs(lines[i][0]))+1) + 
+		lines[i][1] + " " * (maxValLen-len(term.strip_seqs(lines[i][1]))  ) + "│"
+			)
 
 	def draw(self):
 		# print_at(0,term.height-5, term.normal+"-"*(term.width-1))
@@ -531,11 +611,11 @@ class Editor:
 			else:
 				print_at(0, term.height-7, term.normal+f"{'editor.timelineInfos.curNote'}: {self.selectedNote} | {self.loc('editor.timelineInfos.endpos')}: {selectedNote['beatpos']}{term.clear_eol}")
 			
-			if self.noteMenuEnabled:
-				self.draw_noteSettings(note, self.noteMenuSelected)
-			elif self.noteMenuJustDisabled:
-				self.clear_noteSettings(note)
-				self.noteMenuJustDisabled = False
+			# if self.noteMenuEnabled:
+			# 	self.draw_noteSettings(note, self.noteMenuSelected)
+			# elif self.noteMenuJustDisabled:
+			# 	self.clear_noteSettings(note)
+			# 	self.noteMenuJustDisabled = False
 		else:
 			if not self.keyPanelEnabled:
 				text_nomaploaded = self.loc("editor.emptyChart")
@@ -565,6 +645,9 @@ class Editor:
 				print_at(len(self.commandString)-self.commandSelectPos + 1, term.height-2, term.underline + chrAtCursor + term.normal)
 		elif self.commandFooterEnabled:
 			print_at(0,term.height-2, self.commandFooterMessage + term.normal)
+
+		if self.cheatsheetEnabled:
+			self.draw_cheatsheet()
 
 
 	def run_command(self, command = ""):
@@ -765,8 +848,15 @@ class Editor:
 		# :bpm - Change BPM
 		elif commandSplit[0] == "bpm":
 			if len(commandSplit) == 2:
-				self.mapToEdit["bpm"] = int(commandSplit[1])
-				self.localConduc.bpm = int(commandSplit[1])
+				newbpm = 120
+				if commandSplit[1].find(".") != -1:
+					newbpm = float(commandSplit[1])
+				else:
+					newbpm = int(commandSplit[1])
+				
+				self.mapToEdit["bpm"] = newbpm
+				self.localConduc.bpm = newbpm
+
 				return True, ""
 			elif len(commandSplit) > 2:
 				return False, self.loc("editor.commandResults.common.tooManyArgs")
@@ -834,9 +924,6 @@ class Editor:
 		val = ''
 		val = term.inkey(timeout=1/120, esc_delay=0)
 
-		if len(self.mapToEdit["notes"]) == 0 and self.noteMenuEnabled:
-			self.noteMenuEnabled = False
-
 		if self.playtest:
 			for note in self.mapToEdit["notes"]:
 				if note["type"] == "hit_object":
@@ -848,32 +935,7 @@ class Editor:
 					if note in self.dontBeat and remBeats > 0:
 						self.dontBeat.remove(note)
 
-		if self.noteMenuEnabled:
-			if val:
-				note = self.mapToEdit["notes"][self.selectedNote]
-				goOff = False
-
-				keyBinds = [self.layout[setting["keybind"]] for setting in self.noteMenu[note["type"]]]
-				allowedSpKeys = ["KEY_UP", "KEY_DOWN", "KEY_ENTER"]
-				if val not in keyBinds and val.name not in allowedSpKeys:
-					goOff = True
-				else:
-					if val.name == "KEY_ENTER":
-						goOff = self.run_noteSettings(note, self.selectedNote, self.noteMenuSelected)
-					elif val.name == "KEY_UP":
-						self.noteMenuSelected -= 1
-						self.noteMenuSelected %= len(self.noteMenu[note["type"]])
-					elif val.name == "KEY_DOWN":
-						self.noteMenuSelected += 1
-						self.noteMenuSelected %= len(self.noteMenu[note["type"]])
-					if val in keyBinds:
-						goOff = self.run_noteSettings(note, self.selectedNote, keyBinds.index(val))
-				if goOff == True:
-					# self.noteMenuJustDisabled = self.noteMenuEnabled
-					self.noteMenuEnabled = not self.noteMenuEnabled
-					self.clear_noteSettings(note)
-
-		elif self.metadataMenuEnabled:
+		if self.metadataMenuEnabled:
 			if not self.metadataTyping:
 				if val.name == "KEY_ESCAPE":
 					print(term.clear)
@@ -913,6 +975,8 @@ class Editor:
 				pass
 
 		elif not self.commandMode:
+			if val.name == "KEY_TAB":
+				self.cheatsheetEnabled = not self.cheatsheetEnabled
 			# debug_val(val)
 			if self.keyPanelEnabled:
 				if val.name == "KEY_ESCAPE":
@@ -965,11 +1029,11 @@ class Editor:
 					print_at(0,int(term.height*0.4), term.clear_eol)
 				if val == "Z":
 					self.set_end_note(self.localConduc.currentBeat)
-				if val == "e":
-					#Note settings
-					self.noteMenuJustDisabled = self.noteMenuEnabled
-					self.noteMenuEnabled = not self.noteMenuEnabled
-					pass
+				# if val == "e":
+				# 	#Note settings
+				# 	self.noteMenuJustDisabled = self.noteMenuEnabled
+				# 	self.noteMenuEnabled = not self.noteMenuEnabled
+				# 	pass
 				if val == "t":
 					self.localConduc.metronome = not self.localConduc.metronome
 				if val in ["1", "&"]:
@@ -986,12 +1050,12 @@ class Editor:
 					
 				if self.mapToEdit["notes"] != []:
 					note = self.mapToEdit["notes"][self.selectedNote]
-					if val.name == "KEY_DOWN" and not self.noteMenuEnabled:
+					if val.name == "KEY_DOWN":
 						print_at(0,term.height-4, term.clear_eol)
 						self.selectedNote = min(self.selectedNote + 1, len(self.mapToEdit["notes"])-1)
 						note = self.mapToEdit["notes"][self.selectedNote]
 						self.localConduc.currentBeat = (note["beatpos"][0] * 4 + note["beatpos"][1])
-					if val.name == "KEY_UP" and not self.noteMenuEnabled:
+					if val.name == "KEY_UP":
 						print_at(0,term.height-4, term.clear_eol)
 						self.selectedNote = max(self.selectedNote - 1, 0)
 						note = self.mapToEdit["notes"][self.selectedNote]
@@ -1017,29 +1081,25 @@ class Editor:
 						screenPos = note["screenpos"]
 						calculatedPos = Game.calculatePosition(screenPos, 5, 3, term.width-10, term.height-11)
 						if val == "h":
-							self.clear_noteSettings(note)
 							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-							note["screenpos"][0] = max(round(note["screenpos"][0] - 0.05, 2), 0)
+							note["screenpos"][0] = max(round(note["screenpos"][0] - 1/(defaultSize[0]-1), 3), 0)
 						if val == "j":
-							self.clear_noteSettings(note)
 							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-							note["screenpos"][1] = min(round(note["screenpos"][1] + 0.05, 2), 1)
+							note["screenpos"][1] = min(round(note["screenpos"][1] + 1/defaultSize[1], 3), 1)
 						if val == "k":
-							self.clear_noteSettings(note)
 							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-							note["screenpos"][1] = max(round(note["screenpos"][1] - 0.05, 2), 0)
+							note["screenpos"][1] = max(round(note["screenpos"][1] - 1/defaultSize[1], 3), 0)
 						if val == "l":
-							self.clear_noteSettings(note)
 							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-							note["screenpos"][0] = min(round(note["screenpos"][0] + 0.05, 2), 1)
+							note["screenpos"][0] = min(round(note["screenpos"][0] + 1/(defaultSize[0]-1), 3), 1)
 					if note["type"] == "text":
 						if val == "h":
 							print(term.clear)
@@ -1060,7 +1120,15 @@ class Editor:
 							print(term.clear)
 							note["length"] += (1/self.snap)*4
 
+					
+					keyBinds = [self.layout[setting["keybind"]] for setting in self.noteMenu[note["type"]]]
+
+					if val in keyBinds:
+						goOff = self.run_noteSettings(note, self.selectedNote, keyBinds.index(val))
+
 		else:
+			if val.name == "KEY_TAB":
+				self.cheatsheetEnabled = not self.cheatsheetEnabled
 			if val.name == "KEY_UP":
 				if self.commandHistoryCursor == 0:
 					self.cachedCommand = self.commandString
@@ -1151,8 +1219,6 @@ class Editor:
 			print(term.clear)
 			if self.mapToEdit == {}:
 				self.setupMap()
-			global screenOffset
-			screenOffset = [0, 10]
 
 			while not self.turnOff:
 				if self.playtest:
