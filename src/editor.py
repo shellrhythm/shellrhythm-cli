@@ -164,6 +164,7 @@ class Editor:
 				"txt": ""
 			},
 			"bpm": 120,
+			"bpmChanges": [],
 			"offset": 0,
 			"metadata": {
 				"title": "",
@@ -617,6 +618,13 @@ class Editor:
 				text_nomaploaded = self.loc("editor.emptyChart")
 				print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), term.normal+text_nomaploaded)
 
+		if self.mapToEdit["bpmChanges"] != []:
+			for i in range(len(self.mapToEdit["bpmChanges"])):
+				change = self.mapToEdit["bpmChanges"][i]
+				remBeats = (change["atPosition"][0] + change["atPosition"][1]/4) - self.localConduc.currentBeat
+				if int(remBeats*8+(term.width*0.1)) >= 0:
+					print_at(int(remBeats*8+(term.width*0.1)), term.height-3, f"{term.normal}\U000f07da{term.normal}")
+
 		if self.keyPanelEnabled:
 			if self.keyPanelSelected == -1:
 				text_key = self.loc("editor.newKey.creating")
@@ -861,6 +869,32 @@ class Editor:
 			elif len(commandSplit) > 2:
 				return False, self.loc("editor.commandResults.common.tooManyArgs")
 			return False, self.loc("editor.commandResults.common.notEnoughArgs")
+		
+		elif commandSplit[0] == "bpmc":
+			if len(commandSplit) == 2:
+				newbpm = 120
+				if commandSplit[1].find(".") != -1:
+					newbpm = float(commandSplit[1])
+				else:
+					newbpm = int(commandSplit[1])
+				
+				newbpmObj = {
+					"atPosition": [self.localConduc.currentBeat, (self.localConduc.currentBeat%1)*4],
+					"toBPM": newbpm
+				}
+
+				self.mapToEdit["bpmChanges"].append(newbpmObj)
+				self.localConduc.bpmChanges.append(newbpmObj)
+
+				return True, ""
+			elif len(commandSplit) > 2:
+				return False, self.loc("editor.commandResults.common.tooManyArgs")
+			return False, self.loc("editor.commandResults.common.notEnoughArgs")
+
+		elif commandSplit[0] == "delbpmc":
+			if len(commandSplit) == 2:
+				self.localConduc.bpmChanges.remove(self.mapToEdit["bpmChanges"][int(commandSplit[1])])
+				self.mapToEdit["bpmChanges"].remove(self.mapToEdit["bpmChanges"][int(commandSplit[1])])
 
 		# :cp - Copy
 		elif commandSplit[0] == "cp":

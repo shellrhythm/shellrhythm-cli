@@ -35,6 +35,12 @@ class Conductor:
 	skippedTimeWithPause = 0
 	volume = 1
 	metronomeVolume = 1
+	bpmChanges = [
+		# {
+		# 	"atPosition": [16,0],
+		# 	"toBPM": 150
+		# }
+	]
 	bass = Bass()
 
 	def setMetronomeVolume(self, volume):
@@ -45,9 +51,29 @@ class Conductor:
 		self.volume = volume
 		self.bass.SetChannelVolume(self.song.handle, volume)
 
+	def getBeatPos(self, position:float) -> float:
+		if self.bpmChanges == []:
+			return position * (self.bpm/60)
+		else:
+			lastBPMChange = [0, 0, self.bpm] #Beat to change at, corresponding second, bpm to go to
+			for change in self.bpmChanges:
+				nextBeat = change["atPosition"][0] + (change["atPosition"][1]/4)
+				bpm = change["toBPM"]
+				sec = (nextBeat - lastBPMChange[0])/(lastBPMChange[2]/60) + lastBPMChange[1]
+				if sec > position:
+					timeSinceLastChange = position - lastBPMChange[1]
+					self.bpm = lastBPMChange[2]
+					return (timeSinceLastChange*(lastBPMChange[2]/60) + (lastBPMChange[0]))
+				lastBPMChange = [nextBeat, sec, bpm]
+			timeSinceLastChange = position - lastBPMChange[1]
+			self.bpm = lastBPMChange[2]
+			return (timeSinceLastChange*(bpm/60) + (lastBPMChange[0]))
+
 	def loadsong(self, chart = {}):
 		self.bpm = chart["bpm"]
 		self.offset = chart["offset"]
+		if "bpmChanges" in chart:
+			self.bpmChanges = chart["bpmChanges"]
 		if "actualSong" in chart:
 			self.song = chart["actualSong"]
 		else:
@@ -88,7 +114,7 @@ class Conductor:
 		if not self.isPaused and self.bpm > 0:
 			self.currentTimeSec = (time.time_ns() / 10**9) - (self.startTime + self.skippedTimeWithPause)
 			self.deltatime = self.currentTimeSec - self.prevTimeSec
-			self.currentBeat = self.currentTimeSec * (self.bpm/60)
+			self.currentBeat = self.getBeatPos(self.currentTimeSec)
 			self.prevTimeSec = self.currentTimeSec
 
 			if self.currentBeat < 0:

@@ -16,7 +16,7 @@ from src.results import *
 import sys
 import platform
 
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 
 term = Terminal()
 turnOff = False

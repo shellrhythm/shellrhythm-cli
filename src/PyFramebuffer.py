@@ -26,7 +26,10 @@ class Framebuffer:
 
 		if self.lastWidth != self.width or self.lastHeight != self.height:
 			self.Cleanup()
-			os.system("cls")
+			if os.name == "posix":
+				os.system("clear")
+			else:
+				os.system("cls")
 			self.Resize()
 
 		self.ClearScreen()
