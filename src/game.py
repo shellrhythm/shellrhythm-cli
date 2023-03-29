@@ -41,7 +41,10 @@ colors = [
 	term.green,
 	term.cyan,
 	term.blue,
-	term.purple
+	term.purple,
+	term.aqua,
+	term.magenta,
+	term.gray
 ]
 
 defaultSize = [80, 24]

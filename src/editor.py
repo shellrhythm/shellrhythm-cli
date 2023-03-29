@@ -375,15 +375,15 @@ class Editor:
 			"duplicateObject": "d"
 		},
 		"note": {
-			"changeKey": 20,
-			"changeColor": 21,
-			"delete": 22
+			"changeKey": "E",
+			"changeColor": "X",
+			"delete": "Delete"
 		},
 		"text": {
-			"changeText": 20,
-			"changeTextColor": 21,
-			"changeTextAnchor": 22,
-			"delete": 23
+			"changeText": "E",
+			"changeTextColor": "X",
+			"changeTextAnchor": "C",
+			"delete": "Delete"
 		},
 		"command": {
 			"cheatsheet": "Tab",
@@ -612,12 +612,6 @@ class Editor:
 				+term.clear_eol)
 			else:
 				print_at(0, term.height-7, term.normal+f"{'editor.timelineInfos.curNote'}: {self.selectedNote} | {self.loc('editor.timelineInfos.endpos')}: {selectedNote['beatpos']}{term.clear_eol}")
-			
-			# if self.noteMenuEnabled:
-			# 	self.draw_noteSettings(note, self.noteMenuSelected)
-			# elif self.noteMenuJustDisabled:
-			# 	self.clear_noteSettings(note)
-			# 	self.noteMenuJustDisabled = False
 		else:
 			if not self.keyPanelEnabled:
 				text_nomaploaded = self.loc("editor.emptyChart")
@@ -1037,11 +1031,6 @@ class Editor:
 					print_at(0,int(term.height*0.4), term.clear_eol)
 				if val == "Z":
 					self.set_end_note(self.localConduc.currentBeat)
-				# if val == "e":
-				# 	#Note settings
-				# 	self.noteMenuJustDisabled = self.noteMenuEnabled
-				# 	self.noteMenuEnabled = not self.noteMenuEnabled
-				# 	pass
 				if val == "t":
 					self.localConduc.metronome = not self.localConduc.metronome
 				if val in ["1", "&"]:
@@ -1108,6 +1097,15 @@ class Editor:
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
 							note["screenpos"][0] = min(round(note["screenpos"][0] + 1/(defaultSize[0]-1), 3), 1)
+						if val == "e":
+							self.run_noteSettings(note, self.selectedNote, 0)
+
+						if val == "x":
+							note["color"] += 1
+							note["color"] %= len(colors)
+						if val == "X":
+							note["color"] -= 1
+							note["color"] %= len(colors)
 					if note["type"] == "text":
 						if val == "h":
 							print(term.clear)
@@ -1127,12 +1125,20 @@ class Editor:
 						if val == "I":
 							print(term.clear)
 							note["length"] += (1/self.snap)*4
+						if val == "e":
+							self.run_noteSettings(note, self.selectedNote, 0)
+	
+						if val == "x":
+							note["color"] += 1
+							note["color"] %= len(colors)
+						if val == "X":
+							note["color"] -= 1
+							note["color"] %= len(colors)
+						if val == "c":
+							self.run_noteSettings(note, self.selectedNote, 2)
 
-					
-					keyBinds = [self.layout[setting["keybind"]] for setting in self.noteMenu[note["type"]]]
-
-					if val in keyBinds:
-						goOff = self.run_noteSettings(note, self.selectedNote, keyBinds.index(val))
+					if val.name == "KEY_DELETE" or val.name == "KEY_BACKSPACE":
+						self.mapToEdit["notes"].remove(note)
 
 		else:
 			if val.name == "KEY_TAB":
