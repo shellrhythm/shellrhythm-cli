@@ -327,7 +327,12 @@ class Game:
 			note = notes[len(notes) - (i+1)] #It's inverted so that the ones with the lowest remBeats are rendered on top of the others.
 			if note["type"] == "hit_object":
 				calc_pos = self.trueCalcPos(note["screenpos"][0], note["screenpos"][1])
-				color = colors[note["color"]]
+				if type(note["color"]) is int:
+					color = colors[note["color"]]
+				else:
+					# Formatting: "RRGGBB"
+					colorSplit = color_code_from_hex(note["color"])
+					color = term.color_rgb(colorSplit[0], colorSplit[1], colorSplit[2])
 				key = keys[note["key"]]
 				remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat - (self.localConduc.offset/(60/self.localConduc.bpm))
 				remTime = ((note["beatpos"][0] * 4 + note["beatpos"][1]) * (60/self.localConduc.bpm)) - self.localConduc.currentTimeSec

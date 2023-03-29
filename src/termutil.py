@@ -34,8 +34,23 @@ def split_seqs(text):
 		result += [matches[i].group()]
 	return result
 
+def color_code_from_hex(hexcode:str) -> list:
+	# hexcode is string built like "RRGGBB"
+	output = [0,0,0]
+	if len(hexcode) == 6: #No more, no less
+		try:
+			output = [int(hexcode[i:i+2], 16) for i in range(0, len(hexcode), 2)]
+		except ValueError:
+			pass
+	return output
 
-
+def hexcode_from_color_code(code:list) -> str:
+	output = "000000"
+	if len(code) == 3:
+		output = hex((code[0] * 256**2) + (code[1] * 256) + code[2]).replace("0x", "")
+	if len(output) < 6:
+		output = "0"*(6-len(output)) + output
+	return output
 # toDraw = ""
 
 beforeWidth = 0
@@ -169,7 +184,7 @@ def print_box(x,y,width, height, color = term.normal, style = 0, caption = ""):
 	elif type(style) is str:
 		curBoxStyle = box_styles
 	if caption != "":
-		print_at(x,y,color + curBoxStyle[0] + term.reverse + caption + term.normal + (curBoxStyle[1]*(width-(2+len(caption)))) + curBoxStyle[2] + term.normal)
+		print_at(x,y,color + curBoxStyle[0] + term.reverse + caption + term.normal + color + (curBoxStyle[1]*(width-(2+len(caption)))) + curBoxStyle[2] + term.normal)
 	else:
 		print_at(x,y,color + curBoxStyle[0] + (curBoxStyle[1]*(width-2)) + curBoxStyle[2] + term.normal)
 	print_at(x,y+height-1,color + curBoxStyle[5] + (curBoxStyle[6]*(width-2)) + curBoxStyle[7] + term.normal)

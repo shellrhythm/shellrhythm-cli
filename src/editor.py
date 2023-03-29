@@ -2,6 +2,7 @@ from blessed import Terminal
 import os
 import copy
 import json
+import colorsys
 from pybass3 import Song
 from zipfile import ZipFile
 import time
@@ -23,6 +24,8 @@ else:
 	from calibration import Calibration
 
 term = Terminal()
+
+blockStates = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
 
 # WARNING TO WHOEVER WANTS TO MOD THIS FILE:
 # good luck
@@ -220,6 +223,67 @@ class Editor:
 			if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
 				self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
 
+	colorPickerEnabled = False
+	colorPickerColor = [0,0,0]
+	colorPickerFieldSelected = False
+	colorPickerFieldContent = "000000"
+	colorPickerFieldCursor = 0
+	colorPickerSelectedCol = 0
+	colorPickerNoteSelected = -1
+	def draw_colorPicker(self):
+		print_box((term.width - 40)//2, (term.height-9)//2, 40, 9, color=term.color_rgb(self.colorPickerColor[0], self.colorPickerColor[1], self.colorPickerColor[2]), caption="Select color")
+		
+		for i in range(len(self.colorPickerColor)):
+			col = self.colorPickerColor[i]
+			textToPrint = blockStates[8]*int(col/8) + blockStates[col%8]
+			textToPrint += " "*(31-int(col/8))
+			realToPrint = term.underline
+			for j in range(len(textToPrint)):
+				char = textToPrint[j]
+				if i == 0: char = term.color_rgb(j*8,0,0) + char
+				if i == 1: char = term.color_rgb(0,j*8,0) + char
+				if i == 2: char = term.color_rgb(0,0,j*8) + char
+				realToPrint += char
+			if i == self.colorPickerSelectedCol:
+				realToPrint += term.normal+"<"
+			else:
+				realToPrint += term.normal+" "
+			print_at((term.width - 40)//2 + 1, (term.height-9)//2 + (i*2+1), realToPrint+term.normal + "  " + term.reverse + str(col) + " "*(3-len(str(col))) + term.normal)
+
+		if self.colorPickerSelectedCol == 3:
+			print_at((term.width + 8)//2, (term.height-9)//2 + 7, "<")
+		print_at((term.width - 8)//2-1, (term.height-9)//2 + 7, term.normal + "#" + term.reverse + f" {self.colorPickerFieldContent} "+term.normal)
+
+	def input_colorPicker(self, val):
+		if self.colorPickerFieldSelected:
+			if val.isdigit() or val.lower() in ["a", "b", "c", "d", "e", "f"] or val.name is not None:
+				self.colorPickerFieldContent, self.colorPickerFieldCursor = textbox_logic(self.colorPickerFieldContent, self.colorPickerFieldCursor, val)
+				if len(self.colorPickerFieldContent) == 6:
+					self.colorPickerColor = color_code_from_hex(self.colorPickerFieldContent)
+			if val.name == "KEY_ESCAPE" or val.name == "KEY_ENTER":
+				self.colorPickerFieldSelected = False
+		else:
+			if val.name == "KEY_RIGHT" and self.colorPickerSelectedCol < 3:
+				self.colorPickerColor[self.colorPickerSelectedCol] += 1
+				self.colorPickerColor[self.colorPickerSelectedCol] = min(self.colorPickerColor[self.colorPickerSelectedCol], 255)
+				self.colorPickerFieldContent = hexcode_from_color_code(self.colorPickerColor)
+			if val.name == "KEY_LEFT" and self.colorPickerSelectedCol < 3:
+				self.colorPickerColor[self.colorPickerSelectedCol] -= 1
+				self.colorPickerColor[self.colorPickerSelectedCol] = max(self.colorPickerColor[self.colorPickerSelectedCol], 0)
+				self.colorPickerFieldContent = hexcode_from_color_code(self.colorPickerColor)
+			if val.name == "KEY_DOWN":
+				self.colorPickerSelectedCol += 1
+				self.colorPickerSelectedCol %= 4
+			if val.name == "KEY_UP":
+				self.colorPickerSelectedCol -= 1
+				self.colorPickerSelectedCol %= 4
+			if val.name == "KEY_ESCAPE" or val == "E":
+				self.colorPickerEnabled = False
+			if val.name == "KEY_ENTER" and self.colorPickerSelectedCol == 3:
+				self.colorPickerFieldSelected = True
+		if self.colorPickerNoteSelected > -1:
+			self.mapToEdit["notes"][self.colorPickerNoteSelected]["color"] = self.colorPickerFieldContent
+
 
 	def set_end_note(self, atPos):
 		if self.endNote == -1:
@@ -377,7 +441,8 @@ class Editor:
 		},
 		"note": {
 			"changeKey": "E",
-			"changeColor": "X",
+			"changeColor": "X / Shift+X",
+			"changeCustomColor": "Shift+E",
 			"delete": "Delete"
 		},
 		"text": {
@@ -541,13 +606,19 @@ class Editor:
 					calculatedPos = Game.trueCalcPos(None, screenPos[0], screenPos[1], "setSize")
 					calculatedPos[1] -= 1
 					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
+					if type(note["color"]) is int:
+						color = colors[note["color"]]
+					else:
+						# Formatting: "RRGGBB"
+						colorSplit = color_code_from_hex(note["color"])
+						color = term.color_rgb(colorSplit[0], colorSplit[1], colorSplit[2])
 
 					#TIMELINE
 					if remBeats*8+(term.width*0.1) >= 0:
 						if self.selectedNote == j:
-							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{colors[note['color']]}{term.reverse}{term.bold}{characterDisplayed.upper()}{term.normal}")
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{color}{term.reverse}{term.bold}{characterDisplayed.upper()}{term.normal}")
 						else:
-							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.normal}{colors[note['color']]}{term.bold}{characterDisplayed.upper()}{term.normal}")
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.normal}{color}{term.bold}{characterDisplayed.upper()}{term.normal}")
 
 
 					if note in self.dontDrawList and remBeats > -0.1:
@@ -555,9 +626,9 @@ class Editor:
 					appeoachedBeats = (remBeats * self.mapToEdit["approachRate"])
 					if appeoachedBeats > -0.1 and appeoachedBeats < 4:
 						if self.selectedNote == j:
-							Game.renderNote(None, calculatedPos, colors[note["color"]]+term.reverse, characterDisplayed, appeoachedBeats+1)
+							Game.renderNote(None, calculatedPos, color+term.reverse, characterDisplayed, appeoachedBeats+1)
 						else:
-							Game.renderNote(None, calculatedPos, colors[note["color"]], characterDisplayed, appeoachedBeats+1)
+							Game.renderNote(None, calculatedPos, color, characterDisplayed, appeoachedBeats+1)
 					elif appeoachedBeats < -0.1 and note not in self.dontDrawList:
 						print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 						print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
@@ -605,9 +676,15 @@ class Editor:
 			#Current note info
 			selectedNote = self.mapToEdit['notes'][self.selectedNote]
 			if selectedNote["type"] == "hit_object":
+				if type(selectedNote["color"]) is int:
+					color = colors[selectedNote["color"]]
+				else:
+					# Formatting: "RRGGBB"
+					colorSplit = color_code_from_hex(selectedNote["color"])
+					color = term.color_rgb(colorSplit[0], colorSplit[1], colorSplit[2])
 				print_at(0, term.height-7, term.normal
 				+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | "
-				+f"{self.loc('editor.timelineInfos.color')}: {colors[selectedNote['color']]}[{selectedNote['color']}]{term.normal} | "
+				+f"{self.loc('editor.timelineInfos.color')}: {color}[{selectedNote['color']}]{term.normal} | "
 				+f"{self.loc('editor.timelineInfos.screenpos')}: {selectedNote['screenpos']} | "
 				+f"{self.loc('editor.timelineInfos.beatpos')}: {selectedNote['beatpos']}"
 				+term.clear_eol)
@@ -618,6 +695,8 @@ class Editor:
 				text_nomaploaded = self.loc("editor.emptyChart")
 				print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), term.normal+text_nomaploaded)
 
+		if not "bpmChanges" in self.mapToEdit:
+			self.mapToEdit["bpmChanges"] = []
 		if self.mapToEdit["bpmChanges"] != []:
 			for i in range(len(self.mapToEdit["bpmChanges"])):
 				change = self.mapToEdit["bpmChanges"][i]
@@ -634,9 +713,6 @@ class Editor:
 		elif self.keyPanelJustDisabled:
 			self.draw_changeKeyPanel()
 			self.keyPanelJustDisabled = False
-
-		if self.pauseMenuEnabled:
-			self.draw_pauseMenu()
 
 		if self.commandMode:
 			print_at(0,term.height-2, term.normal+":"+self.commandString+term.clear_eol)
@@ -656,6 +732,13 @@ class Editor:
 		if not self.hasCheatsheetBeenSeen:
 			cheatsheettip = "[TAB] " + self.loc("editor.cheatsheet.cheatsheet")
 			print_at(term.width-len(cheatsheettip), term.height-6, cheatsheettip)
+
+		if self.colorPickerEnabled:
+			self.draw_colorPicker()
+
+
+		if self.pauseMenuEnabled:
+			self.draw_pauseMenu()
 
 
 	def run_command(self, command = ""):
@@ -932,7 +1015,10 @@ class Editor:
 			
 		elif commandSplit[0] == "c":
 			note = self.mapToEdit["notes"][self.selectedNote]
-			note["color"] = int(commandSplit[1])
+			if commandSplit[1].startswith("#") and len(commandSplit[1].replace("#", "", 1)) == 6:
+				note["color"] = commandSplit[1].replace("#", "", 1)
+			elif commandSplit[1].isDigit():
+				note["color"] = int(commandSplit[1])
 
 		elif commandSplit[0] == "sel":
 			if commandSplit[1].startswith("~"):
@@ -1008,6 +1094,9 @@ class Editor:
 				self.run_pauseMenu(self.pauseMenuSelected)
 				pass
 
+		elif self.colorPickerEnabled:
+			self.colorPickerNoteSelected = self.selectedNote
+			self.input_colorPicker(val)
 		elif not self.commandMode:
 			if val.name == "KEY_TAB":
 				self.hasCheatsheetBeenSeen = True
@@ -1133,7 +1222,8 @@ class Editor:
 							note["screenpos"][0] = min(round(note["screenpos"][0] + 1/(defaultSize[0]-1), 3), 1)
 						if val == "e":
 							self.run_noteSettings(note, self.selectedNote, 0)
-
+						if val == "E":
+							self.colorPickerEnabled = not self.colorPickerEnabled
 						if val == "x":
 							note["color"] += 1
 							note["color"] %= len(colors)
