@@ -55,11 +55,11 @@ class Calibration:
 					self.turnOff = True
 				if val.name == "KEY_LEFT":
 					self.totalOffset -= 0.001
-					print_at(0,14, f"{term.center(str(round(self.totalOffset, 3)))}")
+					# print_at(0,14, f"{term.center(str(round(self.totalOffset, 3)))}")
 					self.conduc.setOffset(self.totalOffset)
 				if val.name == "KEY_RIGHT":
 					self.totalOffset += 0.001
-					print_at(0,14, f"{term.center(str(round(self.totalOffset, 3)))}")
+					# print_at(0,14, f"{term.center(str(round(self.totalOffset, 3)))}")
 					self.conduc.setOffset(self.totalOffset)
 
 			if self.calibrationMenu == "CalibrationSelect":
@@ -104,6 +104,8 @@ class Calibration:
 			text_beat = "○ ○ ○ ○"
 			text_beat = text_beat[:int(self.conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.conduc.currentBeat)%4 * 2) + 1:]
 			print_at(0,12,f"{term.center(text_beat)}")
+			print_at(0,14, f"{term.center(str(round(self.totalOffset, 3)))}")
+			print_at(0,16,f"{term.center('Press Escape to save settings!')}")
 
 
 		if self.calibrationMenu == "CalibrationSelect":
@@ -162,6 +164,7 @@ class Calibration:
 				self.draw()
 				refresh()
 				self.handle_input()
+			return self.totalOffset
 
 
 		if self.hitCount != 0:

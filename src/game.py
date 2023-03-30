@@ -421,7 +421,11 @@ class Game:
 		self.judgements = []
 		self.outOfHere = []
 		self.dontDraw = []
+		self.localConduc.skippedTimeWithPause = 0
 		self.localConduc.play()
+		self.localConduc.bpm = self.localConduc.previewChart["bpm"]
+		self.localConduc.isPaused = False
+		# self.localConduc.resume()
 
 	def handle_input(self):
 		if not self.localConduc.isPaused:

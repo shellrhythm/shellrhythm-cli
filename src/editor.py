@@ -880,13 +880,18 @@ class Editor:
 
 		# :off - Change song offset
 		elif commandSplit[0] == "off":
+			offset = 0
 			if len(commandSplit) > 1:
-				self.mapToEdit["offset"] = float(commandSplit[1])
+				offset = float(commandSplit[1])
 			else:
 				self.calib.startCalibSong(self.mapToEdit)
 				offset = self.calib.init(False)
 				self.calib.conduc.stop()
-				self.mapToEdit["offset"] = offset
+				self.calib.turnOff = False
+			offset = round(offset, 6) # 6 is completely arbitrary, it's mostly to deal with floating point fuckery
+			self.mapToEdit["offset"] = offset
+			self.localConduc.setOffset(offset)
+			return True, f"New offset: {offset}"
 
 		# :s - Snap
 		elif commandSplit[0] == "s":

@@ -117,7 +117,7 @@ class Conductor:
 			self.currentBeat = self.getBeatPos(self.currentTimeSec)
 			self.prevTimeSec = self.currentTimeSec
 
-			if self.currentBeat < 0:
+			if self.currentBeat < 0 and self.currentTimeSec + self.offset < 0:
 				self.song.move2position_seconds(0)
 				self.currentBeat = 0
 				self.skippedTimeWithPause = 0
