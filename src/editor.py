@@ -217,7 +217,6 @@ class Editor:
 				"anchor": anchor,
 				"align": align,
 				"offset": [0,0],
-				"key": None,
 			}
 			self.mapToEdit["notes"].append(newNote)
 			self.mapToEdit["notes"] = sorted(self.mapToEdit["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
@@ -1200,10 +1199,10 @@ class Editor:
 						print_at(0,term.height-4, term.clear_eol)
 						note["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
 
-					if val == "d":
+					if val == "d" and "key" in note:
 						self.selectedNote = self.create_note(
 							note["beatpos"][0]*4 + note["beatpos"][1], 
-							note.get("key")
+							note["key"]
 						)
 						self.mapToEdit["notes"][self.selectedNote] = copy.deepcopy(note)
 
