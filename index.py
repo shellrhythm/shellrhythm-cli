@@ -213,6 +213,7 @@ class Options:
 		displayedValues = [locales[loc]("lang") for loc in locales]
 		self.menuOptions[3]["populatedValues"] = localeNames
 		self.menuOptions[3]["displayedValues"] = displayedValues
+		self.menuOptions[7]["displayedValues"] = layoutNames
 		self.menuOptions[7]["populatedValues"] = layoutNames
 
 	def translate(self):

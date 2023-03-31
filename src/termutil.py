@@ -159,7 +159,7 @@ def print_lines_at(x, y, text, center = False, eol = False, color = None):
 
 def print_image(x,y,imagePath,scale):
 	if os.path.exists(imagePath):
-		image = from_file(imagePath, width=scale)
+		image = BlockImage.from_file(imagePath, width=scale)
 		stringifiedImage = str(image)
 		print_lines_at(x, y, stringifiedImage)
 		return True
