@@ -216,7 +216,8 @@ class Editor:
 				"text": text,
 				"anchor": anchor,
 				"align": align,
-				"offset": [0,0]
+				"offset": [0,0],
+				"key": None,
 			}
 			self.mapToEdit["notes"].append(newNote)
 			self.mapToEdit["notes"] = sorted(self.mapToEdit["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
@@ -263,12 +264,12 @@ class Editor:
 			if val.name == "KEY_ESCAPE" or val.name == "KEY_ENTER":
 				self.colorPickerFieldSelected = False
 		else:
-			if val.name == "KEY_RIGHT" and self.colorPickerSelectedCol < 3:
-				self.colorPickerColor[self.colorPickerSelectedCol] += 1
+			if val.name in ("KEY_RIGHT", "KEY_SRIGHT") and self.colorPickerSelectedCol < 3:
+				self.colorPickerColor[self.colorPickerSelectedCol] += {'KEY_RIGHT': 1, 'KEY_SRIGHT': 10}[val.name]
 				self.colorPickerColor[self.colorPickerSelectedCol] = min(self.colorPickerColor[self.colorPickerSelectedCol], 255)
 				self.colorPickerFieldContent = hexcode_from_color_code(self.colorPickerColor)
-			if val.name == "KEY_LEFT" and self.colorPickerSelectedCol < 3:
-				self.colorPickerColor[self.colorPickerSelectedCol] -= 1
+			if val.name in ("KEY_LEFT", "KEY_SLEFT") and self.colorPickerSelectedCol < 3:
+				self.colorPickerColor[self.colorPickerSelectedCol] -= {'KEY_LEFT': 1, 'KEY_SLEFT': 10}[val.name]
 				self.colorPickerColor[self.colorPickerSelectedCol] = max(self.colorPickerColor[self.colorPickerSelectedCol], 0)
 				self.colorPickerFieldContent = hexcode_from_color_code(self.colorPickerColor)
 			if val.name == "KEY_DOWN":
@@ -1146,11 +1147,13 @@ class Editor:
 					self.localConduc.currentBeat = 0
 				if val.name == "KEY_ESCAPE":
 					self.pauseMenuEnabled = True
-				if val.name == "KEY_RIGHT":
-					self.localConduc.currentBeat += (1/self.snap)*4
+				if val.name in ("KEY_RIGHT", "KEY_SRIGHT"):
+					multiplier = {"KEY_RIGHT": 1, "KEY_SRIGHT": 4}[val.name]
+					self.localConduc.currentBeat += (1/self.snap)*4*multiplier
 					print_at(0,term.height-4, term.clear_eol)
-				if val.name == "KEY_LEFT":
-					self.localConduc.currentBeat = max(self.localConduc.currentBeat - (1/self.snap)*4, 0)
+				if val.name in ("KEY_LEFT", "KEY_SLEFT"):
+					multiplier = {"KEY_LEFT": 1, "KEY_SLEFT": 4}[val.name]
+					self.localConduc.currentBeat = max(self.localConduc.currentBeat - (1/self.snap)*4*multiplier, 0)
 					print_at(0,term.height-4, term.clear_eol)
 				if val == "z":
 					self.keyPanelEnabled = True
@@ -1175,14 +1178,16 @@ class Editor:
 					
 				if self.mapToEdit["notes"] != []:
 					note = self.mapToEdit["notes"][self.selectedNote]
-					if val.name == "KEY_DOWN":
+					if val.name in ("KEY_DOWN", "KEY_SDOWN"):
+						multiplier = {"KEY_DOWN": 1, "KEY_SDOWN": 4}[val.name]
 						print_at(0,term.height-4, term.clear_eol)
-						self.selectedNote = min(self.selectedNote + 1, len(self.mapToEdit["notes"])-1)
+						self.selectedNote = min(self.selectedNote + (1*multiplier), len(self.mapToEdit["notes"])-1)
 						note = self.mapToEdit["notes"][self.selectedNote]
 						self.localConduc.currentBeat = (note["beatpos"][0] * 4 + note["beatpos"][1])
-					if val.name == "KEY_UP":
+					if val.name in ("KEY_UP", "KEY_SUP"):
+						multiplier = {"KEY_UP": 1, "KEY_SUP": 4}[val.name]
 						print_at(0,term.height-4, term.clear_eol)
-						self.selectedNote = max(self.selectedNote - 1, 0)
+						self.selectedNote = max(self.selectedNote - (1*multiplier), 0)
 						note = self.mapToEdit["notes"][self.selectedNote]
 						self.localConduc.currentBeat = (note["beatpos"][0] * 4 + note["beatpos"][1])
 
@@ -1198,33 +1203,31 @@ class Editor:
 					if val == "d":
 						self.selectedNote = self.create_note(
 							note["beatpos"][0]*4 + note["beatpos"][1], 
-							note["key"]
+							note.get("key")
 						)
 						self.mapToEdit["notes"][self.selectedNote] = copy.deepcopy(note)
 
-					if note["type"] == "hit_object":
+					if note["type"] == "hit_object" and val:
 						screenPos = note["screenpos"]
 						calculatedPos = Game.calculatePosition(screenPos, 5, 3, term.width-10, term.height-11)
-						if val == "h":
+						# erase hitbox
+						if val in "hjklHJKL":
 							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
 							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-							note["screenpos"][0] = max(round(note["screenpos"][0] - 1/(defaultSize[0]-1), 3), 0)
-						if val == "j":
-							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
-							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
-							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-							note["screenpos"][1] = min(round(note["screenpos"][1] + 1/defaultSize[1], 3), 1)
-						if val == "k":
-							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
-							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
-							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-							note["screenpos"][1] = max(round(note["screenpos"][1] - 1/defaultSize[1], 3), 0)
-						if val == "l":
-							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
-							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
-							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
-							note["screenpos"][0] = min(round(note["screenpos"][0] + 1/(defaultSize[0]-1), 3), 1)
+						# calculate new x/y position
+						if val in "hH":
+							multiplier = {"h": 1, "H": 3}[val]
+							note["screenpos"][0] = max(round(note["screenpos"][0] - multiplier/(defaultSize[0]-1), 3), 0)
+						if val in "jJ":
+							multiplier = {"j": 1, "J": 2}[val]
+							note["screenpos"][1] = min(round(note["screenpos"][1] + multiplier/defaultSize[1], 3), 1)
+						if val in "kK":
+							multiplier = {"k": 1, "K": 2}[val]
+							note["screenpos"][1] = max(round(note["screenpos"][1] - multiplier/defaultSize[1], 3), 0)
+						if val in "lL":
+							multiplier = {"l": 1, "L": 3}[val]
+							note["screenpos"][0] = min(round(note["screenpos"][0] + multiplier/(defaultSize[0]-1), 3), 1)
 						if val == "e":
 							self.run_noteSettings(note, self.selectedNote, 0)
 						if val == "E":
@@ -1235,33 +1238,31 @@ class Editor:
 						if val == "X":
 							note["color"] -= 1
 							note["color"] %= len(colors)
-					if note["type"] == "text":
-						if val == "h":
-							print(term.clear)
-							note["offset"][0] -= 1
-						if val == "j":
-							print(term.clear)
-							note["offset"][1] += 1
-						if val == "k":
-							print(term.clear)
-							note["offset"][1] -= 1
-						if val == "l":
-							print(term.clear)
-							note["offset"][0] += 1
+					if note["type"] == "text" and val:
+						if val in "hH":
+							multiplier = 3 if val.isupper() else 1
+							note["offset"][0] = note["offset"][0] - multiplier
+						if val in "jJ":
+							multiplier = 2 if val.isupper() else 1
+							note["offset"][1] = note["offset"][1] + multiplier
+						if val in "kK":
+							multiplier = 2 if val.isupper() else 1
+							note["offset"][1] = note["offset"][1] - multiplier
+						if val in "lL":
+							multiplier = 3 if val.isupper() else 1
+							note["offset"][0] = note["offset"][0] + multiplier
 						if val == "U":
-							print(term.clear)
 							note["length"] = max(note["length"] - (1/self.snap)*4, 0)
 						if val == "I":
-							print(term.clear)
 							note["length"] += (1/self.snap)*4
 						if val == "e":
 							self.run_noteSettings(note, self.selectedNote, 0)
 	
 						if val == "x":
-							note["color"] += 1
+							note["color"] = note.get('color', -1) + 1
 							note["color"] %= len(colors)
 						if val == "X":
-							note["color"] -= 1
+							note["color"] = note.get('color', len(colors)) - 1
 							note["color"] %= len(colors)
 						if val == "c":
 							self.run_noteSettings(note, self.selectedNote, 2)
