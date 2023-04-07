@@ -282,22 +282,22 @@ class Options:
 				print_at(0,i*2 + 3, term.normal + f" {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}  ")
 			if leType == "intField":
 				if self.selectedItem == i and self.menuOptions[i]["isOffset"]:
-					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + (" "*int(term.width*0.2)) + locales[selectedLocale]("options.calibrationTip") + term.clear_eol)
+					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + (" "*int(term.width*0.2)) + locales[selectedLocale]("options.calibrationTip"))
 				else:
-					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + term.clear_eol)
+					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000))
 			if leType == "intSlider":
 				print_at(maxLength + 6, i*2+3, f"{str(int(options[leVar] * 100))}%")
 				print_at(maxLength + 12, i*2+3, f"{'━'*int(max((term.width*0.7) - (maxLength + 16), 20)*options[leVar])}⏺")
 			if leType == "enum":
 				if self.enumInteracted == i:
-					print_at(maxLength + 6, i*2+3, term.reverse + "{ " + self.menuOptions[i]["displayedValues"][self.menuOptions[i]["populatedValues"].index(options[leVar])] + " }" +term.normal + (" "*6) + str(self.menuOptions[i]["displayedValues"]) + term.clear_eol)
+					print_at(maxLength + 6, i*2+3, term.reverse + "{ " + self.menuOptions[i]["displayedValues"][self.menuOptions[i]["populatedValues"].index(options[leVar])] + " }" +term.normal + (" "*6) + str(self.menuOptions[i]["displayedValues"]))
 				else:
 					if self.selectedItem == i and self.menuOptions[i]["var"] == "layout":
-						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + (" "*int(term.width*0.2)) + locales[selectedLocale]("options.layoutTip") + term.clear_eol)
+						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + (" "*int(term.width*0.2)) + locales[selectedLocale]("options.layoutTip"))
 					elif "displayedValues" in self.menuOptions[i]:
-						print_at(maxLength + 6, i*2+3, "[" + self.menuOptions[i]["displayedValues"][self.menuOptions[i]["populatedValues"].index(options[leVar])] + "] ⌄" + term.clear_eol)
+						print_at(maxLength + 6, i*2+3, "[" + self.menuOptions[i]["displayedValues"][self.menuOptions[i]["populatedValues"].index(options[leVar])] + "] ⌄")
 					else:
-						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + term.clear_eol)
+						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄")
 			if leType == "bool":
 				if options[leVar] == True:
 					print_at(maxLength + 6, i*2+3, "☑")
@@ -306,9 +306,9 @@ class Options:
 			if leType == "strField":
 				if self.selectedItem == i:
 					if self.strInteracted == i:
-						print_at(maxLength + 6, i*2+3, term.underline + self.curInput + term.clear_eol + term.normal)
+						print_at(maxLength + 6, i*2+3, term.underline + self.curInput  + term.normal)
 					else:
-						print_at(maxLength + 6, i*2+3, term.reverse + options[leVar] + term.clear_eol + term.normal)
+						print_at(maxLength + 6, i*2+3, term.reverse + options[leVar]  + term.normal)
 				else:
 					print_at(maxLength + 6, i*2+3, term.normal + options[leVar])
 
@@ -540,28 +540,28 @@ class ChartSelect:
 				+ term.normal 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["title"]
-				+ term.clear_eol
+				
 			)
 			print_at(27 + img_width, 3, term.blue 
 				+ locales[selectedLocale]("chartSelect.metadata.artist") 
 				+ term.normal 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["artist"]
-				+ term.clear_eol
+				
 			)
 			print_at(27 + img_width, 5, term.blue 
 				+ locales[selectedLocale]("chartSelect.metadata.author") 
 				+ term.normal 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["author"]
-				+ term.clear_eol
+				
 			)
 			print_at(27 + img_width, 6, term.blue 
 				+ locales[selectedLocale]("chartSelect.difficulty") 
 				+ term.normal 
 				+ ": " 
 				+ str(chartData[self.selectedItem]["difficulty"])
-				+ term.clear_eol
+				
 			)
 			#endregion
 			print_at(25 + img_width, 8, "┠" + ("─"*(term.width - (26 + img_width))))
@@ -592,15 +592,15 @@ class ChartSelect:
 						if self.selectedTab == 1: color = term.reverse
 
 						if score["isOutdated"]:
-							print_at(23, 20+i, f"{term.grey}{color}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + term.clear_eol + term.normal)
+							print_at(23, 20+i, f"{term.grey}{color}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]"  + term.normal)
 						else:
-							print_at(23, 20+i, f"{color}{rank[2]}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" + term.clear_eol + term.normal)
+							print_at(23, 20+i, f"{color}{rank[2]}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)"  + term.normal)
 						print_at(term.width - (len(text_date_format)+1), 20+i, term.reverse + text_date_format + term.normal)
 					else:
 						if score["isOutdated"]:
-							print_at(23, 20+i, f"{term.grey}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + term.clear_eol)
+							print_at(23, 20+i, f"{term.grey}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" )
 						else: 
-							print_at(23, 20+i, f"{rank[2]}{rank[0]}{term.normal} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" + term.clear_eol)
+							print_at(23, 20+i, f"{rank[2]}{rank[0]}{term.normal} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" )
 						print_at(term.width - (len(text_date_format)+1), 20+i, text_date_format)
 				else:
 					print_at(25, 20+i, "[INVALID SCORE]")
