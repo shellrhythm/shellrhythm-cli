@@ -1,0 +1,152 @@
+{
+    "formatVersion": 1,
+    "sound": "nachobit_onhold.mp3",
+    "foldername": "@official/on_hold",
+    "icon": {
+        "img": "",
+        "txt": ""
+    },
+    "bpm": 118,
+    "bpmChanges": [],
+    "offset": 0,
+    "metadata": {
+        "title": "On Hold",
+        "artist": "NachoBIT",
+        "author": "#Guigui",
+        "description": "Just a moment: your call is now first in line, and will be answered by the next representative. Thank you for your patience."
+    },
+    "approachRate": 1,
+    "difficulty": 0,
+    "notes": [
+        {
+            "type": "hit_object",
+            "beatpos": [
+                9,
+                0.0
+            ],
+            "key": 5,
+            "screenpos": [
+                0.474,
+                0.332
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                9,
+                0.66667
+            ],
+            "key": 4,
+            "screenpos": [
+                0.552,
+                0.416
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                9.0,
+                1.499999999999993
+            ],
+            "key": 14,
+            "screenpos": [
+                0.474,
+                0.542
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                9.0,
+                2.000003333333325
+            ],
+            "key": 15,
+            "screenpos": [
+                0.591,
+                0.584
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                10,
+                3.0
+            ],
+            "key": 22,
+            "screenpos": [
+                0.474,
+                0.752
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                10.0,
+                3.25
+            ],
+            "key": 23,
+            "screenpos": [
+                0.5,
+                0.752
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                10.0,
+                3.5
+            ],
+            "key": 24,
+            "screenpos": [
+                0.539,
+                0.752
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                11,
+                0.0
+            ],
+            "key": 5,
+            "screenpos": [
+                0.487,
+                0.374
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                11.0,
+                0.25
+            ],
+            "key": 4,
+            "screenpos": [
+                0.5,
+                0.416
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                11.0,
+                0.5
+            ],
+            "key": 5,
+            "screenpos": [
+                0.526,
+                0.458
+            ],
+            "color": 0
+        }
+    ]
+}

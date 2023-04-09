@@ -1,6 +1,7 @@
 /__pycache__
 /*/__pycache__
 /charts/*/
+!/charts/@official/
 /.vscode/
 *.so
 /logs/*

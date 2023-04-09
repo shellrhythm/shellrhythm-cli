@@ -448,7 +448,7 @@ class Game:
 						f = open("./logs/results.json", "w")
 					f.write(json.dumps(result,indent=4))
 					f.close()
-					f2 = open("./scores/" + self.chart["foldername"] + "-" + hashlib.sha256(json.dumps(result).encode("utf-8")).hexdigest(), "x")
+					f2 = open("./scores/" + self.chart["foldername"].replace("/", "_").replace("\\", "_") + "-" + hashlib.sha256(json.dumps(result).encode("utf-8")).hexdigest(), "x")
 					f2.write(json.dumps(result))
 					f2.close()
 				self.resultsScreen.hitWindows = hitWindows

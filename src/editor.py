@@ -873,7 +873,10 @@ class Editor:
 				soundFileLocation = self.fileBrwsr.loop()
 				if soundFileLocation != "?":
 					self.mapToEdit["sound"] = soundFileLocation.split('/')[-1]
-					shutil.copyfile(soundFileLocation, f"./charts/{self.mapToEdit['foldername']}/{soundFileLocation.split('/')[-1]}")
+					try:
+						shutil.copyfile(soundFileLocation, f"./charts/{self.mapToEdit['foldername']}/{soundFileLocation.split('/')[-1]}")
+					except shutil.SameFileError:
+						pass
 					self.localConduc.loadsong(self.mapToEdit)
 				else:
 					return False, "File selection aborted."
