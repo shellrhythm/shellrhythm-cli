@@ -12,14 +12,14 @@ if __name__ == "src.editor":
 	from src.game import *
 	from src.conductor import *
 	from src.translate import Locale
-	from src.textbox import textbox_logic
+	from src.textbox import textbox_logic, TextEditor
 	from src.filebrowser import FileBrowser
 	from src.calibration import Calibration
 else:
 	from game import *
 	from conductor import *
 	from translate import Locale
-	from textbox import textbox_logic
+	from textbox import textbox_logic, TextEditor
 	from filebrowser import FileBrowser
 	from calibration import Calibration
 
@@ -126,6 +126,11 @@ class Editor:
 		"nerdFont": True,
 		"bypassSize": True,
 	}
+
+	#Text edition
+	textEdit = TextEditor()
+	isTextEditing = False
+	textobjectedited = -1
 
 	def autocomplete(self, command = ""):
 		output = []
@@ -284,6 +289,22 @@ class Editor:
 		if self.colorPickerNoteSelected > -1:
 			self.mapToEdit["notes"][self.colorPickerNoteSelected]["color"] = self.colorPickerFieldContent
 
+	delConfirmEnabled = False
+	delConfirmObj = -1
+	def draw_confirmDeletion(self):
+		print_box((term.width - 30)//2, (term.height - 5)//2, 30, 5)
+		confirmText = self.loc("editor.deleteConfirmPrompt")
+		print_at((term.width - len(confirmText))//2, (term.height - 5)//2+1, confirmText)
+		confirmOptions = "[Y/Return] Yes    [N/Esc] No"
+		print_at((term.width - len(confirmOptions))//2, (term.height - 5)//2+3, confirmOptions)
+
+	def input_confirmDeletion(self, val):
+		if val == "y" or val.name == "KEY_ENTER":
+			self.mapToEdit["notes"].remove(self.mapToEdit["notes"][self.delConfirmObj])
+			self.delConfirmEnabled = False
+		elif val == "n" or val.name == "KEY_ESCAPE":
+			self.delConfirmEnabled = False
+		
 
 	def set_end_note(self, atPos):
 		if self.endNote == -1:
@@ -377,7 +398,9 @@ class Editor:
 				return True
 		elif note["type"] == "text":
 			if option == 0:
-				#TODO add the ability to change text
+				self.isTextEditing = True
+				self.textEdit.textContent = note["text"]
+				self.textobjectedited = noteID
 				return True
 			elif option == 1:
 				#TODO better color picker
@@ -591,7 +614,7 @@ class Editor:
 			print_box(0,0,40,len(self.metadataParts) + 2,reset_color,0)
 		
 
-		if self.mapToEdit["notes"] != []:
+		if self.mapToEdit["notes"] != [] and not self.isTextEditing:
 			self.selectedNote %= len(self.mapToEdit["notes"])
 			note = self.mapToEdit["notes"][self.selectedNote]
 			
@@ -600,7 +623,7 @@ class Editor:
 			for i in range(len(self.mapToEdit["notes"])):
 				j = len(self.mapToEdit["notes"]) - (i+1)
 				note = self.mapToEdit["notes"][j]
-				if note["type"] == "hit_object":
+				if note["type"] == "hit_object": # HIT OBJECT STUFF
 					screenPos = note["screenpos"]
 					characterDisplayed = self.layout[note["key"]]
 					calculatedPos = Game.trueCalcPos(None, screenPos[0], screenPos[1], "setSize")
@@ -623,6 +646,8 @@ class Editor:
 
 					if note in self.dontDrawList and remBeats > -0.1:
 						self.dontDrawList.remove(note)
+					if not "approachRate" in self.mapToEdit:
+						self.mapToEdit["approachRate"] = 1
 					appeoachedBeats = (remBeats * self.mapToEdit["approachRate"])
 					if appeoachedBeats > -0.1 and appeoachedBeats < 4:
 						if self.selectedNote == j:
@@ -634,7 +659,7 @@ class Editor:
 						print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{reset_color}   ")
 						print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{reset_color}   ")
 						self.dontDrawList.append(note)
-				elif note["type"] == "text":
+				elif note["type"] == "text": # TEXT STUFF
 					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
 					stopAt = remBeats + note["length"]
 					
@@ -643,7 +668,7 @@ class Editor:
 						if self.options["nerdFont"]:
 							char = "\U000f150f"
 						else:
-							char = "#"
+							char = "§"
 						if self.selectedNote == j:
 							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.turquoise}{term.bold}{char} {reset_color}")
 							print_at(int(stopAt*8+(term.width*0.1)), term.height-4, f"{term.turquoise}|{reset_color}")
@@ -658,12 +683,12 @@ class Editor:
 					if note not in self.dontDrawList:
 						if remBeats <= 0:
 							if stopAt > 0:
-								Game.renderText(None, note["text"], note["offset"], note["anchor"], note["align"], constOffset)
+								Game.renderText(None, note["text"], note["offset"], note["anchor"], note["align"], constOffset, self.localConduc.currentBeat)
 							else:
-								Game.renderText(None, " " * len(note["text"]), note["offset"], note["anchor"], note["align"], constOffset)
+								Game.renderText(None, " " * len(note["text"]), note["offset"], note["anchor"], note["align"], constOffset, self.localConduc.currentBeat)
 								self.dontDrawList.append(note)
 						else:
-							Game.renderText(None, " " * len(note["text"]), note["offset"], note["anchor"], note["align"], constOffset)
+							Game.renderText(None, " " * len(note["text"]), note["offset"], note["anchor"], note["align"], constOffset, self.localConduc.currentBeat)
 							self.dontDrawList.append(note)
 				else:
 					# END - TIMELINE
@@ -686,12 +711,17 @@ class Editor:
 				+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | "
 				+f"{self.loc('editor.timelineInfos.color')}: {color}[{selectedNote['color']}]{reset_color} | "
 				+f"{self.loc('editor.timelineInfos.screenpos')}: {selectedNote['screenpos']} | "
-				+f"{self.loc('editor.timelineInfos.beatpos')}: {selectedNote['beatpos']}"
-				+term.clear_eol)
-			else:
-				print_at(0, term.height-7, reset_color+f"{'editor.timelineInfos.curNote'}: {self.selectedNote} | {self.loc('editor.timelineInfos.endpos')}: {selectedNote['beatpos']}{term.clear_eol}")
+				+f"{self.loc('editor.timelineInfos.beatpos')}: {selectedNote['beatpos']}")
+			elif selectedNote["type"] == "text":
+				print_at(0, term.height-7, term.normal
+				+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | "
+				# +f"{self.loc('editor.timelineInfos.color')}: {color}[{selectedNote['color']}]{term.normal} | "
+				+f"{self.loc('editor.timelineInfos.screenpos')}: {selectedNote['offset']} | "
+				+f"{self.loc('editor.timelineInfos.beatpos')}: {selectedNote['beatpos']}") # I need to add more stuff yes
+			elif selectedNote["type"] == "end":
+				print_at(0, term.height-7, term.normal+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | {self.loc('editor.timelineInfos.endpos')}: {selectedNote['beatpos']}")
 		else:
-			if not self.keyPanelEnabled:
+			if not self.keyPanelEnabled and not self.isTextEditing:
 				text_nomaploaded = self.loc("editor.emptyChart")
 				print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), reset_color+text_nomaploaded)
 
@@ -736,9 +766,16 @@ class Editor:
 		if self.colorPickerEnabled:
 			self.draw_colorPicker()
 
+		if self.isTextEditing:
+			self.textEdit.draw()
+
+		if self.delConfirmEnabled:
+			self.draw_confirmDeletion()
 
 		if self.pauseMenuEnabled:
 			self.draw_pauseMenu()
+
+		print_at(term.width-len(str(framerate()) + "fps"), 0, str(framerate()) + "fps" )
 
 
 	def run_command(self, command = ""):
@@ -759,6 +796,8 @@ class Editor:
 
 		# :w - Write (Save) | 1 optional argument (where to save it)
 		elif commandSplit[0] == "w":
+			if self.mapToEdit["formatVersion"] != 1:
+				self.mapToEdit["formatVersion"] = 1
 			output = json.dumps(self.mapToEdit, indent=4)
 			if len(commandSplit) > 1:
 				self.mapToEdit["foldername"] = commandSplit[1]
@@ -1102,9 +1141,21 @@ class Editor:
 				self.run_pauseMenu(self.pauseMenuSelected)
 				pass
 
+		elif self.isTextEditing:
+			if val.name == "KEY_ESCAPE" and self.textEdit.isSelectingText == False:
+				self.isTextEditing = False
+				self.mapToEdit["notes"][self.textobjectedited]["text"] = self.textEdit.textContent
+			else:
+				self.textEdit.handle_input(val)
+
 		elif self.colorPickerEnabled:
 			self.colorPickerNoteSelected = self.selectedNote
 			self.input_colorPicker(val)
+
+		elif self.delConfirmEnabled:
+			self.delConfirmObj = self.selectedNote
+			self.input_confirmDeletion(val)
+
 		elif not self.commandMode:
 			if val.name == "KEY_TAB":
 				self.hasCheatsheetBeenSeen = True
@@ -1118,7 +1169,7 @@ class Editor:
 				elif val.name == "KEY_ENTER":
 					if self.keyPanelKey != -1:
 						if self.keyPanelSelected == -1:
-							self.create_note(self.localConduc.currentBeat, self.keyPanelKey)
+							self.selectedNote = self.create_note(self.localConduc.currentBeat, self.keyPanelKey)
 						else:
 							self.mapToEdit["notes"][self.keyPanelSelected]["key"] = self.keyPanelKey
 						self.keyPanelEnabled = False
@@ -1202,12 +1253,19 @@ class Editor:
 						print_at(0,term.height-4, term.clear_eol)
 						note["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
 
-					if val == "d" and "key" in note:
+					if val == "d" and note["type"] == "hit_object":
 						self.selectedNote = self.create_note(
 							note["beatpos"][0]*4 + note["beatpos"][1], 
 							note["key"]
 						)
 						self.mapToEdit["notes"][self.selectedNote] = copy.deepcopy(note)
+					if val == "d" and note["type"] == "text":
+						newNote = copy.deepcopy(note)
+						self.mapToEdit["notes"].append(newNote)
+						self.mapToEdit["notes"] = sorted(self.mapToEdit["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
+						if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
+							self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
+						self.selectedNote = self.mapToEdit["notes"].index(newNote)
 
 					if note["type"] == "hit_object" and val:
 						screenPos = note["screenpos"]
@@ -1270,7 +1328,8 @@ class Editor:
 							self.run_noteSettings(note, self.selectedNote, 2)
 
 					if val.name == "KEY_DELETE" or val.name == "KEY_BACKSPACE":
-						self.mapToEdit["notes"].remove(note)
+						self.delConfirmEnabled = True
+						# self.mapToEdit["notes"].remove(note)
 
 		else:
 			if val.name == "KEY_TAB":

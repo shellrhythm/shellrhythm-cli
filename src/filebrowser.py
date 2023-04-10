@@ -32,9 +32,9 @@ class FileBrowser:
 		if os.path.exists(path):
 			self.curFilesInFolder = [file.name for file in os.scandir(path) if file.is_file() and re.search(self.fileExtFilter, file.name)]
 			self.curSubFolders = [fold.name for fold in os.scandir(path) if fold.is_dir()]
-			self.curSubFolders.append("..")
-			self.curPath = os.path.abspath(path)
 			self.curSubFolders.sort()
+			self.curSubFolders.insert(0, "..")
+			self.curPath = os.path.abspath(path)
 			self.curFilesInFolder.sort()
 		else:
 			return FileNotFoundError()
@@ -51,8 +51,6 @@ class FileBrowser:
 
 		if self.newFolderMode:
 			print_at(11,term.height-3, term.reverse + self.newFolderName)
-		else:
-			print_at(11,term.height-3, term.clear_eol)
 		y = 0
 		for i in range(self.offset, len(self.curSubFolders)):
 			if y > term.height-11:

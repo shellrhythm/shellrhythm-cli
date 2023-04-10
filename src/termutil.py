@@ -31,6 +31,67 @@ def set_reset_color(color):
 	reset_color = color
 
 
+def prng (beat = 0.0, seed = 0): return int(beat * 210413 + 2531041 * (seed+1.3)/3.4) % 2**32 #quick pseudorandomness don't mind me
+
+def colorText(text = "", beat = 0.0):
+	#Here, replace something like {cf XXXXXX} with the corresponding terminal color
+	#Combinaisons to support: 
+	# - cf RRGGBB		Foreground color
+	# - cb RRGGBB		Background color
+	# - b				Bold text
+	# - i				Italic text
+	# - u				Underline text
+	# - n				Reverts text back to normal state
+	# - r				Flips foreground and background
+	# - k				Glitchifies text
+
+	text = text.replace("\{", "￼ø").replace("\}", "ŧ￼").replace("{", "�{").replace("}", "}�") 
+	#If you are using � or ￼ genuiunely, what the #### is wrong with you /gen
+	data = text.split("�")
+	renderedText = ""
+	glitchifyNext = False
+	for i in data:
+		if i.startswith("{") and i.endswith("}"):
+			ac = i.strip("{}")
+			if ac.startswith("cf"):
+				col = color_code_from_hex(ac.replace("cf ", "", 1))
+				renderedText += term.color_rgb(col[0], col[1], col[2])
+				continue
+			if ac.startswith("cb"):
+				col = color_code_from_hex(ac.replace("cb ", "", 1))
+				renderedText += term.on_color_rgb(col[0], col[1], col[2])
+				continue
+			if ac == "b":
+				renderedText += term.bold
+				continue
+			if ac == "i":
+				renderedText += term.italic
+				continue
+			if ac == "u":
+				renderedText += term.underline
+				continue
+			if ac == "n":
+				renderedText += term.normal
+				glitchifyNext = False
+				continue
+			if ac == "r":
+				renderedText += term.reverse
+				continue
+			if ac == "k":
+				glitchifyNext = True
+				continue
+			if glitchifyNext:
+				#this big chunk will generate a random string with characters from 0x20 to 0x7e
+				renderedText += "".join([chr(int(prng(beat, k))%(0x7e-0x20) + 0x20) for k in range(len(i.replace("￼ø", "{").replace("ŧ￼", "}")))])
+			else:
+				renderedText += i.replace("￼ø", "{").replace("ŧ￼", "}")
+		else:
+			if glitchifyNext:
+				renderedText += "".join([chr(int(prng(beat, k))%(0x7e-0x20) + 0x20) for k in range(len(i.replace("￼ø", "{").replace("ŧ￼", "}")))])
+			else:
+				renderedText += i.replace("￼ø", "{").replace("ŧ￼", "}")
+	return renderedText
+
 def split_seqs(text):
 	#apparently the part that needs to be optimized the *most*
 	pattern = term._caps_unnamed_any
@@ -150,7 +211,7 @@ def debug_val(val):
 		elif val:
 			print_at(0,term.height-2,f"got {val}.")
 
-def print_lines_at(x, y, text, center = False, color = None):
+def print_lines_at(x:int, y:int, text:str, center = False, color = None):
 	if color is None:
 		color = reset_color
 	lines = text.split("\n")
@@ -220,14 +281,20 @@ class Grid:
 		if point1//4 == point2//4:
 			return [self.symbolLookup[int(point1)%4+1][int(point2)%4+1]]
 		else:
-			return [self.symbolLookup[int(point1)%4+1][0], self.symbolLookup[0][int(point1)%4+1]]
+			if point2 != 2**32:
+				return [self.symbolLookup[int(point1)%4+1][0], self.symbolLookup[0][int(point1)%4+1]]
+			else:
+				return [self.symbolLookup[int(point1)%4+1][0]]
 
 	def draw(self, cursorPos = 0):
 		for i in range(max(0, (cursorPos*2)-len(self.pointsToPlot)), min(len(self.pointsToPlot), (cursorPos + self.width)*2), 2):
 			point1 = min(max(self.pointsToPlot[i],   self.gridrange[0]), self.gridrange[1])
-			point2 = min(max(self.pointsToPlot[i+1], self.gridrange[0]), self.gridrange[1])
 			firstpos = ((point1 / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]) * self.height*4 + self.offset
-			secpos   = ((point2 / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]) * self.height*4 + self.offset
+			if i+1 < len(self.pointsToPlot):
+				point2 = min(max(self.pointsToPlot[i+1], self.gridrange[0]), self.gridrange[1])
+				secpos   = ((point2 / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]) * self.height*4 + self.offset
+			else:
+				secpos = -2**32
 			points = self.processPoints(firstpos, secpos)
 			for j in range(len(points)):
 				atpos = ((self.pointsToPlot[i+j] / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]) * self.height + (self.offset/4)
