@@ -32,9 +32,9 @@ class FileBrowser:
 		if os.path.exists(path):
 			self.curFilesInFolder = [file.name for file in os.scandir(path) if file.is_file() and re.search(self.fileExtFilter, file.name)]
 			self.curSubFolders = [fold.name for fold in os.scandir(path) if fold.is_dir()]
-			self.curSubFolders.append("..")
-			self.curPath = os.path.abspath(path)
 			self.curSubFolders.sort()
+			self.curSubFolders.insert(0, "..")
+			self.curPath = os.path.abspath(path)
 			self.curFilesInFolder.sort()
 		else:
 			return FileNotFoundError()
@@ -51,13 +51,11 @@ class FileBrowser:
 
 		if self.newFolderMode:
 			print_at(11,term.height-3, term.reverse + self.newFolderName)
-		else:
-			print_at(11,term.height-3, term.clear_eol)
 		y = 0
 		for i in range(self.offset, len(self.curSubFolders)):
 			if y > term.height-11:
 				break
-			if self.selectedItem == y-self.offset:
+			if self.selectedItem == y+self.offset:
 				print_at(12,6 + y, term.reverse + "\uea83 " + self.curSubFolders[i] + "/" + term.normal)
 			else:
 				print_at(12,6 + y, "\uea83 " + self.curSubFolders[i] + "/")
@@ -65,7 +63,7 @@ class FileBrowser:
 		for i in range(max(self.offset - len(self.curSubFolders), 0), len(self.curFilesInFolder)):
 			if y > term.height-11:
 				break
-			if self.selectedItem == y-self.offset:
+			if self.selectedItem == y+self.offset:
 				print_at(14,6 + y, term.reverse + self.curFilesInFolder[i] + term.normal)
 			else:
 				print_at(14,6 + y, self.curFilesInFolder[i])

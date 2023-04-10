@@ -260,9 +260,9 @@ class Game:
 		if align == ALIGN_LEFT:
 			pass
 		elif align == ALIGN_CENTER:
-			calculatedPosition[0] -= int(len(text)*0.5)
+			calculatedPosition[0] -= int(len(strip_seqs(renderedText))*0.5)
 		elif align == ALIGN_RIGHT:
-			calculatedPosition[0] -= len(text)-1
+			calculatedPosition[0] -= len(strip_seqs(renderedText))-1
 
 		# who actually wants text decos to stop after the border lmao
 
@@ -357,9 +357,9 @@ class Game:
 				if note not in self.dontDraw:
 					if renderAt <= 0:
 						if stopAt > 0:
-							self.renderText(note["text"], note["offset"], note["anchor"], note["align"], self.localConduc.currentBeat)
+							self.renderText(note["text"], note["offset"], note["anchor"], note["align"], beat=self.localConduc.currentBeat)
 						else:
-							self.renderText(" " * len(note["text"]), note["offset"], note["anchor"], note["align"], self.localConduc.currentBeat)
+							self.renderText(" " * len(note["text"]), note["offset"], note["anchor"], note["align"], beat=self.localConduc.currentBeat)
 							self.dontDraw.append(note)
 					
 				

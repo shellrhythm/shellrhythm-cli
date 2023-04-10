@@ -850,7 +850,7 @@ class TitleScreen:
 		text_beat = "○ ○ ○ ○"
 		text_beat = text_beat[:int(conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(conduc.currentBeat)%4 * 2) + 1:]
 
-		print_at(0, 0, term.center(f"{text_beat}{term.clear_eol}"))
+		print_at(0, 0, term.center(f"{text_beat}"))
 		if len(chartData) != 0:
 			text_songTitle = chartData[currentLoadedSong]["metadata"]["artist"] + " - " + chartData[currentLoadedSong]["metadata"]["title"] + " // "
 		else:

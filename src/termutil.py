@@ -271,14 +271,20 @@ class Grid:
 		if point1//4 == point2//4:
 			return [self.symbolLookup[int(point1)%4+1][int(point2)%4+1]]
 		else:
-			return [self.symbolLookup[int(point1)%4+1][0], self.symbolLookup[0][int(point1)%4+1]]
+			if point2 != 2**32:
+				return [self.symbolLookup[int(point1)%4+1][0], self.symbolLookup[0][int(point1)%4+1]]
+			else:
+				return [self.symbolLookup[int(point1)%4+1][0]]
 
 	def draw(self, cursorPos = 0):
 		for i in range(max(0, (cursorPos*2)-len(self.pointsToPlot)), min(len(self.pointsToPlot), (cursorPos + self.width)*2), 2):
 			point1 = min(max(self.pointsToPlot[i],   self.gridrange[0]), self.gridrange[1])
-			point2 = min(max(self.pointsToPlot[i+1], self.gridrange[0]), self.gridrange[1])
 			firstpos = ((point1 / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]) * self.height*4 + self.offset
-			secpos   = ((point2 / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]) * self.height*4 + self.offset
+			if i+1 < len(self.pointsToPlot):
+				point2 = min(max(self.pointsToPlot[i+1], self.gridrange[0]), self.gridrange[1])
+				secpos   = ((point2 / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]) * self.height*4 + self.offset
+			else:
+				secpos = -2**32
 			points = self.processPoints(firstpos, secpos)
 			for j in range(len(points)):
 				atpos = ((self.pointsToPlot[i+j] / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]) * self.height + (self.offset/4)

@@ -100,28 +100,29 @@ class TextEditor:
 			if val.name in ("KEY_RIGHT", "KEY_SRIGHT"):
 				self.pickTheColor[self.selectedColorSection] += {"KEY_RIGHT": 1/multiplier, "KEY_SRIGHT": 10/multiplier}[val.name]
 				self.pickTheColor[self.selectedColorSection] = min(self.pickTheColor[self.selectedColorSection], 1.0)
-
-				normalizedcolor = colorsys.hsv_to_rgb(self.pickTheColor[0], self.pickTheColor[1], self.pickTheColor[2])
-				color = [int(i*255) for i in normalizedcolor]
-				if self.currentColorAtPos(len(self.textContent)-(self.textCursor))[0] != len(self.textContent)-(self.textCursor):
-					self.colorChanges.append([len(self.textContent)-(self.textCursor), hexcode_from_color_code(color)])
-				else:
-					self.colorChanges[self.colorChanges.index(self.currentColorAtPos(len(self.textContent)-(self.textCursor)))][1] == hexcode_from_color_code(color)
 					
 			if val.name in ("KEY_LEFT", "KEY_SLEFT"):
 				self.pickTheColor[self.selectedColorSection] -= {"KEY_LEFT": 1/multiplier, "KEY_SLEFT": 10/multiplier}[val.name]
 				self.pickTheColor[self.selectedColorSection] = max(self.pickTheColor[self.selectedColorSection], 0.0)
 
-				normalizedcolor = colorsys.hsv_to_rgb(self.pickTheColor[0], self.pickTheColor[1], self.pickTheColor[2])
-				color = [int(i*255) for i in normalizedcolor]
-				if self.currentColorAtPos(len(self.textContent)-(self.textCursor))[0] != len(self.textContent)-(self.textCursor):
-					self.colorChanges.append([len(self.textContent)-(self.textCursor), hexcode_from_color_code(color)])
 			if val.name == "KEY_UP":
 				self.selectedColorSection -= 1
 				self.selectedColorSection %= 3
 			if val.name == "KEY_DOWN":
 				self.selectedColorSection += 1
 				self.selectedColorSection %= 3
+
+			if val.name == "KEY_ENTER":
+				normalizedcolor = colorsys.hsv_to_rgb(self.pickTheColor[0], self.pickTheColor[1], self.pickTheColor[2])
+				color = [int(i*255) for i in normalizedcolor]
+				colStr = "{cf " + hexcode_from_color_code(color) + "}"
+				self.textContent = self.textContent[:len(self.textContent)-(self.textCursor)] + colStr + self.textContent[len(self.textContent)-(self.textCursor):]
+			if val.name == "KEY_SENTER":
+				normalizedcolor = colorsys.hsv_to_rgb(self.pickTheColor[0], self.pickTheColor[1], self.pickTheColor[2])
+				color = [int(i*255) for i in normalizedcolor]
+				colStr = "{cb " + hexcode_from_color_code(color) + "}"
+				self.textContent = self.textContent[:len(self.textContent)-(self.textCursor)] + colStr + self.textContent[len(self.textContent)-(self.textCursor):]
+
 
 	def __init__(self) -> None:
 		pass

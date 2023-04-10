@@ -646,6 +646,8 @@ class Editor:
 
 					if note in self.dontDrawList and remBeats > -0.1:
 						self.dontDrawList.remove(note)
+					if not "approachRate" in self.mapToEdit:
+						self.mapToEdit["approachRate"] = 1
 					appeoachedBeats = (remBeats * self.mapToEdit["approachRate"])
 					if appeoachedBeats > -0.1 and appeoachedBeats < 4:
 						if self.selectedNote == j:
@@ -795,6 +797,8 @@ class Editor:
 
 		# :w - Write (Save) | 1 optional argument (where to save it)
 		elif commandSplit[0] == "w":
+			if self.mapToEdit["formatVersion"] != 1:
+				self.mapToEdit["formatVersion"] = 1
 			output = json.dumps(self.mapToEdit, indent=4)
 			if len(commandSplit) > 1:
 				self.mapToEdit["foldername"] = commandSplit[1]
@@ -1163,7 +1167,7 @@ class Editor:
 				elif val.name == "KEY_ENTER":
 					if self.keyPanelKey != -1:
 						if self.keyPanelSelected == -1:
-							self.create_note(self.localConduc.currentBeat, self.keyPanelKey)
+							self.selectedNote = self.create_note(self.localConduc.currentBeat, self.keyPanelKey)
 						else:
 							self.mapToEdit["notes"][self.keyPanelSelected]["key"] = self.keyPanelKey
 						self.keyPanelEnabled = False
@@ -1247,12 +1251,19 @@ class Editor:
 						print_at(0,term.height-4, term.clear_eol)
 						note["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
 
-					if val == "d" and "key" in note:
+					if val == "d" and note["type"] == "hit_object":
 						self.selectedNote = self.create_note(
 							note["beatpos"][0]*4 + note["beatpos"][1], 
 							note["key"]
 						)
 						self.mapToEdit["notes"][self.selectedNote] = copy.deepcopy(note)
+					if val == "d" and note["type"] == "text":
+						newNote = copy.deepcopy(note)
+						self.mapToEdit["notes"].append(newNote)
+						self.mapToEdit["notes"] = sorted(self.mapToEdit["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
+						if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
+							self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
+						self.selectedNote = self.mapToEdit["notes"].index(newNote)
 
 					if note["type"] == "hit_object" and val:
 						screenPos = note["screenpos"]
