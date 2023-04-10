@@ -36,6 +36,7 @@ def colorText(text = "", beat = 0.0):
 	# - i				Italic text
 	# - u				Underline text
 	# - n				Reverts text back to normal state
+	# - r				Flips foreground and background
 	# - k				Glitchifies text
 
 	text = text.replace("\{", "￼ø").replace("\}", "ŧ￼").replace("{", "�{").replace("}", "}�") 
@@ -66,6 +67,9 @@ def colorText(text = "", beat = 0.0):
 			if ac == "n":
 				renderedText += term.normal
 				glitchifyNext = False
+				continue
+			if ac == "r":
+				renderedText += term.reverse
 				continue
 			if ac == "k":
 				glitchifyNext = True
