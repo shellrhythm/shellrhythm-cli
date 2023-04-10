@@ -103,7 +103,7 @@ class ResultsScreen:
 		if self.resultsData != {}:
 			print_box(4, 2, term.width-7, term.height-4, term.normal, 0)
 			rank = getRank(self.resultsData["score"])
-			print_lines_at(5,3, self.rankIMGImages[rank[1]], False, False, rank[2])
+			print_lines_at(5,3, self.rankIMGImages[rank[1]], False, rank[2])
 			print_at(16, 4, f"{rank[2]}SCORE{term.normal}: {int(self.resultsData['score'])}")
 			print_at(16, 6, f"{rank[2]}ACCURACY{term.normal}: {int(self.resultsData['accuracy'])}%")
 			print_at(31, 4, f"{ranks[0][2]}Marvelous: {ranks[0][4]}{self.judgementCount[0]}{term.normal}")

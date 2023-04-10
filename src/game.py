@@ -222,9 +222,11 @@ class Game:
 
 		return out
 
-	def renderText(self, text = "", offset = [0,0], anchor = CENTER, align = ALIGN_LEFT, renderOffset = [0,0]):
+	def renderText(self, text = "", offset = [0,0], anchor = CENTER, align = ALIGN_LEFT, renderOffset = [0,0], beat = 0.0):
 		#calculate position
 		calculatedPosition = [0,0]
+
+		renderedText = colorText(text, beat)
 
 		if anchor == CENTER:
 			calculatedPosition[0] = int(defaultSize[0]/2 + offset[0])
@@ -258,23 +260,22 @@ class Game:
 		if align == ALIGN_LEFT:
 			pass
 		elif align == ALIGN_CENTER:
-			calculatedPosition[0] -= int(len(text)*0.5)
+			calculatedPosition[0] -= int(len(strip_seqs(renderedText))*0.5)
 		elif align == ALIGN_RIGHT:
-			calculatedPosition[0] -= len(text)-1
+			calculatedPosition[0] -= len(strip_seqs(renderedText))-1
 
-		#prevent clipping out of the playfield
-		renderedText = text
+		# who actually wants text decos to stop after the border lmao
 
-		if calculatedPosition[0] < 0:
-			renderedText = text[-calculatedPosition[0]:]
-			calculatedPosition[0] = 0
-		if calculatedPosition[0] + len(text) > defaultSize[0]:
-			renderedText = text[:len(renderedText) - (calculatedPosition[0] + len(renderedText) - defaultSize[0])]
+		# if calculatedPosition[0] < 0:
+			# renderedText = text[-calculatedPosition[0]:]
+			# calculatedPosition[0] = 0
+		# if calculatedPosition[0] + len(text) > defaultSize[0]:
+			# renderedText = text[:len(renderedText) - (calculatedPosition[0] + len(renderedText) - defaultSize[0])]
 		
 		topleft = [int((term.width-defaultSize[0]) * 0.5) + renderOffset[0], int((term.height-defaultSize[1]) * 0.5) + renderOffset[1]]
-
-		if 0 <= calculatedPosition[1] < defaultSize[1]:
-			print_at(calculatedPosition[0] + topleft[0], calculatedPosition[1] + topleft[1], renderedText)
+					
+		# if 0 <= calculatedPosition[1] < defaultSize[1]:
+		print_at(calculatedPosition[0] + topleft[0], calculatedPosition[1] + topleft[1], renderedText)
 
 		pass
 
@@ -356,9 +357,9 @@ class Game:
 				if note not in self.dontDraw:
 					if renderAt <= 0:
 						if stopAt > 0:
-							self.renderText(note["text"], note["offset"], note["anchor"], note["align"])
+							self.renderText(note["text"], note["offset"], note["anchor"], note["align"], beat=self.localConduc.currentBeat)
 						else:
-							self.renderText(" " * len(note["text"]), note["offset"], note["anchor"], note["align"])
+							self.renderText(" " * len(note["text"]), note["offset"], note["anchor"], note["align"], beat=self.localConduc.currentBeat)
 							self.dontDraw.append(note)
 					
 				
@@ -367,7 +368,7 @@ class Game:
 		print_at(int(term.width * 0.5)-3, 1, term.normal + text_beat)
 		
 	def draw(self):
-		print_at(0, term.height-2, str(framerate()) + "fps" + term.clear_eol)
+		print_at(0, term.height-2, str(framerate()) + "fps" )
 		if not self.localConduc.isPaused:
 			timerText = str(format_time(int(self.localConduc.currentTimeSec))) + " / " + str(format_time(int(self.endTime)))
 			print_at(0,0, f"{term.normal}{term.center(timerText)}")
