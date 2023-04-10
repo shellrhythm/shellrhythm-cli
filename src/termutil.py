@@ -24,6 +24,12 @@ box_styles = [
 term = Terminal()
 f = Framebuffer()
 
+reset_color = term.normal
+
+def set_reset_color(color):
+	global reset_color
+	reset_color = color
+
 
 def split_seqs(text):
 	#apparently the part that needs to be optimized the *most*
@@ -134,7 +140,7 @@ Pro tip: only call this at the end of a frame! Or else, this will reduce the fra
 	# global toDraw
 	# print(toDraw)
 	# toDraw = ""
-	f.Draw(term.move_xy(0,0) + term.normal)
+	f.Draw(term.move_xy(0,0) + reset_color)
 
 def debug_val(val):
 		if not val:
@@ -144,18 +150,15 @@ def debug_val(val):
 		elif val:
 			print_at(0,term.height-2,f"got {val}.")
 
-def print_lines_at(x, y, text, center = False, eol = False, color = None):
+def print_lines_at(x, y, text, center = False, color = None):
 	if color is None:
-		color = term.normal
+		color = reset_color
 	lines = text.split("\n")
 	for i in range(len(lines)):
 		if center:
-			print_at(x, y + i, color + term.center(lines[i]) + term.normal)
+			print_at(x, y + i, color + term.center(lines[i]) + reset_color)
 		else:
-			if eol:
-				print_at(x, y + i, color + lines[i] + term.normal + term.clear_eol)
-			else:
-				print_at(x, y + i, color + lines[i] + term.normal)
+			print_at(x, y + i, color + lines[i] + reset_color)
 
 def print_image(x,y,imagePath,scale):
 	if os.path.exists(imagePath):
@@ -172,22 +175,22 @@ def print_column(x, y, size, char):
 
 def print_cropped(x, y, maxsize, text, offset, color, isWrapAround = True):
 	if isWrapAround:
-		print_at(x, y, color + (text*(3+int(maxsize/len(text))))[(offset%len(text))+len(text):maxsize+(offset%len(text))+len(text)] + term.normal)
+		print_at(x, y, color + (text*(3+int(maxsize/len(text))))[(offset%len(text))+len(text):maxsize+(offset%len(text))+len(text)] + reset_color)
 	else:
 		actualText = text[offset%len(text):maxsize+(offset%len(text))]
-		print_at(x, y, color + actualText + term.normal + (" "*(maxsize - len(actualText))))
+		print_at(x, y, color + actualText + reset_color + (" "*(maxsize - len(actualText))))
 
-def print_box(x,y,width, height, color = term.normal, style = 0, caption = ""):
+def print_box(x,y,width, height, color = reset_color, style = 0, caption = ""):
 	curBoxStyle = "????????"
 	if type(style) is int:
 		curBoxStyle = box_styles[style]
 	elif type(style) is str:
 		curBoxStyle = box_styles
 	if caption != "":
-		print_at(x,y,color + curBoxStyle[0] + term.reverse + caption + term.normal + color + (curBoxStyle[1]*(width-(2+len(caption)))) + curBoxStyle[2] + term.normal)
+		print_at(x,y,color + curBoxStyle[0] + term.reverse + caption + reset_color + color + (curBoxStyle[1]*(width-(2+len(caption)))) + curBoxStyle[2] + reset_color)
 	else:
-		print_at(x,y,color + curBoxStyle[0] + (curBoxStyle[1]*(width-2)) + curBoxStyle[2] + term.normal)
-	print_at(x,y+height-1,color + curBoxStyle[5] + (curBoxStyle[6]*(width-2)) + curBoxStyle[7] + term.normal)
+		print_at(x,y,color + curBoxStyle[0] + (curBoxStyle[1]*(width-2)) + curBoxStyle[2] + reset_color)
+	print_at(x,y+height-1,color + curBoxStyle[5] + (curBoxStyle[6]*(width-2)) + curBoxStyle[7] + reset_color)
 	print_column(x,y+1,height-2,color + curBoxStyle[3])
 	print_column(x+width-1,y+1,height-2,color + curBoxStyle[4])
 

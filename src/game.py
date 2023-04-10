@@ -34,7 +34,7 @@ ALIGN_RIGHT = 2
 term = Terminal()
 
 colors = [
-	term.normal,
+	reset_color,
 	term.red,
 	term.orange,
 	term.yellow,
@@ -94,6 +94,11 @@ class Game:
 
 	#Bypass size
 	bypassSize = False
+
+	def set_background(self, background):
+		global reset_color
+		reset_color = background
+		set_reset_color(background)
 
 	def setupKeys(self, layout):
 		if os.path.exists("./layout/" + layout):
@@ -282,33 +287,33 @@ class Game:
 		toPrint = "   \n   \n   \n"
 		val = int(approachedBeats*2)
 		if val == 8:
-			toPrint = f"{term.normal}{color} ═ \n{term.normal}{color}   \n{term.normal}{color}   {term.normal}"
+			toPrint = f"{reset_color}{color} ═ \n{reset_color}{color}   \n{reset_color}{color}   {reset_color}"
 		elif val == 7:
-			toPrint = f"{term.normal}{color} ═╗\n{term.normal}{color}   \n{term.normal}{color}   {term.normal}"
+			toPrint = f"{reset_color}{color} ═╗\n{reset_color}{color}   \n{reset_color}{color}   {reset_color}"
 		elif val == 6:
-			toPrint = f"{term.normal}{color} ═╗\n{term.normal}{color}  ║\n{term.normal}{color}   {term.normal}"
+			toPrint = f"{reset_color}{color} ═╗\n{reset_color}{color}  ║\n{reset_color}{color}   {reset_color}"
 		elif val == 5:
-			toPrint = f"{term.normal}{color} ═╗\n{term.normal}{color}  ║\n{term.normal}{color}  ╝{term.normal}"
+			toPrint = f"{reset_color}{color} ═╗\n{reset_color}{color}  ║\n{reset_color}{color}  ╝{reset_color}"
 		elif val == 4:
-			toPrint = f"{term.normal}{color} ═╗\n{term.normal}{color}  ║\n{term.normal}{color} ═╝{term.normal}"
+			toPrint = f"{reset_color}{color} ═╗\n{reset_color}{color}  ║\n{reset_color}{color} ═╝{reset_color}"
 		elif val == 3:
-			toPrint = f"{term.normal}{color} ═╗\n{term.normal}{color}  ║\n{term.normal}{color}╚═╝{term.normal}"
+			toPrint = f"{reset_color}{color} ═╗\n{reset_color}{color}  ║\n{reset_color}{color}╚═╝{reset_color}"
 		elif val == 2:
-			toPrint = f"{term.normal}{color} ═╗\n{term.normal}{color}║ ║\n{term.normal}{color}╚═╝{term.normal}"
+			toPrint = f"{reset_color}{color} ═╗\n{reset_color}{color}║ ║\n{reset_color}{color}╚═╝{reset_color}"
 		elif val == 1:
-			toPrint = f"{term.normal}{color}╔═╗\n{term.normal}{color}║ ║\n{term.normal}{color}╚═╝{term.normal}"
+			toPrint = f"{reset_color}{color}╔═╗\n{reset_color}{color}║ ║\n{reset_color}{color}╚═╝{reset_color}"
 		
 		print_lines_at(atPos[0]-1, atPos[1]-1, toPrint)
 		if self is not None:
 			if len(self.judgements) > len(notes) - (i+1):
 				if self.judgements[len(notes) - (i+1)] != {}:
-					print_at(atPos[0], atPos[1], f"{term.bold}{judgementShort[self.judgements[len(self.chart['notes']) - (i+1)]['judgement']]}{term.normal}{color}")
+					print_at(atPos[0], atPos[1], f"{term.bold}{judgementShort[self.judgements[len(self.chart['notes']) - (i+1)]['judgement']]}{reset_color}{color}")
 				else:
-					print_at(atPos[0], atPos[1], f"{term.normal}{term.bold}{key.upper()}{term.normal}{color}")
+					print_at(atPos[0], atPos[1], f"{reset_color}{term.bold}{key.upper()}{reset_color}{color}")
 			else:
-				print_at(atPos[0], atPos[1], f"{term.normal}{term.bold}{key.upper()}{term.normal}{color}")
+				print_at(atPos[0], atPos[1], f"{reset_color}{term.bold}{key.upper()}{reset_color}{color}")
 		else:
-			print_at(atPos[0], atPos[1], f"{term.normal}{term.bold}{key.upper()}{term.normal}{color}")
+			print_at(atPos[0], atPos[1], f"{reset_color}{term.bold}{key.upper()}{reset_color}{color}")
 
 	def calculatePosition(screenPos, x, y, width, height):
 		"""
@@ -364,28 +369,28 @@ class Game:
 				
 		text_beat = "○ ○ ○ ○"
 		text_beat = text_beat[:int(self.localConduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.localConduc.currentBeat)%4 * 2) + 1:]
-		print_at(int(term.width * 0.5)-3, 1, term.normal + text_beat)
+		print_at(int(term.width * 0.5)-3, 1, reset_color + text_beat)
 		
 	def draw(self):
 		print_at(0, term.height-2, str(framerate()) + "fps" + term.clear_eol)
 		if not self.localConduc.isPaused:
 			timerText = str(format_time(int(self.localConduc.currentTimeSec))) + " / " + str(format_time(int(self.endTime)))
-			print_at(0,0, f"{term.normal}{term.center(timerText)}")
-			print_at(0,0,term.normal + self.chart["metadata"]["artist"] + " - " + self.chart["metadata"]["title"])
+			print_at(0,0, f"{reset_color}{term.center(timerText)}")
+			print_at(0,0,reset_color + self.chart["metadata"]["artist"] + " - " + self.chart["metadata"]["title"])
 			print_at(term.width - (len(str(self.accuracy)) + 2), 0, str(self.accuracy) + "%")
 			print_at(term.width - (len(str(self.score)) + 1), 1, str(self.score))
 
 			if self.auto:
-				print_at(0,1, f"{term.reverse}[AUTO ENABLED]{term.normal}")
+				print_at(0,1, f"{term.reverse}[AUTO ENABLED]{reset_color}")
 
 			if self.lastHit != {}:
-				print_at(15, 1, judgementNames[self.lastHit["judgement"]] + "   " + term.normal + str(round(self.lastHit["offset"]*1000, 4)) + "ms")
+				print_at(15, 1, judgementNames[self.lastHit["judgement"]] + "   " + reset_color + str(round(self.lastHit["offset"]*1000, 4)) + "ms")
 			
 			if playfield_mode == "scale":
-				print_box(4,2,term.width-7,term.height-4,term.normal,1)
+				print_box(4,2,term.width-7,term.height-4,reset_color,1)
 			elif playfield_mode == "setSize":
 				topleft = [int((term.width-defaultSize[0]) * 0.5)-1, int((term.height-defaultSize[1]) * 0.5)-1]
-				print_box(topleft[0],topleft[1],defaultSize[0]+2,defaultSize[1]+2,term.normal,1)
+				print_box(topleft[0],topleft[1],defaultSize[0]+2,defaultSize[1]+2,reset_color,1)
 			
 			self.actualKeysRendering(self.chart["notes"])
 		else:
@@ -399,19 +404,19 @@ class Game:
 			print_column(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) - 3, 5, '|')
 			print_column(int((term.width+len(text_paused)) * 0.5) + 3, int(term.height*0.5) - 3, 5, '|')
 			if self.pauseOption == 0:
-				print_at(int((term.width-len(text_resume)) * 0.5) - 1, int(term.height*0.5) - 2, term.normal+term.reverse+" "+text_resume+" "+term.normal)
+				print_at(int((term.width-len(text_resume)) * 0.5) - 1, int(term.height*0.5) - 2, reset_color+term.reverse+" "+text_resume+" "+reset_color)
 			else:
-				print_at(int((term.width-len(text_resume)) * 0.5) - 1, int(term.height*0.5) - 2, term.normal+" "+text_resume+" "+term.normal)
+				print_at(int((term.width-len(text_resume)) * 0.5) - 1, int(term.height*0.5) - 2, reset_color+" "+text_resume+" "+reset_color)
 
 			if self.pauseOption == 1:
-				print_at(int((term.width-len(text_retry)) * 0.5) - 1, int(term.height*0.5) - 1, term.normal+term.reverse+" "+text_retry+" "+term.normal)
+				print_at(int((term.width-len(text_retry)) * 0.5) - 1, int(term.height*0.5) - 1, reset_color+term.reverse+" "+text_retry+" "+reset_color)
 			else:
-				print_at(int((term.width-len(text_retry)) * 0.5) - 1, int(term.height*0.5) - 1, term.normal+" "+text_retry+" "+term.normal)
+				print_at(int((term.width-len(text_retry)) * 0.5) - 1, int(term.height*0.5) - 1, reset_color+" "+text_retry+" "+reset_color)
 
 			if self.pauseOption == 2:
-				print_at(int((term.width-len(text_quit)) * 0.5) - 1, int(term.height*0.5), term.normal+term.reverse+" "+text_quit+" "+term.normal)
+				print_at(int((term.width-len(text_quit)) * 0.5) - 1, int(term.height*0.5), reset_color+term.reverse+" "+text_quit+" "+reset_color)
 			else:
-				print_at(int((term.width-len(text_quit)) * 0.5) - 1, int(term.height*0.5), term.normal+" "+text_quit+" "+term.normal)
+				print_at(int((term.width-len(text_quit)) * 0.5) - 1, int(term.height*0.5), reset_color+" "+text_quit+" "+reset_color)
 			
 
 	def retry(self):
@@ -511,7 +516,7 @@ class Game:
 						self.draw()
 					else:
 						text = self.loc("screenTooSmall")
-						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + reset_color)
 					refresh()
 					self.handle_input()
 				else:
@@ -530,6 +535,7 @@ class Game:
 				
 
 	def play(self, chart = {}, layout = "qwerty", options = {}):
+		self.set_background(term.normal + term.on_color_rgb(200,100,200))
 		self.options = options
 		self.resultsScreen.auto = self.auto
 		self.setupKeys(layout)

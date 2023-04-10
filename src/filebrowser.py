@@ -43,11 +43,11 @@ class FileBrowser:
 		print_at(0,0,str(self.selectedItem))
 
 		print_box(10,3,term.width-20, term.height-6, caption=self.caption)
-		print_cropped(11,4,term.width-22,self.curPath,max(len(self.curPath)-(term.width-22), 0), term.normal, False)
+		print_cropped(11,4,term.width-22,self.curPath,max(len(self.curPath)-(term.width-22), 0), reset_color, False)
 		print_at(11,5,"─"*(term.width-22))
 
 		if self.selectFolderMode:
-			print_at(11,term.height-2, term.reverse + "[SPACE] Select folder" + term.normal + " " + term.reverse + "[n] New Folder")
+			print_at(11,term.height-2, term.reverse + "[SPACE] Select folder" + reset_color + " " + term.reverse + "[n] New Folder")
 
 		if self.newFolderMode:
 			print_at(11,term.height-3, term.reverse + self.newFolderName)
@@ -58,7 +58,7 @@ class FileBrowser:
 			if y > term.height-11:
 				break
 			if self.selectedItem == y-self.offset:
-				print_at(12,6 + y, term.reverse + "\uea83 " + self.curSubFolders[i] + "/" + term.normal)
+				print_at(12,6 + y, term.reverse + "\uea83 " + self.curSubFolders[i] + "/" + reset_color)
 			else:
 				print_at(12,6 + y, "\uea83 " + self.curSubFolders[i] + "/")
 			y+=1
@@ -66,7 +66,7 @@ class FileBrowser:
 			if y > term.height-11:
 				break
 			if self.selectedItem == y-self.offset:
-				print_at(14,6 + y, term.reverse + self.curFilesInFolder[i] + term.normal)
+				print_at(14,6 + y, term.reverse + self.curFilesInFolder[i] + reset_color)
 			else:
 				print_at(14,6 + y, self.curFilesInFolder[i])
 			y+=1
