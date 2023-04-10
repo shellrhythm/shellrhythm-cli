@@ -250,14 +250,14 @@ class Editor:
 				if i == 2: char = term.color_rgb(0,0,j*8) + char
 				realToPrint += char
 			if i == self.colorPickerSelectedCol:
-				realToPrint += term.normal+"<"
+				realToPrint += reset_color+"<"
 			else:
-				realToPrint += term.normal+" "
-			print_at((term.width - 40)//2 + 1, (term.height-9)//2 + (i*2+1), realToPrint+term.normal + "  " + term.reverse + str(col) + " "*(3-len(str(col))) + term.normal)
+				realToPrint += reset_color+" "
+			print_at((term.width - 40)//2 + 1, (term.height-9)//2 + (i*2+1), realToPrint+reset_color + "  " + term.reverse + str(col) + " "*(3-len(str(col))) + reset_color)
 
 		if self.colorPickerSelectedCol == 3:
 			print_at((term.width + 8)//2, (term.height-9)//2 + 7, "<")
-		print_at((term.width - 8)//2-1, (term.height-9)//2 + 7, term.normal + "#" + term.reverse + f" {self.colorPickerFieldContent} "+term.normal)
+		print_at((term.width - 8)//2-1, (term.height-9)//2 + 7, reset_color + "#" + term.reverse + f" {self.colorPickerFieldContent} "+reset_color)
 
 	def input_colorPicker(self, val):
 		if self.colorPickerFieldSelected:
@@ -328,7 +328,7 @@ class Editor:
 		print_box((term.width-width)//2 - 1, (term.height//2) - len(self.pauseMenu) - 1, width+2, len(self.pauseMenu) * 2 + 1)
 		for i in range(len(self.pauseMenu)):
 			if i == self.pauseMenuSelected:
-				print_at((term.width-width)//2, (term.height//2) - len(self.pauseMenu) + i*2, term.reverse + term.center(self.loc("editor.pause." + self.pauseMenu[i]), width) + term.normal)
+				print_at((term.width-width)//2, (term.height//2) - len(self.pauseMenu) + i*2, term.reverse + term.center(self.loc("editor.pause." + self.pauseMenu[i]), width) + reset_color)
 			else:
 				print_at((term.width-width)//2, (term.height//2) - len(self.pauseMenu) + i*2, term.center(self.loc("editor.pause." + self.pauseMenu[i]), width))
 			if i != len(self.pauseMenu)-1:
@@ -374,7 +374,7 @@ class Editor:
 			self.pauseMenuEnabled = False
 			self.export()
 			print(term.clear)
-			print_at(0,term.height-2, term.on_green+f"Exported successfully to ./charts/{self.mapToEdit['foldername']}.zip" +term.clear_eol+term.normal)
+			print_at(0,term.height-2, term.on_green+f"Exported successfully to ./charts/{self.mapToEdit['foldername']}.zip" +term.clear_eol+reset_color)
 			pass
 		if option == 7:
 			#quit
@@ -424,9 +424,9 @@ class Editor:
 			print_column(int((term.width+width)*0.5), int((term.height-height)*0.5)+1, height, "|")
 			print_at(int((term.width-len(toptext))*0.5), int((term.height-height)*0.5)+1, toptext)
 			if curKey > 0 and curKey < 30:
-				print_at(int(term.width*0.5)-1, int(term.height *0.5), term.reverse + f" {self.layout[curKey]} " + term.normal)
+				print_at(int(term.width*0.5)-1, int(term.height *0.5), term.reverse + f" {self.layout[curKey]} " + reset_color)
 			else:
-				print_at(int(term.width*0.5)-1, int(term.height *0.5), term.reverse + f"   " + term.normal)
+				print_at(int(term.width*0.5)-1, int(term.height *0.5), term.reverse + f"   " + reset_color)
 		else:
 			print_lines_at(int((term.width-width)*0.5), int((term.height-height)*0.5), (" "*(width+1)+"\n")*(height+1))
 
@@ -549,12 +549,12 @@ class Editor:
 								val += "<"
 								if len(arg) > 2: #Prefix
 									val += arg[2]
-								val += term.italic + arg[1] + term.normal + ">"
+								val += term.italic + arg[1] + reset_color + ">"
 							else: 						#Optional arguments
 								val += "["
 								if len(arg) > 2: #Prefix
 									val += arg[2]
-								val += term.italic + arg[1] + term.normal + "]"
+								val += term.italic + arg[1] + reset_color + "]"
 					if len(term.strip_seqs(key)) > maxKeyLen: maxKeyLen = len(term.strip_seqs(key))
 					if len(term.strip_seqs(val)) > maxValLen: maxValLen = len(term.strip_seqs(val))
 
@@ -573,8 +573,8 @@ class Editor:
 			print_at(0, term.height-(6+min(len(lines)+1,51)), "Tip: The cheatsheet can change depending on the context!")
 
 	def draw(self):
-		# print_at(0,term.height-5, term.normal+"-"*(term.width-1))
-		print_at(0,term.height-3, term.normal+"-"*(term.width))
+		# print_at(0,term.height-5, reset_color+"-"*(term.width-1))
+		print_at(0,term.height-3, reset_color+"-"*(term.width))
 
 		#Timeline
 		for i in range(-(int(term.width/80)+1),int(term.width/8)-(int(term.width/80))+1):
@@ -592,7 +592,7 @@ class Editor:
 		if self.playtest:
 			print_at(0,term.height-4, term.clear_eol)
 		print_at(int(term.width*0.1), term.height-4, "@")
-		print_at(0,term.height-6, term.normal
+		print_at(0,term.height-6, reset_color
 		+f"{self.loc('editor.timelineInfos.bpm')}: {self.localConduc.bpm} | "
 		+f"{self.loc('editor.timelineInfos.snap')}: 1/{self.snap} | "
 		+f"{self.loc('editor.timelineInfos.bar')}: {int(self.localConduc.currentBeat//4)} | "
@@ -605,13 +605,13 @@ class Editor:
 			for i in range(len(self.metadataParts)):
 				if i == self.metadataMenuSelection:
 					if self.metadataTyping:
-						print_at(1,1+i,f"{term.reverse}{self.loc('editor.metadata.'+self.metadataParts[i])}{' '*(length-len(self.loc('editor.metadata.'+self.metadataParts[i]))+1)}: {term.underline}{self.metadataString}{term.normal}")
+						print_at(1,1+i,f"{term.reverse}{self.loc('editor.metadata.'+self.metadataParts[i])}{' '*(length-len(self.loc('editor.metadata.'+self.metadataParts[i]))+1)}: {term.underline}{self.metadataString}{reset_color}")
 					else:
-						print_at(1,1+i,f"{term.reverse}{self.loc('editor.metadata.'+self.metadataParts[i])}{' '*(length-len(self.loc('editor.metadata.'+self.metadataParts[i]))+1)}: {term.underline}{self.mapToEdit['metadata'][self.metadataParts[i]]}{term.normal}")
+						print_at(1,1+i,f"{term.reverse}{self.loc('editor.metadata.'+self.metadataParts[i])}{' '*(length-len(self.loc('editor.metadata.'+self.metadataParts[i]))+1)}: {term.underline}{self.mapToEdit['metadata'][self.metadataParts[i]]}{reset_color}")
 				else:
 					print_at(1,1+i,f"{self.loc('editor.metadata.'+self.metadataParts[i])}{' '*(length-len(self.loc('editor.metadata.'+self.metadataParts[i]))+1)}: {self.mapToEdit['metadata'][self.metadataParts[i]]}")
 			pass
-			print_box(0,0,40,len(self.metadataParts) + 2,term.normal,0)
+			print_box(0,0,40,len(self.metadataParts) + 2,reset_color,0)
 		
 
 		if self.mapToEdit["notes"] != [] and not self.isTextEditing:
@@ -619,7 +619,7 @@ class Editor:
 			note = self.mapToEdit["notes"][self.selectedNote]
 			
 			topleft = [int((term.width-defaultSize[0]) * 0.5)-1, int((term.height-defaultSize[1]) * 0.5)-1]
-			print_box(topleft[0],topleft[1]-1,defaultSize[0]+2,defaultSize[1]+2,term.normal,1)
+			print_box(topleft[0],topleft[1]-1,defaultSize[0]+2,defaultSize[1]+2,reset_color,1)
 			for i in range(len(self.mapToEdit["notes"])):
 				j = len(self.mapToEdit["notes"]) - (i+1)
 				note = self.mapToEdit["notes"][j]
@@ -639,9 +639,9 @@ class Editor:
 					#TIMELINE
 					if remBeats*8+(term.width*0.1) >= 0:
 						if self.selectedNote == j:
-							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{color}{term.reverse}{term.bold}{characterDisplayed.upper()}{term.normal}")
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{color}{term.reverse}{term.bold}{characterDisplayed.upper()}{reset_color}")
 						else:
-							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.normal}{color}{term.bold}{characterDisplayed.upper()}{term.normal}")
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{reset_color}{color}{term.bold}{characterDisplayed.upper()}{reset_color}")
 
 
 					if note in self.dontDrawList and remBeats > -0.1:
@@ -655,26 +655,25 @@ class Editor:
 						else:
 							Game.renderNote(None, calculatedPos, color, characterDisplayed, appeoachedBeats+1)
 					elif appeoachedBeats < -0.1 and note not in self.dontDrawList:
-						print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
-						print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
-						print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
+						print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{reset_color}   ")
+						print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{reset_color}   ")
+						print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{reset_color}   ")
 						self.dontDrawList.append(note)
 				elif note["type"] == "text": # TEXT STUFF
 					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
 					stopAt = remBeats + note["length"]
 					
 					# TEXT - TIMELINE
-					if self.options["nerdFont"]:
-						char = "\U000f150f"
-					else:
-						char = "#"
-					if self.selectedNote == j:
-						if remBeats*8+(term.width*0.1) >= 0:
-							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.turquoise}{term.bold}{char} {term.normal}")
-						print_at(int(stopAt*8+(term.width*0.1)), term.height-4, f"{term.turquoise}|{term.normal}")
-					else:
-						if remBeats*8+(term.width*0.1) >= 0:
-							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.normal}{term.turquoise}{term.bold}{char}{term.normal}")
+					if remBeats*8+(term.width*0.1) >= 0:
+						if self.options["nerdFont"]:
+							char = "\U000f150f"
+						else:
+							char = "§"
+						if self.selectedNote == j:
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.turquoise}{term.bold}{char} {reset_color}")
+							print_at(int(stopAt*8+(term.width*0.1)), term.height-4, f"{term.turquoise}|{reset_color}")
+						else:
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{reset_color}{term.turquoise}{term.bold}{char}{reset_color}")
 
 					# TEXT - ON SCREEN
 					constOffset = [0,-1]
@@ -696,9 +695,9 @@ class Editor:
 					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
 					if remBeats*8+(term.width*0.1) >= 0:
 						if self.selectedNote == j:
-							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.bold_grey}▚{term.normal}")
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.bold_grey}▚{reset_color}")
 						else:
-							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.normal}{term.bold_grey}▚{term.normal}")
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{reset_color}{term.bold_grey}▚{reset_color}")
 			#Current note info
 			selectedNote = self.mapToEdit['notes'][self.selectedNote]
 			if selectedNote["type"] == "hit_object":
@@ -708,9 +707,9 @@ class Editor:
 					# Formatting: "RRGGBB"
 					colorSplit = color_code_from_hex(selectedNote["color"])
 					color = term.color_rgb(colorSplit[0], colorSplit[1], colorSplit[2])
-				print_at(0, term.height-7, term.normal
+				print_at(0, term.height-7, reset_color
 				+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | "
-				+f"{self.loc('editor.timelineInfos.color')}: {color}[{selectedNote['color']}]{term.normal} | "
+				+f"{self.loc('editor.timelineInfos.color')}: {color}[{selectedNote['color']}]{reset_color} | "
 				+f"{self.loc('editor.timelineInfos.screenpos')}: {selectedNote['screenpos']} | "
 				+f"{self.loc('editor.timelineInfos.beatpos')}: {selectedNote['beatpos']}")
 			elif selectedNote["type"] == "text":
@@ -724,7 +723,7 @@ class Editor:
 		else:
 			if not self.keyPanelEnabled and not self.isTextEditing:
 				text_nomaploaded = self.loc("editor.emptyChart")
-				print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), term.normal+text_nomaploaded)
+				print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), reset_color+text_nomaploaded)
 
 		if not "bpmChanges" in self.mapToEdit:
 			self.mapToEdit["bpmChanges"] = []
@@ -733,7 +732,7 @@ class Editor:
 				change = self.mapToEdit["bpmChanges"][i]
 				remBeats = (change["atPosition"][0] + change["atPosition"][1]/4) - self.localConduc.currentBeat
 				if int(remBeats*8+(term.width*0.1)) >= 0:
-					print_at(int(remBeats*8+(term.width*0.1)), term.height-3, f"{term.normal}\U000f07da{term.normal}")
+					print_at(int(remBeats*8+(term.width*0.1)), term.height-3, f"{reset_color}\U000f07da{reset_color}")
 
 		if self.keyPanelEnabled:
 			if self.keyPanelSelected == -1:
@@ -746,16 +745,16 @@ class Editor:
 			self.keyPanelJustDisabled = False
 
 		if self.commandMode:
-			print_at(0,term.height-2, term.normal+":"+self.commandString+term.clear_eol)
+			print_at(0,term.height-2, reset_color+":"+self.commandString+term.clear_eol)
 			chrAtCursor = ""
 			if len(self.commandString) != 0:
 				if self.commandSelectPos != 0:
 					chrAtCursor = self.commandString[len(self.commandString)-(self.commandSelectPos)]
 				else:
 					chrAtCursor = " "
-				print_at(len(self.commandString)-self.commandSelectPos + 1, term.height-2, term.underline + chrAtCursor + term.normal)
+				print_at(len(self.commandString)-self.commandSelectPos + 1, term.height-2, term.underline + chrAtCursor + reset_color)
 		elif self.commandFooterEnabled:
-			print_at(0,term.height-2, self.commandFooterMessage + term.normal)
+			print_at(0,term.height-2, self.commandFooterMessage + reset_color)
 
 		if self.cheatsheetEnabled:
 			self.draw_cheatsheet()
@@ -913,7 +912,10 @@ class Editor:
 				soundFileLocation = self.fileBrwsr.loop()
 				if soundFileLocation != "?":
 					self.mapToEdit["sound"] = soundFileLocation.split('/')[-1]
-					shutil.copyfile(soundFileLocation, f"./charts/{self.mapToEdit['foldername']}/{soundFileLocation.split('/')[-1]}")
+					try:
+						shutil.copyfile(soundFileLocation, f"./charts/{self.mapToEdit['foldername']}/{soundFileLocation.split('/')[-1]}")
+					except shutil.SameFileError:
+						pass
 					self.localConduc.loadsong(self.mapToEdit)
 				else:
 					return False, "File selection aborted."
@@ -1118,7 +1120,7 @@ class Editor:
 				if val.name == "KEY_ESCAPE":
 					self.metadataTyping = False
 					# self.commandString = ""
-					print_at(0,term.height-2, term.clear_eol+term.normal)
+					print_at(0,term.height-2, term.clear_eol+reset_color)
 				elif val.name == "KEY_ENTER":
 					self.metadataTyping = False
 					self.mapToEdit["metadata"][self.metadataParts[self.metadataMenuSelection]] = self.metadataString
@@ -1126,7 +1128,7 @@ class Editor:
 				else:
 					if self.metadataString == "" and val.name == "KEY_BACKSPACE":
 						self.commandMode = False
-						# print_at(0,term.height-2, term.clear_eol+term.normal)
+						# print_at(0,term.height-2, term.clear_eol+reset_color)
 					self.metadataString, self.metadataTypingCursor = textbox_logic(self.metadataString, self.metadataTypingCursor, val)
 		elif self.pauseMenuEnabled:
 			if val.name == "KEY_UP":
@@ -1270,9 +1272,9 @@ class Editor:
 						calculatedPos = Game.calculatePosition(screenPos, 5, 3, term.width-10, term.height-11)
 						# erase hitbox
 						if val in "hjklHJKL":
-							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{term.normal}   ")
-							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{term.normal}   ")
-							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{term.normal}   ")
+							print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{reset_color}   ")
+							print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{reset_color}   ")
+							print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{reset_color}   ")
 						# calculate new x/y position
 						if val in "hH":
 							multiplier = {"h": 1, "H": 3}[val]
@@ -1391,7 +1393,7 @@ class Editor:
 							errors.append(results[i][1])
 							col = term.on_red
 						self.commandFooterMessage += col + "*"
-					self.commandFooterMessage += term.normal + "     "
+					self.commandFooterMessage += reset_color + "     "
 					if len(errors) != 0:
 						self.commandFooterMessage += term.on_red+errors[-1]
 					self.commandMode = False
@@ -1413,7 +1415,7 @@ class Editor:
 			else:
 				if self.commandString == "" and val.name == "KEY_BACKSPACE":
 					self.commandMode = False
-					print_at(0,term.height-2, term.clear_eol+term.normal)
+					print_at(0,term.height-2, term.clear_eol+reset_color)
 				self.commandString, self.commandSelectPos = textbox_logic(self.commandString, self.commandSelectPos, val, self.autocomplete)
 
 
@@ -1430,7 +1432,7 @@ class Editor:
 					self.draw()
 				else:
 					text = self.loc("screenTooSmall")
-					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + reset_color)
 
 				refresh()
 				

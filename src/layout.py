@@ -40,7 +40,7 @@ class LayoutCreator:
 			[f"│ {key} " for key in self.layout][20:30]
 		) + f"│\n└───{'┴───'*9}┘\n"
 		print_lines_at(int(term.width*0.5 - len(f"┌───{'┬───'*9}┐")/2), int((term.height-len(text.split("\n")))*0.5), text)
-		print_at(int(term.width*0.5 - len(f"┌───{'┬───'*9}┐")/2) + 1 + (self.selectedKey%10)*4, int((term.height-len(text.split("\n")))*0.5) + 1 + (self.selectedKey//10)*2, term.reverse + f" {self.layout[self.selectedKey]} " + term.normal)
+		print_at(int(term.width*0.5 - len(f"┌───{'┬───'*9}┐")/2) + 1 + (self.selectedKey%10)*4, int((term.height-len(text.split("\n")))*0.5) + 1 + (self.selectedKey//10)*2, term.reverse + f" {self.layout[self.selectedKey]} " + reset_color)
 		if self.changingKey:
 			text_changeKey = self.loc("")
 			print_at(int((term.width-len(text_changeKey))*0.5), int(term.height*0.5) + 6, text_changeKey)
@@ -92,7 +92,7 @@ class LayoutCreator:
 		result, code = self.save()
 		if __name__ == "__main__":
 			if not result:
-				print(term.on_yellow + "Could not save: " + code + term.normal)
+				print(term.on_yellow + "Could not save: " + code + reset_color)
 		else:
 			return result, code
 

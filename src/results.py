@@ -84,16 +84,16 @@ class ResultsScreen:
 
 	def draw_debug_info(self):
 		print_at(60, 4, "Scored at date: " + datetime.datetime.fromtimestamp(self.resultsData["time"]).strftime('%d %b %y, %H:%M:%S'))
-		print_at(60, 5, "Chart SHA256: " + term.underline + self.resultsData["checksum"][:6] + term.normal + self.resultsData["checksum"][6:])
+		print_at(60, 5, "Chart SHA256: " + term.underline + self.resultsData["checksum"][:6] + reset_color + self.resultsData["checksum"][6:])
 
 	def render_accuracy_view(self, cursorPos = 0):
 		for i in range(5):
-			print_at(5, self.centerRow+(i*2)+2, ranks[i+1][3]+" "*(term.width-9)+ term.normal)
-			print_at(5, self.centerRow+(i*2)+1, ranks[i+1][3]+" "*(term.width-9)+ term.normal)
-			print_at(5, self.centerRow-(i*2)-1, ranks[i+1][3]+" "*(term.width-9)+ term.normal)
-			print_at(5, self.centerRow-(i*2)-2, ranks[i+1][3]+" "*(term.width-9)+ term.normal)
+			print_at(5, self.centerRow+(i*2)+2, ranks[i+1][3]+" "*(term.width-9)+ reset_color)
+			print_at(5, self.centerRow+(i*2)+1, ranks[i+1][3]+" "*(term.width-9)+ reset_color)
+			print_at(5, self.centerRow-(i*2)-1, ranks[i+1][3]+" "*(term.width-9)+ reset_color)
+			print_at(5, self.centerRow-(i*2)-2, ranks[i+1][3]+" "*(term.width-9)+ reset_color)
 		if self.resultsData != {}:
-			print_at(3, self.centerRow, f"{ranks[0][2]+ranks[0][3]}0" + " "*(term.width-8)+ term.normal)
+			print_at(3, self.centerRow, f"{ranks[0][2]+ranks[0][3]}0" + " "*(term.width-8)+ reset_color)
 			print_at(3, self.centerRow-10, "+")
 			print_at(3, self.centerRow+10, "-")
 			self.grid.draw(cursorPos)
@@ -101,19 +101,19 @@ class ResultsScreen:
 
 	def draw(self):
 		if self.resultsData != {}:
-			print_box(4, 2, term.width-7, term.height-4, term.normal, 0)
+			print_box(4, 2, term.width-7, term.height-4, reset_color, 0)
 			rank = getRank(self.resultsData["score"])
-			print_lines_at(5,3, self.rankIMGImages[rank[1]], False, rank[2])
-			print_at(16, 4, f"{rank[2]}SCORE{term.normal}: {int(self.resultsData['score'])}")
-			print_at(16, 6, f"{rank[2]}ACCURACY{term.normal}: {int(self.resultsData['accuracy'])}%")
-			print_at(31, 4, f"{ranks[0][2]}Marvelous: {ranks[0][4]}{self.judgementCount[0]}{term.normal}")
-			print_at(31, 5, f"{ranks[1][2]}Perfect:   {ranks[1][4]}{self.judgementCount[1]}{term.normal}")
-			print_at(31, 6, f"{ranks[2][2]}Epic:      {ranks[2][4]}{self.judgementCount[2]}{term.normal}")
-			print_at(31, 7, f"{ranks[3][2]}Good:      {ranks[3][4]}{self.judgementCount[3]}{term.normal}")
-			print_at(31, 8, f"{ranks[4][2]}Eh:        {ranks[4][4]}{self.judgementCount[4]}{term.normal}")
-			print_at(31, 9, f"{ranks[5][2]}Misses:    {ranks[5][4]}{self.judgementCount[5]}{term.normal}")
+			print_lines_at(5,3, self.rankIMGImages[rank[1]], color=rank[2])
+			print_at(16, 4, f"{rank[2]}SCORE{reset_color}: {int(self.resultsData['score'])}")
+			print_at(16, 6, f"{rank[2]}ACCURACY{reset_color}: {int(self.resultsData['accuracy'])}%")
+			print_at(31, 4, f"{ranks[0][2]}Marvelous: {ranks[0][4]}{self.judgementCount[0]}{reset_color}")
+			print_at(31, 5, f"{ranks[1][2]}Perfect:   {ranks[1][4]}{self.judgementCount[1]}{reset_color}")
+			print_at(31, 6, f"{ranks[2][2]}Epic:      {ranks[2][4]}{self.judgementCount[2]}{reset_color}")
+			print_at(31, 7, f"{ranks[3][2]}Good:      {ranks[3][4]}{self.judgementCount[3]}{reset_color}")
+			print_at(31, 8, f"{ranks[4][2]}Eh:        {ranks[4][4]}{self.judgementCount[4]}{reset_color}")
+			print_at(31, 9, f"{ranks[5][2]}Misses:    {ranks[5][4]}{self.judgementCount[5]}{reset_color}")
 			if self.auto:
-				print_at(16, 8, f"{term.reverse}[AUTO ENABLED]{term.normal}")
+				print_at(16, 8, f"{term.reverse}[AUTO ENABLED]{reset_color}")
 			if self.debug:
 				self.draw_debug_info()
 			self.render_accuracy_view()

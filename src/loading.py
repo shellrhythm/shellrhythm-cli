@@ -53,7 +53,7 @@ def load_locales():
 def load_scores(chartName, chartChecksum, chart):
 	if not os.path.exists("./scores/"):
 		os.mkdir("./scores/")
-	scoreFiles = [f.name for f in os.scandir("./scores/") if f.is_file() and f.name.startswith(chartName+"-")]
+	scoreFiles = [f.name for f in os.scandir("./scores/") if f.is_file() and f.name.startswith(chartName.replace("/", "_").replace("\\", "_")+"-")]
 	output = []
 	for i in range(len(scoreFiles)):
 		file = scoreFiles[i]
@@ -147,18 +147,27 @@ def load_charts():
 	scores = {}
 	if os.path.exists("./charts"):
 		charts = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts") if f.is_dir()]
-		for i in range(len(charts)):
-			print(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})")
-			f = open("./charts/" + charts[i] + "/data.json").read()
-			completelyNormalJson = json.loads(f)
-			jsonThing = json.loads(f)
-			jsonThing = check_chart(jsonThing, charts[i])
-			if jsonThing["sound"] != None:
-				jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
+		i = 0
+		while i < len(charts):
+			subfolder = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts/" + charts[i]) if f.is_dir()]
+			if len(subfolder) > 0:
+				charts.remove(charts[i])
+				i-=1
+				for sub in subfolder:
+					charts.append(sub)
 			else:
-				jsonThing["actualSong"] = Song("./assets/metronome.wav")
-			chartData.append(jsonThing)
-			scores[charts[i]] = load_scores(charts[i], hashlib.sha256(json.dumps(completelyNormalJson).encode("utf-8")).hexdigest(), completelyNormalJson)
+				print(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})")
+				f = open("./charts/" + charts[i] + "/data.json").read()
+				completelyNormalJson = json.loads(f)
+				jsonThing = json.loads(f)
+				jsonThing = check_chart(jsonThing, charts[i])
+				if jsonThing["sound"] != None:
+					jsonThing["actualSong"] = Song("./charts/" + charts[i] + "/" + jsonThing["sound"])
+				else:
+					jsonThing["actualSong"] = Song("./assets/metronome.wav")
+				chartData.append(jsonThing)
+				scores[charts[i]] = load_scores(charts[i], hashlib.sha256(json.dumps(completelyNormalJson).encode("utf-8")).hexdigest(), completelyNormalJson)
+			i+=1
 		print("All charts loaded successfully!")
 	else:
 		print(f"{term.yellow}[WARN] Chart folder inexistant!{term.normal}")

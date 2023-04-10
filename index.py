@@ -117,9 +117,9 @@ class Credits:
 				
 		for i in range(len(self.creditsOrSomething)):
 			if self.selectedItem == i:
-				print_at(0,(i*2)+3,term.reverse + term.bold + "    " + (" "*(maxLength-len(self.creditsOrSomething[i]["role"]))) + self.creditsOrSomething[i]["role"] + " " + term.normal + term.underline + self.creditsOrSomething[i]["name"] + term.normal)
+				print_at(0,(i*2)+3,term.reverse + term.bold + "    " + (" "*(maxLength-len(self.creditsOrSomething[i]["role"]))) + self.creditsOrSomething[i]["role"] + " " + reset_color + term.underline + self.creditsOrSomething[i]["name"] + reset_color)
 			else:
-				print_at(0,(i*2)+3,term.bold + "    " + (" "*(maxLength-len(self.creditsOrSomething[i]["role"]))) + self.creditsOrSomething[i]["role"] + " " + term.normal + self.creditsOrSomething[i]["name"] + term.normal)
+				print_at(0,(i*2)+3,term.bold + "    " + (" "*(maxLength-len(self.creditsOrSomething[i]["role"]))) + self.creditsOrSomething[i]["role"] + " " + reset_color + self.creditsOrSomething[i]["name"] + reset_color)
 		if self.isViewingProfile:
 			for i in range(len(self.creditsOrSomething[self.selectedItem]["links"])):
 				text = self.creditsOrSomething[self.selectedItem]["links"][i]["label"]
@@ -171,7 +171,7 @@ class Credits:
 					self.draw()
 				else:
 					text = locales[selectedLocale]("screenTooSmall")
-					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + reset_color)
 				refresh()
 				
 				self.handle_input()
@@ -275,11 +275,11 @@ class Options:
 			#DisplayName
 			if self.selectedItem == i and not self.isPickingOffset:
 				if int(conduc.currentBeat) % 2 == 1:
-					print_at(0,i*2 + 3, term.reverse + f"- {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}>" + term.normal)
+					print_at(0,i*2 + 3, term.reverse + f"- {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}>" + reset_color)
 				else:
-					print_at(0,i*2 + 3, term.normal  + f"- {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}>" + term.normal)
+					print_at(0,i*2 + 3, reset_color  + f"- {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}>" + reset_color)
 			else:
-				print_at(0,i*2 + 3, term.normal + f" {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}  ")
+				print_at(0,i*2 + 3, reset_color + f" {self.menuOptions[i]['displayName']}{' '*(maxLength-titleLen+1)}  ")
 			if leType == "intField":
 				if self.selectedItem == i and self.menuOptions[i]["isOffset"]:
 					print_at(maxLength + 6, i*2+3, str(options[leVar] * 1000) + (" "*int(term.width*0.2)) + locales[selectedLocale]("options.calibrationTip"))
@@ -290,7 +290,7 @@ class Options:
 				print_at(maxLength + 12, i*2+3, f"{'━'*int(max((term.width*0.7) - (maxLength + 16), 20)*options[leVar])}⏺")
 			if leType == "enum":
 				if self.enumInteracted == i:
-					print_at(maxLength + 6, i*2+3, term.reverse + "{ " + self.menuOptions[i]["displayedValues"][self.menuOptions[i]["populatedValues"].index(options[leVar])] + " }" +term.normal + (" "*6) + str(self.menuOptions[i]["displayedValues"]))
+					print_at(maxLength + 6, i*2+3, term.reverse + "{ " + self.menuOptions[i]["displayedValues"][self.menuOptions[i]["populatedValues"].index(options[leVar])] + " }" +reset_color + (" "*6) + str(self.menuOptions[i]["displayedValues"]) + term.clear_eol)
 				else:
 					if self.selectedItem == i and self.menuOptions[i]["var"] == "layout":
 						print_at(maxLength + 6, i*2+3, "[" + options[leVar] + "] ⌄" + (" "*int(term.width*0.2)) + locales[selectedLocale]("options.layoutTip"))
@@ -306,11 +306,11 @@ class Options:
 			if leType == "strField":
 				if self.selectedItem == i:
 					if self.strInteracted == i:
-						print_at(maxLength + 6, i*2+3, term.underline + self.curInput  + term.normal)
+						print_at(maxLength + 6, i*2+3, term.underline + self.curInput + reset_color)
 					else:
-						print_at(maxLength + 6, i*2+3, term.reverse + options[leVar]  + term.normal)
+						print_at(maxLength + 6, i*2+3, term.reverse + options[leVar] + reset_color)
 				else:
-					print_at(maxLength + 6, i*2+3, term.normal + options[leVar])
+					print_at(maxLength + 6, i*2+3, reset_color + options[leVar])
 
 		if self.menuOptions[self.selectedItem]["var"] == "layout":
 			text = f"┌───{'┬───'*9}┐\n" + "".join(["".join([f"│ {key} " for key in layouts[options["layout"]]][10*i:10*(i+1)]) + f"│\n├───{'┼───'*9}┤\n" for i in range(2)]) + "".join([f"│ {key} " for key in layouts[options["layout"]]][20:30]) + f"│\n└───{'┴───'*9}┘\n"
@@ -319,8 +319,8 @@ class Options:
 		if self.isPickingOffset:
 			text_offsetConfirm = f"Do you want to use the new following offset: {int(self.suggestedOffset*(10**3))}ms?"
 			print_at(int((term.width - len(text_offsetConfirm)) * 0.5), int(term.height*0.5)-1, text_offsetConfirm)
-			print_at(int(term.width * 0.4)-3, int(term.height*0.5)+1, term.reverse+"Yes [Y]"+term.normal)
-			print_at(int(term.width * 0.6)-3, int(term.height*0.5)+1, term.reverse+"No [N] "+term.normal)
+			print_at(int(term.width * 0.4)-3, int(term.height*0.5)+1, term.reverse+"Yes [Y]"+reset_color)
+			print_at(int(term.width * 0.6)-3, int(term.height*0.5)+1, term.reverse+"No [N] "+reset_color)
 
 	def enterPressed(self):
 		self.populate_enum()
@@ -471,7 +471,7 @@ class Options:
 					self.draw()
 				else:
 					text = locales[selectedLocale]("screenTooSmall")
-					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + reset_color)
 				refresh()
 				
 				self.handle_input()
@@ -510,9 +510,8 @@ class ChartSelect:
 				print_cropped(0, i+1, 20, text, int(conduc.currentBeat), term.reverse)
 			else:
 				text = chartData[i]["metadata"]["artist"] + " - " + chartData[i]["metadata"]["title"]
-				print_cropped(0, i+1, 20, text, 0, term.normal, False)
-			# print_at(20,i,f"{term.normal}")
-		print_column(20, 0, term.height-2, term.normal+"┃")
+				print_cropped(0, i+1, 20, text, 0, reset_color, False)
+		print_column(20, 0, term.height-2, reset_color+"┃")
 		# Actual chart info display
 		if len(chartData) == 0:
 			print_at(25,5, locales[selectedLocale]("chartSelect.no_charts"))
@@ -537,35 +536,35 @@ class ChartSelect:
 			#region metadata
 			print_at(27 + img_width, 2, term.blue 
 				+ locales[selectedLocale]("chartSelect.metadata.song") 
-				+ term.normal 
+				+ reset_color 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["title"]
 				
 			)
 			print_at(27 + img_width, 3, term.blue 
 				+ locales[selectedLocale]("chartSelect.metadata.artist") 
-				+ term.normal 
+				+ reset_color 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["artist"]
 				
 			)
 			print_at(27 + img_width, 5, term.blue 
 				+ locales[selectedLocale]("chartSelect.metadata.author") 
-				+ term.normal 
+				+ reset_color 
 				+ ": " 
 				+ chartData[self.selectedItem]["metadata"]["author"]
 				
 			)
 			print_at(27 + img_width, 6, term.blue 
 				+ locales[selectedLocale]("chartSelect.difficulty") 
-				+ term.normal 
+				+ reset_color 
 				+ ": " 
 				+ str(chartData[self.selectedItem]["difficulty"])
 				
 			)
 			#endregion
 			print_at(25 + img_width, 8, "┠" + ("─"*(term.width - (26 + img_width))))
-			print_at(28 + img_width, 8, term.reverse + locales[selectedLocale]("chartSelect.metadata.description") + term.normal)
+			print_at(28 + img_width, 8, term.reverse + locales[selectedLocale]("chartSelect.metadata.description") + reset_color)
 			print_lines_at(26 + img_width, 9, chartData[self.selectedItem]["metadata"]["description"])
 			print_at(25 + img_width, 19, "┸" + ("─"*(term.width - (26 + img_width))))
 			print_at(20, 19, "┠" + ("─"*(4+img_width)))
@@ -574,10 +573,10 @@ class ChartSelect:
 				print_at(23, 18, 
 					term.reverse + (" "*int((round(term.width*0.2)-len(text_auto))/2)) 
 					+ text_auto + (" "*int((int(term.width*0.2)-len(text_auto))/2)) 
-					+ term.normal
+					+ reset_color
 				)
 			else:
-				print_at(23, 18, term.normal+(" "*int(term.width*0.2)))
+				print_at(23, 18, reset_color+(" "*int(term.width*0.2)))
 
 			#Scores!
 			maxRenderedScores = min(len(scores[chartData[self.selectedItem]["foldername"]]), term.height-23) 
@@ -592,10 +591,10 @@ class ChartSelect:
 						if self.selectedTab == 1: color = term.reverse
 
 						if score["isOutdated"]:
-							print_at(23, 20+i, f"{term.grey}{color}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]"  + term.normal)
+							print_at(23, 20+i, f"{term.grey}{color}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + reset_color)
 						else:
-							print_at(23, 20+i, f"{color}{rank[2]}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)"  + term.normal)
-						print_at(term.width - (len(text_date_format)+1), 20+i, term.reverse + text_date_format + term.normal)
+							print_at(23, 20+i, f"{color}{rank[2]}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" + reset_color)
+						print_at(term.width - (len(text_date_format)+1), 20+i, term.reverse + text_date_format + reset_color)
 					else:
 						if score["isOutdated"]:
 							print_at(23, 20+i, f"{term.grey}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" )
@@ -608,11 +607,11 @@ class ChartSelect:
 				print_at(35, int((term.height-18)/2)+17, "No scores yet!")
 		# Controls
 		print_at(1,term.height - 2, 
-		f"{term.reverse}[ENTER] {locales[selectedLocale]('chartSelect.controls.play')} {term.normal} "+
-		f"{term.reverse}[j/↓] {locales[selectedLocale]('chartSelect.controls.down')} {term.normal} "+
-		f"{term.reverse}[k/↑] {locales[selectedLocale]('chartSelect.controls.up')} {term.normal} "+
-		f"{term.reverse}[a] {locales[selectedLocale]('chartSelect.controls.auto')} {term.normal} "+
-		f"{term.reverse}[e] {locales[selectedLocale]('chartSelect.controls.editor')} {term.normal} "
+		f"{term.reverse}[ENTER] {locales[selectedLocale]('chartSelect.controls.play')} {reset_color} "+
+		f"{term.reverse}[j/↓] {locales[selectedLocale]('chartSelect.controls.down')} {reset_color} "+
+		f"{term.reverse}[k/↑] {locales[selectedLocale]('chartSelect.controls.up')} {reset_color} "+
+		f"{term.reverse}[a] {locales[selectedLocale]('chartSelect.controls.auto')} {reset_color} "+
+		f"{term.reverse}[e] {locales[selectedLocale]('chartSelect.controls.editor')} {reset_color} "
 		)
 
 	def enterPressed(self):
@@ -724,7 +723,7 @@ class ChartSelect:
 						self.resultsThing.draw()
 					else:
 						text = locales[selectedLocale]("screenTooSmall")
-						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + reset_color)
 					refresh()
 
 					self.resultsThing.handle_input()
@@ -737,7 +736,7 @@ class ChartSelect:
 						self.draw()
 					else:
 						text = locales[selectedLocale]("screenTooSmall")
-						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+						print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + reset_color)
 					refresh()
 					
 					self.handle_input()
@@ -841,9 +840,9 @@ class TitleScreen:
 			text = locales[selectedLocale](self.menuOptions[i])
 			if self.selectedItem == i:
 				if options["nerdFont"]:
-					print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"{term.reverse}   {text} {term.normal}\ue0b0")
+					print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"{term.reverse}   {text} {reset_color}\ue0b0")
 				else:
-					print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"{term.reverse}   {text} >{term.normal}")
+					print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"{term.reverse}   {text} >{reset_color}")
 			else:
 				print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"  {text}   ")
 
@@ -855,7 +854,7 @@ class TitleScreen:
 			text_songTitle = chartData[currentLoadedSong]["metadata"]["artist"] + " - " + chartData[currentLoadedSong]["metadata"]["title"] + " // "
 		else:
 			text_songTitle = "[NO SONG PLAYING] // "
-		print_cropped(term.width - 31, 0, 30, text_songTitle, int(conduc.currentBeat), term.normal)
+		print_cropped(term.width - 31, 0, 30, text_songTitle, int(conduc.currentBeat), reset_color)
 
 		text_copyright = "© #Guigui, 2022-2023"
 		text_version = "v"+__version__
@@ -896,7 +895,7 @@ class TitleScreen:
 					self.draw()
 				else:
 					text = locales[selectedLocale]("screenTooSmall")
-					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + term.normal)
+					print_at(int((term.width - len(text))*0.5), int(term.height*0.5), term.reverse + text + reset_color)
 
 				refresh()
 				self.handle_input()
