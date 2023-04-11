@@ -599,7 +599,7 @@ class ChartSelect:
 						if score["isOutdated"]:
 							print_at(23, 20+i, f"{term.grey}{rank[0]} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" )
 						else: 
-							print_at(23, 20+i, f"{rank[2]}{rank[0]}{term.normal} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" )
+							print_at(23, 20+i, f"{rank[2]}{rank[0]}{reset_color} {score['playername'] if 'playername' in score else 'Unknown'} - {int(score['score'])} ({score['accuracy']}%)" )
 						print_at(term.width - (len(text_date_format)+1), 20+i, text_date_format)
 				else:
 					print_at(25, 20+i, "[INVALID SCORE]")

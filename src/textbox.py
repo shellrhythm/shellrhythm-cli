@@ -71,7 +71,7 @@ class TextEditor:
 		print_at(int(self.pickTheColor[0]*(term.width-13)) + 6, {True:term.height-10, False:10}[self.isSelectingText], term.color_rgb(int(color[0]), int(color[1]), int(color[2])) + "^")
 		print_at(int(self.pickTheColor[1]*(term.width-13)) + 6, {True:term.height-8, False:12}[self.isSelectingText], term.color_rgb(int(color[0]), int(color[1]), int(color[2])) + "^")
 		print_at(int(self.pickTheColor[2]*(term.width-13)) + 6, {True:term.height-6, False:14}[self.isSelectingText], term.color_rgb(int(color[0]), int(color[1]), int(color[2])) + "^")
-		print_at(6, {True:term.height-4, False:16}[self.isSelectingText], term.color_rgb(color[0], color[1], color[2]) + term.bold + term.reverse + term.center("#" + hexcode_from_color_code(color), term.width - 12) + term.normal)
+		print_at(6, {True:term.height-4, False:16}[self.isSelectingText], term.color_rgb(color[0], color[1], color[2]) + term.bold + term.reverse + term.center("#" + hexcode_from_color_code(color), term.width - 12) + reset_color)
 
 	def handle_input(self, val):
 		if val.name == "KEY_TAB":

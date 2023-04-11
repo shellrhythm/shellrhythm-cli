@@ -132,6 +132,21 @@ class Editor:
 	isTextEditing = False
 	textobjectedited = -1
 
+	background_changes = []
+	def get_background(self, at_beat):
+		out = term.normal
+		for i in self.background_changes:
+			if i[0] <= at_beat:
+				out = i[1]
+			else:
+				break
+		return out
+
+	def set_background(self, background):
+		global reset_color
+		reset_color = background
+		set_reset_color(background)
+
 	def autocomplete(self, command = ""):
 		output = []
 		if command == "":
@@ -573,6 +588,8 @@ class Editor:
 			print_at(0, term.height-(6+min(len(lines)+1,51)), "Tip: The cheatsheet can change depending on the context!")
 
 	def draw(self):
+		# get background color
+		self.set_background(self.get_background(self.localConduc.currentBeat))
 		# print_at(0,term.height-5, reset_color+"-"*(term.width-1))
 		print_at(0,term.height-3, reset_color+"-"*(term.width))
 
@@ -690,6 +707,20 @@ class Editor:
 						else:
 							Game.renderText(None, " " * len(note["text"]), note["offset"], note["anchor"], note["align"], constOffset, self.localConduc.currentBeat)
 							self.dontDrawList.append(note)
+				elif note["type"] == "bg_color":
+					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
+					# BACKGROUND_COLOR - TIMELINE
+					if remBeats*8+(term.width*0.1) >= 0:
+						if self.options["nerdFont"]:
+							char = "\ue22b"
+						else:
+							char = "¶"
+						symbol_color = self.get_background(note['beatpos'][0]*4 + note['beatpos'][1])
+						if self.selectedNote == j:
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-3, f"{term.reverse}{symbol_color}{term.bold}{char} {reset_color}")
+						else:
+							print_at(int(remBeats*8+(term.width*0.1)), term.height-3, f"{reset_color}{symbol_color}{term.bold}{char}{reset_color}")
+
 				else:
 					# END - TIMELINE
 					remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
@@ -713,13 +744,13 @@ class Editor:
 				+f"{self.loc('editor.timelineInfos.screenpos')}: {selectedNote['screenpos']} | "
 				+f"{self.loc('editor.timelineInfos.beatpos')}: {selectedNote['beatpos']}")
 			elif selectedNote["type"] == "text":
-				print_at(0, term.height-7, term.normal
+				print_at(0, term.height-7, reset_color
 				+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | "
-				# +f"{self.loc('editor.timelineInfos.color')}: {color}[{selectedNote['color']}]{term.normal} | "
+				# +f"{self.loc('editor.timelineInfos.color')}: {color}[{selectedNote['color']}]{reset_color} | "
 				+f"{self.loc('editor.timelineInfos.screenpos')}: {selectedNote['offset']} | "
 				+f"{self.loc('editor.timelineInfos.beatpos')}: {selectedNote['beatpos']}") # I need to add more stuff yes
 			elif selectedNote["type"] == "end":
-				print_at(0, term.height-7, term.normal+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | {self.loc('editor.timelineInfos.endpos')}: {selectedNote['beatpos']}")
+				print_at(0, term.height-7, reset_color+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | {self.loc('editor.timelineInfos.endpos')}: {selectedNote['beatpos']}")
 		else:
 			if not self.keyPanelEnabled and not self.isTextEditing:
 				text_nomaploaded = self.loc("editor.emptyChart")
@@ -1079,13 +1110,26 @@ class Editor:
 			else:
 				self.mapToEdit["notes"].remove(self.mapToEdit["notes"][int(commandSplit[1])])
 
+		elif commandSplit[0] == "bgc":
+			if len(commandSplit) > 1:
+				newNote = {
+					"type": "bg_color",
+					"beatpos": [
+						int(self.localConduc.currentBeat//4),
+						round(self.localConduc.currentBeat%4, 5)
+					],
+					"color": commandSplit[1]
+				}
+				self.mapToEdit["notes"].append(newNote)
+				self.background_changes = Game.load_bg_changes(None, self.mapToEdit)
+				return True, "this is gonna crash the game isn't it"
+
 		else:
 			if len(commandSplit[0]) > 128:
 				return False, self.loc("editor.commandResults.common.tooLong")
 			return False, self.loc("editor.commandResults.common.notFound")
 
 		return True, ""
-		
 
 	def handle_input(self):
 		val = ''

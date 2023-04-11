@@ -88,6 +88,9 @@ class Game:
 	playername = ""
 	lastHit = {}
 	options = {}
+	background_changes = [
+		[0, term.normal]
+	]
 
 	#Locale
 	loc:Locale = Locale("en")
@@ -99,6 +102,15 @@ class Game:
 		global reset_color
 		reset_color = background
 		set_reset_color(background)
+
+	def get_background(self, at_beat):
+		out = term.normal
+		for i in self.background_changes:
+			if i[0] < at_beat:
+				out = i[1]
+			else:
+				break
+		return out
 
 	def setupKeys(self, layout):
 		if os.path.exists("./layout/" + layout):
@@ -373,6 +385,8 @@ class Game:
 		print_at(int(term.width * 0.5)-3, 1, reset_color + text_beat)
 		
 	def draw(self):
+		# get background color
+		self.set_background(self.get_background(self.localConduc.currentBeat))
 		print_at(0, term.height-2, str(framerate()) + "fps" )
 		if not self.localConduc.isPaused:
 			timerText = str(format_time(int(self.localConduc.currentTimeSec))) + " / " + str(format_time(int(self.endTime)))
@@ -533,10 +547,29 @@ class Game:
 		self.resultsScreen.gameTurnOff = False
 		self.resultsScreen.isEnabled = False
 
+	def load_bg_changes(self, chart):
+		out = []
+		for i in chart["notes"]:
+			if i["type"] == "bg_color":
+				color = term.normal
+				for col in i["color"].split("/"):
+					if col.startswith("#"): # background color
+						parsedColor = color_code_from_hex(i["color"][1:])
+						color += term.on_color_rgb(parsedColor[0], parsedColor[1], parsedColor[2])
+					elif col.startswith("%"): # foreground color
+						parsedColor = color_code_from_hex(i["color"][1:])
+						color += term.color_rgb(parsedColor[0], parsedColor[1], parsedColor[2])
+					else: # reset
+						color = term.normal
+				out.append([(i["beatpos"][0] * 4 + i["beatpos"][1]), color])
+		if self != None:
+			self.background_changes = out
+		else:
+			return out
 				
 
 	def play(self, chart = {}, layout = "qwerty", options = {}):
-		self.set_background(term.normal + term.on_color_rgb(200,100,200))
+		self.load_bg_changes(chart)
 		self.options = options
 		self.resultsScreen.auto = self.auto
 		self.setupKeys(layout)
@@ -551,6 +584,7 @@ class Game:
 		self.localConduc.play()
 		self.localConduc.song.move2position_seconds(0)
 		self.endTime = self.getSongEndTime()
+		
 		self.loop()
 
 

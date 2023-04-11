@@ -15,8 +15,8 @@
         "author": "#Guigui",
         "description": "Just a moment: your call is now first in line, and will be answered by the next representative. Thank you for your patience."
     },
-    "approachRate": 2.0,
-    "difficulty": 0,
+    "approachRate": 1.5,
+    "difficulty": "Voicemail",
     "notes": [
         {
             "type": "text",
@@ -521,6 +521,79 @@
                 0.794
             ],
             "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                17,
+                0.0
+            ],
+            "key": 3,
+            "screenpos": [
+                0.409,
+                0.416
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                17,
+                0.66667
+            ],
+            "key": 4,
+            "screenpos": [
+                0.448,
+                0.5
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                17.0,
+                1.0
+            ],
+            "key": 11,
+            "screenpos": [
+                0.474,
+                0.542
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                17.0,
+                1.3333333333333428
+            ],
+            "key": 12,
+            "screenpos": [
+                0.5,
+                0.5
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                17,
+                2.0
+            ],
+            "key": 13,
+            "screenpos": [
+                0.604,
+                0.626
+            ],
+            "color": 0
+        },
+        {
+            "type": "bg_color",
+            "beatpos": [
+                17,
+                0.0
+            ],
+            "color": "#20aa50"
         }
     ]
 }
