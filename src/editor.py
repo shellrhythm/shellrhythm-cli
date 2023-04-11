@@ -143,8 +143,9 @@ class Editor:
 		return out
 
 	def set_background(self, background):
-		global reset_color
+		global reset_color, colors
 		reset_color = background
+		colors[0] = background
 		set_reset_color(background)
 
 	def autocomplete(self, command = ""):
@@ -302,7 +303,10 @@ class Editor:
 			if val.name == "KEY_ENTER" and self.colorPickerSelectedCol == 3:
 				self.colorPickerFieldSelected = True
 		if self.colorPickerNoteSelected > -1:
-			self.mapToEdit["notes"][self.colorPickerNoteSelected]["color"] = self.colorPickerFieldContent
+			if self.mapToEdit["notes"][self.colorPickerNoteSelected]["type"] == "hit_object":
+				self.mapToEdit["notes"][self.colorPickerNoteSelected]["color"] = self.colorPickerFieldContent
+			if self.mapToEdit["notes"][self.colorPickerNoteSelected]["type"] == "bg_color":
+				self.mapToEdit["notes"][self.colorPickerNoteSelected]["color"] = "#" + self.colorPickerFieldContent
 
 	delConfirmEnabled = False
 	delConfirmObj = -1
@@ -668,9 +672,9 @@ class Editor:
 					appeoachedBeats = (remBeats * self.mapToEdit["approachRate"])
 					if appeoachedBeats > -0.1 and appeoachedBeats < 4:
 						if self.selectedNote == j:
-							Game.renderNote(None, calculatedPos, color+term.reverse, characterDisplayed, appeoachedBeats+1)
+							Game.renderNote(None, calculatedPos, color+term.reverse, characterDisplayed, appeoachedBeats+1, resetcol=reset_color)
 						else:
-							Game.renderNote(None, calculatedPos, color, characterDisplayed, appeoachedBeats+1)
+							Game.renderNote(None, calculatedPos, color, characterDisplayed, appeoachedBeats+1, resetcol=reset_color)
 					elif appeoachedBeats < -0.1 and note not in self.dontDrawList:
 						print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{reset_color}   ")
 						print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{reset_color}   ")
@@ -1230,6 +1234,7 @@ class Editor:
 					self.commandMode = True
 					self.commandString = ""
 				if val == " ":
+					self.background_changes = Game.load_bg_changes(None, self.mapToEdit)
 					if not self.playtest:
 						for note in self.mapToEdit["notes"]:
 							remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
@@ -1370,6 +1375,10 @@ class Editor:
 							note["color"] %= len(colors)
 						if val == "c":
 							self.run_noteSettings(note, self.selectedNote, 2)
+					if note["type"] == "bg_color" and val:
+						if val == "e":
+							self.colorPickerEnabled = not self.colorPickerEnabled
+
 
 					if val.name == "KEY_DELETE" or val.name == "KEY_BACKSPACE":
 						self.delConfirmEnabled = True
@@ -1481,6 +1490,7 @@ class Editor:
 				refresh()
 				
 				self.handle_input()
+			self.set_background(term.normal)
 
 	def __init__(self) -> None:
 		pass

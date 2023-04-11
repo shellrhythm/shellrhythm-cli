@@ -99,8 +99,9 @@ class Game:
 	bypassSize = False
 
 	def set_background(self, background):
-		global reset_color
+		global reset_color, colors
 		reset_color = background
+		colors[0] = background
 		set_reset_color(background)
 
 	def get_background(self, at_beat):
@@ -296,37 +297,37 @@ class Game:
 
 		pass
 
-	def renderNote(self, atPos, color, key, approachedBeats, notes = {}, i = -1):
+	def renderNote(self, atPos, color, key, approachedBeats, notes = {}, i = -1, resetcol = reset_color):
 		toPrint = "   \n   \n   \n"
 		val = int(approachedBeats*2)
 		if val == 8:
-			toPrint = f"{reset_color}{color} ═ \n{reset_color}{color}   \n{reset_color}{color}   {reset_color}"
+			toPrint = f"{resetcol}{color} ═ \n{resetcol}{color}   \n{resetcol}{color}   {resetcol}"
 		elif val == 7:
-			toPrint = f"{reset_color}{color} ═╗\n{reset_color}{color}   \n{reset_color}{color}   {reset_color}"
+			toPrint = f"{resetcol}{color} ═╗\n{resetcol}{color}   \n{resetcol}{color}   {resetcol}"
 		elif val == 6:
-			toPrint = f"{reset_color}{color} ═╗\n{reset_color}{color}  ║\n{reset_color}{color}   {reset_color}"
+			toPrint = f"{resetcol}{color} ═╗\n{resetcol}{color}  ║\n{resetcol}{color}   {resetcol}"
 		elif val == 5:
-			toPrint = f"{reset_color}{color} ═╗\n{reset_color}{color}  ║\n{reset_color}{color}  ╝{reset_color}"
+			toPrint = f"{resetcol}{color} ═╗\n{resetcol}{color}  ║\n{resetcol}{color}  ╝{resetcol}"
 		elif val == 4:
-			toPrint = f"{reset_color}{color} ═╗\n{reset_color}{color}  ║\n{reset_color}{color} ═╝{reset_color}"
+			toPrint = f"{resetcol}{color} ═╗\n{resetcol}{color}  ║\n{resetcol}{color} ═╝{resetcol}"
 		elif val == 3:
-			toPrint = f"{reset_color}{color} ═╗\n{reset_color}{color}  ║\n{reset_color}{color}╚═╝{reset_color}"
+			toPrint = f"{resetcol}{color} ═╗\n{resetcol}{color}  ║\n{resetcol}{color}╚═╝{resetcol}"
 		elif val == 2:
-			toPrint = f"{reset_color}{color} ═╗\n{reset_color}{color}║ ║\n{reset_color}{color}╚═╝{reset_color}"
+			toPrint = f"{resetcol}{color} ═╗\n{resetcol}{color}║ ║\n{resetcol}{color}╚═╝{resetcol}"
 		elif val == 1:
-			toPrint = f"{reset_color}{color}╔═╗\n{reset_color}{color}║ ║\n{reset_color}{color}╚═╝{reset_color}"
+			toPrint = f"{resetcol}{color}╔═╗\n{resetcol}{color}║ ║\n{resetcol}{color}╚═╝{resetcol}"
 		
 		print_lines_at(atPos[0]-1, atPos[1]-1, toPrint)
 		if self is not None:
 			if len(self.judgements) > len(notes) - (i+1):
 				if self.judgements[len(notes) - (i+1)] != {}:
-					print_at(atPos[0], atPos[1], f"{term.bold}{judgementShort[self.judgements[len(self.chart['notes']) - (i+1)]['judgement']]}{reset_color}{color}")
+					print_at(atPos[0], atPos[1], f"{term.bold}{judgementShort[self.judgements[len(self.chart['notes']) - (i+1)]['judgement']]}{resetcol}{color}")
 				else:
-					print_at(atPos[0], atPos[1], f"{reset_color}{term.bold}{key.upper()}{reset_color}{color}")
+					print_at(atPos[0], atPos[1], f"{resetcol}{term.bold}{key.upper()}{resetcol}{color}")
 			else:
-				print_at(atPos[0], atPos[1], f"{reset_color}{term.bold}{key.upper()}{reset_color}{color}")
+				print_at(atPos[0], atPos[1], f"{resetcol}{term.bold}{key.upper()}{resetcol}{color}")
 		else:
-			print_at(atPos[0], atPos[1], f"{reset_color}{term.bold}{key.upper()}{reset_color}{color}")
+			print_at(atPos[0], atPos[1], f"{resetcol}{term.bold}{key.upper()}{resetcol}{color}")
 
 	def calculatePosition(screenPos, x, y, width, height):
 		"""
@@ -357,7 +358,7 @@ class Game:
 				approachedBeats = (remBeats * self.chart["approachRate"]) + 1
 				if approachedBeats > -0.1 and approachedBeats < 4 and note not in self.dontDraw:
 
-					Game.renderNote(self, calc_pos, color, key, approachedBeats, notes, i) # Say it, you didn't expect a call directly to the Game class. Frankly it's the same shit lmao
+					Game.renderNote(self, calc_pos, color, key, approachedBeats, notes, i, reset_color) # Say it, you didn't expect a call directly to the Game class. Frankly it's the same shit lmao
 
 				if note not in self.dontDraw and ((remTime <= -0.6) or (self.judgements[len(notes) - (i+1)] != {} and -0.2 > remTime > -0.6 )):
 					if note not in self.outOfHere:
@@ -541,6 +542,7 @@ class Game:
 					self.turnOff = self.resultsScreen.gameTurnOff
 				if self.auto and not self.resultsScreen.auto: #displays the resultsScreen.auto message even if you somehow can disable it
 					self.resultsScreen.auto = self.auto
+		self.set_background(term.normal)
 		self.localConduc.stop()
 		self.localConduc.song.stop()
 		self.turnOff = False
