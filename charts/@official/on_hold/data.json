@@ -15,7 +15,11 @@
         "author": "#Guigui",
         "description": "Just a moment: your call is now first in line, and will be answered by the next representative. Thank you for your patience."
     },
-    "approachRate": 1.5,
+    "previewLoop":{
+        "start": [9, 0],
+        "end": [17, 0]
+    },
+    "approachRate": 1.2,
     "difficulty": "Voicemail",
     "notes": [
         {
@@ -562,7 +566,7 @@
                 17,
                 0.66667
             ],
-            "key": 4,
+            "key": 10,
             "screenpos": [
                 0.448,
                 0.5
@@ -614,10 +618,10 @@
                 17,
                 3.0
             ],
-            "key": 20,
+            "key": 4,
             "screenpos": [
-                0.019,
-                0.92
+                0.5,
+                0.164
             ],
             "color": 0
         },
@@ -640,10 +644,10 @@
                 18.0,
                 1.0
             ],
-            "key": 20,
+            "key": 4,
             "screenpos": [
-                0.071,
-                0.92
+                0.5,
+                0.29
             ],
             "color": 0
         },
@@ -653,10 +657,10 @@
                 18,
                 2.5
             ],
-            "key": 10,
+            "key": 14,
             "screenpos": [
-                0.058,
-                0.752
+                0.253,
+                0.584
             ],
             "color": 0
         },
@@ -666,10 +670,10 @@
                 18.0,
                 3.0
             ],
-            "key": 11,
+            "key": 15,
             "screenpos": [
-                0.11,
-                0.752
+                0.292,
+                0.584
             ],
             "color": 0
         },
@@ -679,7 +683,7 @@
                 19.0,
                 0.0
             ],
-            "key": 3,
+            "key": 5,
             "screenpos": [
                 0.409,
                 0.416
@@ -692,7 +696,7 @@
                 19.0,
                 0.0
             ],
-            "key": 1,
+            "key": 4,
             "screenpos": [
                 0.357,
                 0.416
@@ -705,7 +709,7 @@
                 19.0,
                 0.6666699999999999
             ],
-            "key": 4,
+            "key": 13,
             "screenpos": [
                 0.448,
                 0.5
@@ -718,7 +722,7 @@
                 19.0,
                 1.0
             ],
-            "key": 11,
+            "key": 14,
             "screenpos": [
                 0.474,
                 0.542
@@ -731,7 +735,7 @@
                 19.0,
                 1.3333333333333428
             ],
-            "key": 12,
+            "key": 15,
             "screenpos": [
                 0.5,
                 0.5
@@ -744,7 +748,7 @@
                 19.0,
                 2.0
             ],
-            "key": 13,
+            "key": 25,
             "screenpos": [
                 0.604,
                 0.626
@@ -1049,7 +1053,7 @@
             "type": "hit_object",
             "beatpos": [
                 23.0,
-                3.1666666666666714
+                3.25
             ],
             "key": 10,
             "screenpos": [
@@ -1075,7 +1079,7 @@
             "type": "hit_object",
             "beatpos": [
                 24.0,
-                0.6666666666666714
+                0.75
             ],
             "key": 12,
             "screenpos": [
@@ -1088,7 +1092,7 @@
             "type": "hit_object",
             "beatpos": [
                 24.0,
-                1.8333333333333428
+                1.5833333333333428
             ],
             "key": 10,
             "screenpos": [
@@ -1101,7 +1105,7 @@
             "type": "hit_object",
             "beatpos": [
                 24.0,
-                2.25
+                2.0
             ],
             "key": 14,
             "screenpos": [
@@ -1114,7 +1118,7 @@
             "type": "hit_object",
             "beatpos": [
                 24.0,
-                2.75
+                2.5
             ],
             "key": 15,
             "screenpos": [

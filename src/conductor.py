@@ -41,6 +41,9 @@ class Conductor:
 		# 	"toBPM": 150
 		# }
 	]
+	loopStart = -1
+	loopEnd = -1
+	isLoop = False
 	bass = Bass()
 
 	def setMetronomeVolume(self, volume):
@@ -129,12 +132,21 @@ class Conductor:
 
 			self.prevBeat = self.currentBeat
 
+			if self.isLoop:
+				if self.currentTimeSec > self.loopEnd:
+					differenceToSubstract = self.loopEnd - self.loopStart
+					self.currentTimeSec = self.currentTimeSec - differenceToSubstract
+					self.prevTimeSec = self.prevTimeSec - differenceToSubstract
+					self.startTime = self.startTime + differenceToSubstract
+					self.currentBeat = self.getBeatPos(self.currentTimeSec)
+					self.song.move2position_seconds(self.currentTimeSec)
 			return self.deltatime
 		else:
 			if self.song.is_playing:
 				self.song.pause()
 			self.skippedTimeWithPause = (time.time_ns() / 10**9) - self.pauseStartTime
 			return 1/60
+		
 
 	def stop(self):
 		# self.song.pause()

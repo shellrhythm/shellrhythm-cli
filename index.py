@@ -652,7 +652,16 @@ class ChartSelect:
 				conduc.stop()
 				conduc.song.stop()
 				conduc.loadsong(chartData[self.selectedItem])
-				conduc.play()
+				if "previewLoop" in chartData[self.selectedItem]:
+					beginPos = chartData[self.selectedItem]["previewLoop"]["start"]
+					endPos = chartData[self.selectedItem]["previewLoop"]["end"]
+					conduc.loopStart = (beginPos[0] + beginPos[1]/4) * (conduc.bpm/60)
+					conduc.loopEnd = (endPos[0] + endPos[1]/4) * (conduc.bpm/60)
+					conduc.isLoop = True
+					conduc.startAt(beginPos[0]*4 + beginPos[1])
+				else:
+					conduc.isLoop = False
+					conduc.play()
 				# print(term.clear)
 			else:
 				if len(scores[chartData[self.selectedItem]["foldername"]]) != 0:
@@ -668,7 +677,16 @@ class ChartSelect:
 				conduc.stop()
 				conduc.song.stop()
 				conduc.loadsong(chartData[self.selectedItem])
-				conduc.play()
+				if "previewLoop" in chartData[self.selectedItem]:
+					beginPos = chartData[self.selectedItem]["previewLoop"]["start"]
+					endPos = chartData[self.selectedItem]["previewLoop"]["end"]
+					conduc.loopStart = (beginPos[0] + beginPos[1]/4) * (conduc.bpm/60)
+					conduc.loopEnd = (endPos[0] + endPos[1]/4) * (conduc.bpm/60)
+					conduc.isLoop = True
+					conduc.startAt(beginPos[0]*4 + beginPos[1])
+				else:
+					conduc.isLoop = False
+					conduc.play()
 				# print(term.clear)
 			else:
 				if len(scores[chartData[self.selectedItem]["foldername"]]) != 0:
@@ -930,7 +948,17 @@ if __name__ == "__main__":
 			songLoaded = random.randint(0, len(chartData)-1)
 			if chartData[songLoaded] != None:
 				conduc.loadsong(chartData[songLoaded])
-			conduc.play()
+
+			if "previewLoop" in chartData[songLoaded]:
+				beginPos = chartData[songLoaded]["previewLoop"]["start"]
+				endPos = chartData[songLoaded]["previewLoop"]["end"]
+				conduc.loopStart = (beginPos[0] + beginPos[1]/4) * (conduc.bpm/60)
+				conduc.loopEnd = (endPos[0] + endPos[1]/4) * (conduc.bpm/60)
+				conduc.isLoop = True
+				conduc.startAt(beginPos[0]*4 + beginPos[1])
+			else:
+				conduc.isLoop = False
+				conduc.play()
 		else:
 			songLoaded = 0
 		menu = "Titlescreen"
