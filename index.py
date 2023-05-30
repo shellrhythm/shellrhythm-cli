@@ -57,6 +57,15 @@ import src.game as game
 
 conduc = Conductor()
 chartData = []
+chartPacks = [{
+	"name": "Official Songs",
+	"charter": "#Guigui"
+	"folder": "@official",
+	"charts": {
+		"tutorial": ["tutorial"],
+		"on_hold": ["on_hold"],
+	}
+}]
 scores = {}
 
 # ========================= [UTIL FUNCTIONS] =========================
@@ -938,7 +947,7 @@ class TitleScreen:
 			self.loop()
 
 if __name__ == "__main__":
-	chartData, scores = load_charts()
+	chartData, chartPacks, scores = load_charts()
 	locales, localeNames = load_locales()
 	options, selectedLocale = load_options(options)
 	layouts, layoutNames = load_layouts()

@@ -1,0 +1,8 @@
+{
+    "name": "Official shellrhythm Song Pack",
+    "charts": {
+        "tutorial": ["tutorial"],
+        "on_hold": ["on_hold"]
+    },
+    "charter": "#Guigui"
+}

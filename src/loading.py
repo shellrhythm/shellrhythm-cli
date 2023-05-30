@@ -144,6 +144,7 @@ def check_chart(chart = {}, folder = ""):
 
 def load_charts():
 	chartData = []
+	chartPacks = []
 	scores = {}
 	if os.path.exists("./charts"):
 		charts = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts") if f.is_dir()]
@@ -151,10 +152,18 @@ def load_charts():
 		while i < len(charts):
 			subfolder = [f.path[len("./charts\\"):len(f.path)] for f in os.scandir("./charts/" + charts[i]) if f.is_dir()]
 			if len(subfolder) > 0:
+				packname = charts[i]
+				packjson = {
+					"name": "TODO",
+					"folder": packname,
+					"charts": []
+				}
 				charts.remove(charts[i])
 				i-=1
 				for sub in subfolder:
 					charts.append(sub)
+					packjson["charts"].append(sub)
+				chartPacks.append(packjson)
 			else:
 				print(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})")
 				f = open("./charts/" + charts[i] + "/data.json").read()
@@ -172,4 +181,4 @@ def load_charts():
 	else:
 		print(f"{term.yellow}[WARN] Chart folder inexistant!{term.normal}")
 
-	return chartData, scores
+	return chartData, chartPacks, scores
