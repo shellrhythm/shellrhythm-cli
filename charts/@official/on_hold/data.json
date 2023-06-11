@@ -32,7 +32,7 @@
             "type": "text",
             "beatpos": [
                 4.0,
-                0.0
+                6.252776074688882e-13
             ],
             "length": 1.5,
             "text": "{r}Hello,{n}",
@@ -1111,7 +1111,7 @@
             "type": "hit_object",
             "beatpos": [
                 24.0,
-                2.0
+                2.5
             ],
             "key": 12,
             "screenpos": [
@@ -1124,7 +1124,7 @@
             "type": "hit_object",
             "beatpos": [
                 24.0,
-                2.5
+                3.0
             ],
             "key": 13,
             "screenpos": [
@@ -1177,6 +1177,430 @@
             "screenpos": [
                 0.513,
                 0.5
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                25,
+                1.0
+            ],
+            "key": 16,
+            "screenpos": [
+                0.552,
+                0.5
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                25,
+                1.5
+            ],
+            "key": 17,
+            "screenpos": [
+                0.591,
+                0.458
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                25,
+                2.0
+            ],
+            "key": 26,
+            "screenpos": [
+                0.539,
+                0.626
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                25,
+                3.0
+            ],
+            "key": 12,
+            "screenpos": [
+                0.305,
+                0.458
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                26.0,
+                0.3333333333333428
+            ],
+            "key": 23,
+            "screenpos": [
+                0.409,
+                0.752
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                26,
+                1.5
+            ],
+            "key": 23,
+            "screenpos": [
+                0.448,
+                0.752
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                26,
+                2.5
+            ],
+            "key": 24,
+            "screenpos": [
+                0.5,
+                0.794
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                26,
+                3.0
+            ],
+            "key": 5,
+            "screenpos": [
+                0.539,
+                0.29
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                26.0,
+                3.250000000000014
+            ],
+            "key": 6,
+            "screenpos": [
+                0.604,
+                0.332
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                26.0,
+                3.75
+            ],
+            "key": 7,
+            "screenpos": [
+                0.695,
+                0.374
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                28,
+                0.5
+            ],
+            "key": 24,
+            "screenpos": [
+                0.5,
+                0.752
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                28,
+                0.75
+            ],
+            "key": 25,
+            "screenpos": [
+                0.552,
+                0.71
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                28,
+                1.5
+            ],
+            "key": 26,
+            "screenpos": [
+                0.63,
+                0.752
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                28,
+                1.75
+            ],
+            "key": 27,
+            "screenpos": [
+                0.682,
+                0.71
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                28.0,
+                2.5
+            ],
+            "key": 22,
+            "screenpos": [
+                0.344,
+                0.626
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                28,
+                3.0
+            ],
+            "key": 12,
+            "screenpos": [
+                0.357,
+                0.458
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                28,
+                3.5
+            ],
+            "key": 13,
+            "screenpos": [
+                0.448,
+                0.374
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                29,
+                0.0
+            ],
+            "key": 4,
+            "screenpos": [
+                0.474,
+                0.29
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                29,
+                0.0
+            ],
+            "key": 5,
+            "screenpos": [
+                0.526,
+                0.29
+            ],
+            "color": 0
+        },
+        {
+            "type": "bg_color",
+            "beatpos": [
+                29.0,
+                5.684341886080802e-14
+            ],
+            "color": "#00706a"
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                29,
+                0.66667
+            ],
+            "key": 4,
+            "screenpos": [
+                0.5,
+                0.416
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                29,
+                0.66667
+            ],
+            "key": 5,
+            "screenpos": [
+                0.539,
+                0.416
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                29,
+                1.33333
+            ],
+            "key": 4,
+            "screenpos": [
+                0.513,
+                0.5
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                29,
+                2.0
+            ],
+            "key": 5,
+            "screenpos": [
+                0.552,
+                0.5
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                29,
+                3.0
+            ],
+            "key": 15,
+            "screenpos": [
+                0.539,
+                0.584
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                30,
+                0.0
+            ],
+            "key": 10,
+            "screenpos": [
+                0.084,
+                0.626
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                30.0,
+                0.25
+            ],
+            "key": 11,
+            "screenpos": [
+                0.123,
+                0.626
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                30.0,
+                0.5
+            ],
+            "key": 12,
+            "screenpos": [
+                0.162,
+                0.626
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                30,
+                1.5
+            ],
+            "key": 11,
+            "screenpos": [
+                0.084,
+                0.752
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                30,
+                1.75
+            ],
+            "key": 12,
+            "screenpos": [
+                0.123,
+                0.752
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                30,
+                2.0
+            ],
+            "key": 13,
+            "screenpos": [
+                0.162,
+                0.752
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                30,
+                2.5
+            ],
+            "key": 2,
+            "screenpos": [
+                0.162,
+                0.374
+            ],
+            "color": 0
+        },
+        {
+            "type": "hit_object",
+            "beatpos": [
+                30,
+                3.0
+            ],
+            "key": 2,
+            "screenpos": [
+                0.201,
+                0.374
             ],
             "color": 0
         }

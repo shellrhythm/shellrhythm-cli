@@ -869,7 +869,7 @@ class Editor:
 		
 		# :wq - Save and Quit | 1 optional argument (where to save it)
 		elif commandSplit[0] == "wq!" or (commandSplit[0] == "wq" and not self.needsSaving):
-			output = json.dumps(self.mapToEdit)
+			output = json.dumps(self.mapToEdit, indent=4)
 			if len(commandSplit) == 2:
 				self.fileLocation = f"./charts/{commandSplit[1]}/data.json"
 			elif len(commandSplit) == 3:

@@ -59,7 +59,7 @@ conduc = Conductor()
 chartData = []
 chartPacks = [{
 	"name": "Official Songs",
-	"charter": "#Guigui"
+	"charter": "#Guigui",
 	"folder": "@official",
 	"charts": {
 		"tutorial": ["tutorial"],
