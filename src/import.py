@@ -5,7 +5,7 @@ import sys, os, requests, zipfile, io, json
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        r = requests.get(sys.argv[1])
+        r = requests.get(sys.argv[1], timeout=60000)
         z = zipfile.ZipFile(io.BytesIO(r.content))
         folder = "something"
         jsonData = {}
