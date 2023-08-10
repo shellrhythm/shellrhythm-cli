@@ -136,7 +136,7 @@ class TitleScreen(BaseScene):
         """
 
         bottom_txt = open("./assets/bottom.txt", encoding="utf8")
-        self.bottomTextLines = bottom_txt.readline()
+        self.bottom_text_lines = bottom_txt.readline()
         bottom_txt.close()
 
         logo_file = open("./assets/logo.txt", encoding="utf-8")

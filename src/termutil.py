@@ -7,7 +7,7 @@ import datetime
 from blessed import Terminal
 from src.framebuffer import Framebuffer
 from src.translate import LocaleManager
-from term_image.image import BlockImage
+from term_image.image import from_file
 
 cur_locale = LocaleManager().current_locale()
 
@@ -166,6 +166,7 @@ def on_resize(_, _2):
     previous_width = framebuffer.width
     previous_height = framebuffer.height
     just_resized = True
+    print(term.clear)
 
 if platform.system() != "Windows":
     signal.signal(signal.SIGWINCH, on_resize)
@@ -204,17 +205,17 @@ def print_lines_at(x:int, y:int, text:str, center = False, color = None):
     if color is None:
         color = reset_color
     lines = text.split("\n")
-    for i in range(len(lines)):
+    for i,line in enumerate(lines):
         if center:
-            print_at(x, y + i, color + term.center(lines[i]) + reset_color)
+            print_at(x, y + i, color + term.center(line) + reset_color)
         else:
-            print_at(x, y + i, color + lines[i] + reset_color)
+            print_at(x, y + i, color + line + reset_color)
 
-def print_image(x,y,imagePath,scale):
-    if os.path.exists(imagePath):
-        image = BlockImage.from_file(imagePath, width=scale)
-        stringifiedImage = str(image)
-        print_lines_at(x, y, stringifiedImage)
+def print_image(x,y,image_path,scale):
+    if os.path.exists(image_path):
+        image = from_file(image_path, width=scale)
+        stringified_image = str(image)
+        print_lines_at(x, y, stringified_image)
         return True
     else:
         return False
@@ -223,18 +224,18 @@ def print_column(x, y, size, char):
     for i in range(size):
         print_at(x, y + i, char)
 
-def print_cropped(x, y, maxsize, text, offset, color, isWrapAround = True):
-    if isWrapAround:
+def print_cropped(x, y, maxsize, text, offset, color, is_wrap_around = True):
+    if is_wrap_around:
         print_at(x, y, color + (text*(3+int(maxsize/len(text))))[(offset%len(text))+len(text):maxsize+(offset%len(text))+len(text)] + reset_color)
     else:
-        actualText = text[offset%len(text):maxsize+(offset%len(text))]
-        print_at(x, y, color + actualText + reset_color + (" "*(maxsize - len(actualText))))
+        actual_text = text[offset%len(text):maxsize+(offset%len(text))]
+        print_at(x, y, color + actual_text + reset_color + (" "*(maxsize - len(actual_text))))
 
 def print_box(x,y,width, height, color = reset_color, style = 0, caption = ""):
     current_box_style = "????????"
-    if type(style) is int:
+    if isinstance(style, int):
         current_box_style = box_styles[style]
-    elif type(style) is str:
+    elif isinstance(style, str):
         current_box_style = box_styles
     if caption != "":
         print_at(x,y,

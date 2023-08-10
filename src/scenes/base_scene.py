@@ -1,6 +1,6 @@
 import platform
 import asyncio
-from src.termutil import too_small, refresh, check_term_size
+from src.termutil import too_small, refresh, check_term_size, term, print_at, reset_color
 from src.options import OptionsManager
 from src.conductor import Conductor
 from src.translate import LocaleManager, Locale
@@ -9,7 +9,7 @@ class BaseScene:
     """Base scene class. Use this when creating a scene."""
     turn_off:bool = False
     deltatime:float = 0.0
-    conduc:Conductor = None
+    conduc:Conductor = Conductor()
     loc:Locale = LocaleManager.current_locale()
 
     async def draw(self) -> None:
@@ -22,6 +22,9 @@ class BaseScene:
     async def handle_screen_too_small(self) -> None:
         """Display a message on the screen instead of drawing \
         when the screen does not meet the minimum size requirements"""
+        text = self.loc("screenTooSmall")
+        print_at(int((term.width - len(text))*0.5),
+                 int(term.height*0.5), term.reverse + text + reset_color)
 
     def loop(self) -> None:
         """The looping mechanism. May need to be redone."""
