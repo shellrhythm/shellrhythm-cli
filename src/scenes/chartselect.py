@@ -95,19 +95,19 @@ class ChartSelect(BaseScene):
 
             #endregion
             print_at(25 + img_width, 8, "┠" + ("─"*(term.width - (26 + img_width))))
-            print_at(28 + img_width, 8, term.reverse + self.loc("chartSelect.metadata.description") + reset_color)
+            print_at(28 + img_width, 8, 
+                     term.reverse + self.loc("chartSelect.metadata.description") + reset_color
+                    )
             print_lines_at(26 + img_width, 9, chart_in_question["metadata"]["description"])
             print_at(25 + img_width, 19, "┸" + ("─"*(term.width - (26 + img_width))))
             print_at(20, 19, "┠" + ("─"*(4+img_width)))
             text_auto = self.loc("chartSelect.auto")
             if SceneManager["Game"].auto:
-                print_at(23, 18, 
-                    term.reverse + (" "*int((round(term.width*0.2)-len(text_auto))/2)) 
-                    + text_auto + (" "*int((int(term.width*0.2)-len(text_auto))/2)) 
-                    + reset_color
+                print_at(23, 18,
+                    term.reverse(term.center(text_auto, img_width))
                 )
             else:
-                print_at(23, 18, reset_color+(" "*int(term.width*0.2)))
+                print_at(23, 18, reset_color+(" "*img_width))
 
             #Scores!
             max_rendered_scores = min(len(ChartManager.scores[chart_in_question["foldername"]]), term.height-23)

@@ -32,7 +32,6 @@ class Options(BaseScene):
     string_interacted = -1
     current_input = ""
     string_cursor = 0
-    loc:Locale = LocaleManager.current_locale
 
     def populate_enum(self):
         displayed_values = [LocaleManager.locales[loc]("lang") for loc in LocaleManager.locales]
@@ -42,10 +41,9 @@ class Options(BaseScene):
         self.menuOptions[7]["populatedValues"] = LayoutManager.layoutNames
 
     def translate(self):
-        loc:Locale = self.loc
         for optn in self.menuOptions:
             key = f"options.{optn['var']}"
-            optn["displayName"] = Locale.__call__(loc, key)
+            optn["displayName"] = self.loc(key)
 
     def moveBy(self, x):
         # print(term.clear)
@@ -69,7 +67,7 @@ class Options(BaseScene):
         OptionsManager.set(enum["var"], enum["populatedValues"][curChoice])
         if enum["var"] == "lang":
             LocaleManager.change_locale(enum["populatedValues"][curChoice])
-            self.loc = LocaleManager.current_locale
+            self.loc = LocaleManager.current_locale()
             # print(term.clear)
             self.translate()
     
@@ -104,7 +102,7 @@ class Options(BaseScene):
                 print_at(0,i*2 + 3, reset_color + f" {optn['displayName']}{' '*(maxLength-titleLen+1)}  ")
             if leType == "intField":
                 if self.selectedItem == i and optn["isOffset"]:
-                    print_at(maxLength + 6, i*2+3, str(OptionsManager[leVar] * 1000) + (" "*int(term.width*0.2)) + self.loc.__call__("options.calibrationTip"))
+                    print_at(maxLength + 6, i*2+3, str(OptionsManager[leVar] * 1000) + (" "*int(term.width*0.2)) + self.loc("options.calibrationTip"))
                 else:
                     print_at(maxLength + 6, i*2+3, str(OptionsManager[leVar] * 1000))
             if leType == "intSlider":
@@ -117,7 +115,7 @@ class Options(BaseScene):
                                 reset_color + (" "*6) + str(self.menuOptions[i]["displayedValues"]) + term.clear_eol)
                 else:
                     if self.selectedItem == i and self.menuOptions[i]["var"] == "layout":
-                        print_at(maxLength + 6, i*2+3, "[" + OptionsManager[leVar] + "] ⌄" + (" "*int(term.width*0.2)) + self.loc.__call__("options.layoutTip"))
+                        print_at(maxLength + 6, i*2+3, "[" + OptionsManager[leVar] + "] ⌄" + (" "*int(term.width*0.2)) + self.loc("options.layoutTip"))
                     elif "displayedValues" in self.menuOptions[i]:
                         print_at(maxLength + 6, i*2+3, "[" + self.menuOptions[i]["displayedValues"][self.menuOptions[i]["populatedValues"].index(OptionsManager[leVar])] + "] ⌄")
                     else:
@@ -217,10 +215,10 @@ class Options(BaseScene):
                         new_value -= self.menuOptions[self.selectedItem]["snap"]
                         new_value = min(int(new_value*100)/100, self.menuOptions[self.selectedItem]["max"])
                         new_value /= self.menuOptions[self.selectedItem]["mult"]
-                        volMode = 0
+                        volume_type = 0
                         if option_variable == "hitSoundVolume":
-                            volMode = 1
-                        self.volume(volMode, new_value)
+                            volume_type = 1
+                        self.volume(volume_type, new_value)
                     else:
                         new_value -= self.menuOptions[self.selectedItem]["snap"]
                     OptionsManager.set(option_variable, new_value)
@@ -232,10 +230,10 @@ class Options(BaseScene):
                         new_value += self.menuOptions[self.selectedItem]["snap"]
                         new_value = min(int(new_value*100)/100, self.menuOptions[self.selectedItem]["max"])
                         new_value /= self.menuOptions[self.selectedItem]["mult"]
-                        volMode = 0
+                        volume_type = 0
                         if option_variable == "hitSoundVolume":
-                            volMode = 1
-                        self.volume(volMode, new_value)
+                            volume_type = 1
+                        self.volume(volume_type, new_value)
                     else:
                         new_value += self.menuOptions[self.selectedItem]["snap"]
                     OptionsManager.set(option_variable, new_value)
@@ -252,7 +250,7 @@ class Options(BaseScene):
                     self.conduc.stop()
                     SceneManager["Calibration"].turn_off = False
                     SceneManager["Calibration"].startCalibGlobal()
-                    self.suggestedOffset = SceneManager["Calibration"].init()
+                    self.suggestedOffset = SceneManager["Calibration"].init(False)
                     self.isPickingOffset = True
                     SceneManager["Calibration"].conduc.stop()
                     SceneManager["Calibration"].hitCount = 0
@@ -264,7 +262,7 @@ class Options(BaseScene):
                     self.turn_off = True
                     self.goBack = True
                     self.selectedItem = 4
- 
+
                     result = False
                     custom_layout = ["╳" for _ in range(30)]
                     if "custom" in LayoutManager.layoutNames:
@@ -276,12 +274,14 @@ class Options(BaseScene):
 
             else:
                 if val.name == "KEY_DOWN" or val == "j":
-                    self.curEnumValue = (self.curEnumValue-1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
+                    self.curEnumValue = (self.curEnumValue-1) % \
+                        len(self.menuOptions[self.enumInteracted]["populatedValues"])
                     self.interact_enum(self.menuOptions[self.enumInteracted], self.curEnumValue)
                 if val.name == "KEY_UP" or val == "k":
-                    self.curEnumValue = (self.curEnumValue+1)%len(self.menuOptions[self.enumInteracted]["populatedValues"])
+                    self.curEnumValue = (self.curEnumValue+1) % \
+                        len(self.menuOptions[self.enumInteracted]["populatedValues"])
                     self.interact_enum(self.menuOptions[self.enumInteracted], self.curEnumValue)
-                if val.name == "KEY_ESCAPE" or val.name == "KEY_ENTER":
+                if val.name in ("KEY_ESCAPE", "KEY_ENTER"):
                     self.enumInteracted = -1
 
 

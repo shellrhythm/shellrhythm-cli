@@ -3,6 +3,7 @@ from src.charts_manager import ChartManager
 from src.termutil import *
 from src.conductor import Conductor
 from src.translate import Locale, LocaleManager
+from src.charts_manager import ChartManager
 
 from pybass3 import Song
 
@@ -24,12 +25,10 @@ class Calibration:
     # CalibrationSong   : Sync song to beats
 
     calibselec = 0
-    selecSong = -1
+    selected_song_id = -1
+    selected_song:dict = None
 
-    chart_data = []
-
-    #Locale
-    loc:Locale = LocaleManager.current_locale
+    loc:Locale = LocaleManager.current_locale()
 
     def handle_input(self):
         val = ''
@@ -56,7 +55,7 @@ class Calibration:
                     self.conduc.setOffset(self.totalOffset)
 
             if self.calibration_menu == "CalibrationSelect":
-                if self.selecSong == -1:
+                if self.selected_song_id == -1:
                     if val.name == "KEY_DOWN":
                         self.calibselec = (self.calibselec + 1)%3
                     if val.name == "KEY_UP":
@@ -65,20 +64,20 @@ class Calibration:
                         if self.calibselec == 0:
                             self.startCalibGlobal()
                         if self.calibselec == 1:
-                            self.selecSong = 0
+                            self.selected_song_id = 0
                             print_at(int((term.width)*0.2), int(term.height*0.5)-1,self.loc("calibration.selectSong"))
-                            print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(self.selecSong) + "  ")
+                            print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(self.selected_song_id) + "  ")
                         if self.calibselec == 2:
                             self.turnOff = True
                 else:
                     if val.name == "KEY_LEFT":
-                        self.selecSong = (self.selecSong - 1)%len(self.chart_data)
-                        print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(self.selecSong) + "  ")
+                        self.selected_song_id = (self.selected_song_id - 1)%len(ChartManager.chart_data)
+                        print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(self.selected_song_id) + "  ")
                     if val.name == "KEY_RIGHT":
-                        self.selecSong = (self.selecSong + 1)%len(self.chart_data)
-                        print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(self.selecSong) + "  ")
+                        self.selected_song_id = (self.selected_song_id + 1)%len(ChartManager.chart_data)
+                        print_at(int((term.width)*0.2), int(term.height*0.5)+1,"> " + str(self.selected_song_id) + "  ")
                     if val.name == "KEY_ENTER":
-                        self.startCalibSong(self.chart_data[self.selecSong])
+                        self.startCalibSong(ChartManager.chart_data[self.selected_song_id])
 
 
     def draw(self):
@@ -89,8 +88,9 @@ class Calibration:
             print_at(0,10,f"{term.center(self.loc('calibration.hit'))}")
             print_at(0,12,f"{term.center(text_beat)}")
         if self.calibration_menu == "CalibrationSong":
-            text_title = self.chart_data[self.selecSong]["metadata"]["title"] + " - " + self.chart_data[self.selecSong]["metadata"]["artist"]
-            text_bpm = "BPM: " + str(self.chart_data[self.selecSong]["bpm"])
+            text_title = self.selected_song["metadata"]["title"] + " - " + \
+                self.selected_song["metadata"]["artist"]
+            text_bpm = "BPM: " + str(self.selected_song["bpm"])
             print_at(0,9,f"{term.center(text_title)}")
             print_at(0,10,f"{term.center(text_bpm)}")
 
@@ -121,21 +121,25 @@ class Calibration:
                 print_at(int((term.width - len(text_quit))*0.5)+2, int(term.height*0.5) + 2, "< " + text_quit + " >")
 
     def startCalibGlobal(self):
+        self.loc = LocaleManager.current_locale()
         ChartManager.load_charts()
-        self.conduc.loadsong(self.chart_data[0])
+        self.conduc.loadsong(ChartManager.chart_data[0])
+        self.selected_song_id = 0
+        self.selected_song = ChartManager.chart_data[self.selected_song_id]
         self.calibration_menu = "CalibrationGlobal"
         print(term.clear)
         self.conduc.play()
 
     def startCalibSong(self, chart):
+        self.loc = LocaleManager.current_locale()
         self.calibration_menu = "CalibrationSong"
         print(term.clear)
         self.conduc.stop()
         self.conduc.loadsong(chart)
         self.conduc.play()
         self.conduc.metronome = True
-        self.chart_data.append(chart)
-        self.selecSong = len(self.chart_data)-1
+        ChartManager.chart_data.append(chart)
+        self.selected_song_id = len(ChartManager.chart_data)-1
 
     def init(self, fullscreen = True):		
         if fullscreen:

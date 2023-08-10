@@ -1,6 +1,8 @@
 
+import json
 from src.scenes.base_scene import BaseScene
 from src.scene_manager import SceneManager
+from src.options import OptionsManager
 from src.termutil import print_at, term, reset_color
 
 class Credits(BaseScene):
@@ -8,11 +10,10 @@ class Credits(BaseScene):
     turnOff = False
     credits_data = []
     creditsPath = "./assets/credits.json"
-    selectedItem = 0
-    isViewingProfile = False
-    options = {}
+    selected_item = 0
+    state_viewing_profile = False
 
-    def draw(self):
+    async def draw(self):
         max_length = 0
 
         for option in self.credits_data:
@@ -20,7 +21,7 @@ class Credits(BaseScene):
                 max_length = len(option["role"])
 
         for (i,data_line) in enumerate(self.credits_data):
-            if self.selectedItem == i:
+            if self.selected_item == i:
                 print_at(0,(i*2)+3,term.reverse + term.bold + "    " +
                          (" "*(max_length-len(data_line["role"]))) + data_line["role"]
                          + " " + reset_color + term.underline + data_line["name"] + reset_color
@@ -28,43 +29,44 @@ class Credits(BaseScene):
             else:
                 print_at(0,(i*2)+3,term.bold + "    " + (" "*(max_length-len(data_line["role"])))
                          + data_line["role"] + " " + reset_color + data_line["name"] + reset_color)
-        if self.isViewingProfile:
-            for i in range(len(self.credits_data[self.selectedItem]["links"])):
-                text = self.credits_data[self.selectedItem]["links"][i]["label"]
-                print_value = term.link(self.credits_data[self.selectedItem]["links"][i]["link"],
-                                        self.credits_data[self.selectedItem]["links"][i]["label"])
+        if self.state_viewing_profile:
+            for i in range(len(self.credits_data[self.selected_item]["links"])):
+                text = self.credits_data[self.selected_item]["links"][i]["label"]
+                print_value = term.link(self.credits_data[self.selected_item]["links"][i]["link"],
+                                        self.credits_data[self.selected_item]["links"][i]["label"])
                 print_at(term.width - (len(text)+1), i+3, print_value)
-                if self.options["nerdFont"]:
+                if OptionsManager["nerdFont"]:
                     print_at(term.width - (len(text)+3), i+3,
-                             self.credits_data[self.selectedItem]["links"][i]["icon"])
+                             self.credits_data[self.selected_item]["links"][i]["icon"])
 
     def enter_pressed(self):
-        if not self.isViewingProfile:
-            self.isViewingProfile = True
+        if not self.state_viewing_profile:
+            self.state_viewing_profile = True
 
-    def handle_input(self):
+    async def handle_input(self):
         val = ''
         val = term.inkey(timeout=1/60, esc_delay=0)
 
         if val.name == "KEY_ESCAPE":
-            if not self.isViewingProfile:
+            if not self.state_viewing_profile:
                 self.turn_off = True
                 SceneManager.change_scene("Titlescreen")
                 # print(term.clear)
             else:
-                self.isViewingProfile = False
+                self.state_viewing_profile = False
                 # print(term.clear)
 
         if val.name == "KEY_DOWN":
-            self.selectedItem += 1
-            self.selectedItem %= len(self.credits_data)
+            self.selected_item += 1
+            self.selected_item %= len(self.credits_data)
 
         if val.name == "KEY_UP":
-            self.selectedItem -= 1
-            self.selectedItem %= len(self.credits_data)
+            self.selected_item -= 1
+            self.selected_item %= len(self.credits_data)
 
         if val.name == "KEY_ENTER":
             self.enter_pressed()
 
     def __init__(self) -> None:
-        pass
+        file = open(self.creditsPath, encoding="utf8")
+        self.credits_data = json.load(file)

@@ -27,7 +27,6 @@ class TitleScreen(BaseScene):
     bottom_text = ""
     discordLink = "https://discord.gg/artQgD3Y8V"
     githubLink = "https://github.com/HastagGuigui/shellrhythm"
-    locale:Locale = Locale("en")
     conduc:Conductor = Conductor()
     options:dict = {}
     bottom_text_lines:list = []
@@ -50,7 +49,6 @@ class TitleScreen(BaseScene):
             SceneManager["Editor"].options = self.options
             SceneManager["Editor"].layoutname = self.options["layout"]
             SceneManager["Editor"].layout = Game.setupKeys(None, self.options["layout"])
-            SceneManager["Editor"].loc = self.locale
             SceneManager.change_scene("Editor")
 
         if self.selectedItem == 2:
@@ -74,7 +72,7 @@ class TitleScreen(BaseScene):
         print_at(int((term.width - len(self.bottom_text)) / 2), len(self.logo.splitlines()) + 2, self.bottom_text)
 
         for (i,optn) in enumerate(self.menuOptions):
-            text = self.locale(optn)
+            text = self.loc(optn)
             if self.selectedItem == i:
                 if OptionsManager["nerdFont"]:
                     print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"{term.reverse}   {text} {reset_color}\ue0b0")
@@ -136,7 +134,7 @@ class TitleScreen(BaseScene):
         """
 
         bottom_txt = open("./assets/bottom.txt", encoding="utf8")
-        self.bottom_text_lines = bottom_txt.readline()
+        self.bottom_text_lines = bottom_txt.read().split("\n")
         bottom_txt.close()
 
         logo_file = open("./assets/logo.txt", encoding="utf-8")

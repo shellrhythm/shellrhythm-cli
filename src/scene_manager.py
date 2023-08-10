@@ -20,8 +20,10 @@ class SceneManager:
     @staticmethod
     def loop():
         "Starts the scene manager."
+
         with term.fullscreen(), term.cbreak(), term.hidden_cursor():
             # print(term.clear)
+            SceneManager.loadedMenus[SceneManager.current_scene].on_open()
             while not SceneManager.loadedMenus[SceneManager.current_scene].turn_off:
                 SceneManager.loadedMenus[SceneManager.current_scene].loop()
 
