@@ -1,26 +1,28 @@
-from blessed import Terminal
-import os, sys
+import os
 import json
-from pybass3 import Song
 import time
-# from index import *
 import hashlib
-from src.termutil import term, print_at, set_reset_color
-from src.conductor import *
-from src.scenes.results import *
+from src.termutil import term, print_at, set_reset_color, framerate, print_column,\
+    color_code_from_hex, print_box, reset_color
+from src.conductor import Conductor, format_time
+from src.scene_manager import SceneManager
 from src.scenes.base_scene import BaseScene
+from src.scenes.results import scoreCalc
+from src.layout import LayoutManager
 from src.translate import Locale
 from src.scenes.game_objects.note import NoteObject
 
-from src.constants import *
+from src.constants import colors, MAX_SCORE, accMultiplier, JUDGEMENT_NAMES,\
+    default_size, INPUT_FREQUENCY, hitWindows
 
 
 
 
 class Game(BaseScene):
     version = 1.2
-    localConduc = Conductor()
-    beatSound = Song("assets/clap.wav")
+
+    conduc:Conductor = Conductor()
+    beat_sound_volume = 1.0
     chart = {}
     deltatime = 0.0
     turnOff = False
@@ -33,7 +35,6 @@ class Game(BaseScene):
     auto = False
     misses_count = 0
     pause_option = 0
-    results_screen = ResultsScreen()
     playername = ""
     lastHit = {}
     options = {}
@@ -67,19 +68,10 @@ class Game(BaseScene):
         return out
 
     def setupKeys(self, layout):
-        if os.path.exists("./layout/" + layout):
-            output = []
-            file = open("./layout/" + layout, encoding="utf8")
-            rows = file.readlines()
-
-            for row in range(len(rows)):
-                for char in range(10):
-                    output.append(rows[row][char])
-
-            if self is not None:
-                self.keys = output
-            else:
-                return output
+        if self is not None:
+            self.keys = LayoutManager[layout]
+        else:
+            return LayoutManager[layout]
     
 
     def generate_results_file(self):
@@ -133,21 +125,21 @@ class Game(BaseScene):
                 self.judgements.append({})
         for i in range(len(self.notes)):
             note = self.notes[len(self.notes) - (i+1)] #It's inverted so that the ones with the lowest remaining_beats are rendered on top of the others.
-            offseted_beat = self.localConduc.currentBeat - (self.localConduc.offset/(60/self.localConduc.bpm))
-            note.render(offseted_beat,self.dontDraw)
+            offseted_beat = self.conduc.current_beat - (self.conduc.offset/(60/self.conduc.bpm))
+            note.render(offseted_beat,self.dontDraw,self.conduc.bpm,self.outOfHere)
                     
                 
         text_beat = "○ ○ ○ ○"
-        text_beat = text_beat[:int(self.localConduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.localConduc.currentBeat)%4 * 2) + 1:]
+        text_beat = text_beat[:int(self.conduc.current_beat)%4 * 2] + "●" + text_beat[(int(self.conduc.current_beat)%4 * 2) + 1:]
         print_at(int(term.width * 0.5)-3, 1, reset_color + text_beat)
         
-    def draw(self):
+    async def draw(self):
         # get background color
-        self.set_background(self.get_background(self.localConduc.currentBeat))
+        self.set_background(self.get_background(self.conduc.current_beat))
         print_at(0, term.height-2, str(framerate()) + "fps" )
-        if not self.localConduc.isPaused:
-            timerText = str(format_time(int(self.localConduc.currentTimeSec))) + " / " + str(format_time(int(self.end_time)))
-            print_at(0,0, f"{reset_color}{term.center(timerText)}")
+        if not self.conduc.paused:
+            timer_text = str(format_time(int(self.conduc.cur_time_sec))) + " / " + str(format_time(int(self.end_time)))
+            print_at(0,0, f"{reset_color}{term.center(timer_text)}")
             print_at(0,0,reset_color + self.chart["metadata"]["artist"] + " - " + self.chart["metadata"]["title"])
             print_at(term.width - (len(str(self.accuracy)) + 2), 0, str(self.accuracy) + "%")
             print_at(term.width - (len(str(self.score)) + 1), 1, str(self.score))
@@ -190,29 +182,30 @@ class Game(BaseScene):
             else:
                 print_at(int((term.width-len(text_quit)) * 0.5) - 1, int(term.height*0.5), reset_color+" "+text_quit+" "+reset_color)
             
+        self.conduc.debugSound()
 
     def retry(self):
         print(term.clear)
-        self.localConduc.stop()
-        self.localConduc.song.move2position_seconds(0)
+        self.conduc.stop()
+        self.conduc.song.move2position_seconds(0)
         self.judgements = []
         self.outOfHere = []
         self.dontDraw = []
-        self.localConduc.skippedTimeWithPause = 0
-        self.localConduc.play()
-        self.localConduc.bpm = self.localConduc.previewChart["bpm"]
-        self.localConduc.isPaused = False
+        self.conduc.skipped_time_with_pause = 0
+        self.conduc.play()
+        self.conduc.bpm = self.conduc.previewChart["bpm"]
+        self.conduc.paused = False
         # self.localConduc.resume()
 
-    def handle_input(self):
-        if not self.localConduc.isPaused:
+    async def handle_input(self):
+        if not self.conduc.paused:
             val = ''
             val = term.inkey(timeout=1/INPUT_FREQUENCY, esc_delay=0)
 
             if val.name == "KEY_ESCAPE":
-                self.localConduc.pause()
+                self.conduc.pause()
 
-            if self.localConduc.currentTimeSec > self.end_time:
+            if self.conduc.cur_time_sec > self.end_time:
                 result = self.generate_results_file()
                 if not self.auto:
                     if not os.path.exists("./scores/"):
@@ -232,33 +225,31 @@ class Game(BaseScene):
                             "x", encoding="utf8")
                     f2.write(json.dumps(result))
                     f2.close()
-                self.results_screen.hitWindows = hitWindows
-                self.results_screen.resultsData = result
-                self.results_screen.isEnabled = True
+                SceneManager["Results"].hit_windows = hitWindows
+                SceneManager["Results"].results_data = result
+                SceneManager["Results"].isEnabled = True
                 print(term.clear)
-                self.results_screen.setup()
+                SceneManager.change_scene("Results")
 
-            if val in self.keys and not self.auto and not self.localConduc.isPaused:
-                pos = [-1, -1]
-                for y in range(len(self.keys)):
-                    for x in range(len(self.keys[y])):
-                        if self.keys[y][x] == val:
-                            pos = [x, y]
-                for i in range(len(self.chart["notes"])):
-                    note = self.chart["notes"][i]
-                    if note["type"] == "hit_object":
-                        if note["key"] == pos[0] * 10 + pos[1] and note not in self.outOfHere:
-                            hit_detected = self.checkJudgement(note, i)
-                            if hit_detected:
-                                self.outOfHere.append(note)
-                                break
-
-            if self.auto and not self.localConduc.isPaused:
-                for i in range(len(self.chart["notes"])):
-                    note = self.chart["notes"][i]
-                    if note["type"] == "hit_object":
+            if val in self.keys and not self.auto and not self.conduc.paused:
+                # for (y,row) in enumerate(self.keys):
+                #     for (x, key) in enumerate(row):
+                #         if key == val:
+                #             pos = [x, y]
+                for (_, note) in enumerate(self.notes):
+                    if isinstance(note, NoteObject):
                         if note not in self.outOfHere:
-                            hit_detected = self.checkJudgement(note, i)
+                            if note.key == val:
+                                hit_detected = note.checkJudgement(self.conduc.cur_time_sec, wasnt_hit=False, auto=self.auto)
+                                if hit_detected:
+                                    self.outOfHere.append(note)
+                                    break
+
+            if self.auto and not self.conduc.paused:
+                for (_, note) in enumerate(self.notes):
+                    if isinstance(note, NoteObject):
+                        if note not in self.outOfHere:
+                            hit_detected = note.checkJudgement(self.conduc.cur_time_sec, auto=self.auto)
                             if hit_detected:
                                 self.outOfHere.append(note)
                                 break
@@ -267,7 +258,7 @@ class Game(BaseScene):
             val = term.inkey(timeout=1/INPUT_FREQUENCY, esc_delay=0)
 
             if val.name == "KEY_ESCAPE":
-                self.localConduc.resume()
+                self.conduc.resume()
             if val.name == "KEY_DOWN" or val == "j":
                 self.pause_option = (self.pause_option + 4)%3
             if val.name == "KEY_UP" or val == "k":
@@ -275,29 +266,20 @@ class Game(BaseScene):
 
             if val.name == "KEY_ENTER":
                 if self.pause_option == 0:
-                    self.localConduc.resume()
+                    self.conduc.resume()
                 if self.pause_option == 1:
                     self.retry()
                 if self.pause_option == 2:
                     self.turn_off = True
-                    self.localConduc.resume()
+                    self.conduc.resume()
 
-    def handle_screen_too_small(self):
-        text = self.loc("screenTooSmall")
-        print_at(
-            int((term.width - len(text))*0.5),
-            int(term.height*0.5),
-            term.reverse + text + reset_color
-        )
-
-    def loop(self):
-        super().loop()
+    def on_close(self):
         self.set_background(term.normal)
-        self.localConduc.stop()
-        self.localConduc.song.stop()
+        self.conduc.stop()
+        self.conduc.song.stop()
         self.turn_off = False
-        self.results_screen.gameTurnOff = False
-        self.results_screen.isEnabled = False
+        SceneManager["Results"].gameTurnOff = False
+        SceneManager["Results"].isEnabled = False
 
     def load_bg_changes(self, notes):
         """TODO: REWRITE THIS"""
@@ -333,8 +315,11 @@ class Game(BaseScene):
         self.background_changes = []
         for note in notes:
             if note["type"] == "hit_object": # setup note
-                new_note = NoteObject(note, self.keys)
+                new_note = NoteObject(note, [self.chart["bpm"]], self.keys)
                 new_note.approach_rate = self.chart["approachRate"]
+                SceneManager["Options"].conduc.bass.SetChannelVolume(
+                    new_note.hit_sound.handle, self.beat_sound_volume
+                )
                 self.notes.append(new_note)
             elif note["type"] == "bg_color":
                 color = term.normal
@@ -357,7 +342,7 @@ class Game(BaseScene):
                         color = term.normal
             elif note["type"] == "end":
                 ends_at_beat = note["beatpos"][0] * 4 + note["beatpos"][1]
-                self.end_time = ends_at_beat * (60/self.localConduc.bpm)
+                self.end_time = ends_at_beat * (60/self.conduc.bpm)
 
 
     def play(self, chart, options, layout = "qwerty"):
@@ -371,16 +356,15 @@ class Game(BaseScene):
         self.dontDraw = []
         self.outOfHere = []
 
-        self.results_screen = ResultsScreen()
-        self.results_screen.auto = self.auto
+        SceneManager["Results"].auto = self.auto
         self.misses_count = 0
         self.score = 0
 
-        self.localConduc.loadsong(self.chart)
-        self.localConduc.play()
-        self.localConduc.song.move2position_seconds(0)
+        self.conduc.loadsong(self.chart)
+        self.conduc.song.move2position_seconds(0)
+        self.conduc.play()
+        assert self.conduc.start_time != 0
 
-        self.loop()
 
 
     def __init__(self) -> None:

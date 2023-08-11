@@ -77,10 +77,13 @@ class ChartManager:
         if "formatVersion" not in chart.keys():
             chart["formatVersion"] = 0
 
+        if "approachRate" not in chart.keys():
+            chart["approachRate"] = 1
+
         if chart["formatVersion"] == 0:
             #Format 0 docs:
             #no foldername
-            #no icon, defaults to a TXT 
+            #no icon, defaults to a TXT
             #author/charter instead of artist/author
             output = {
                 "formatVersion": 0,

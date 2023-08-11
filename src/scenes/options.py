@@ -1,7 +1,7 @@
 from src.termutil import print_at, print_lines_at, term, reset_color
 from src.scenes.base_scene import BaseScene
 from src.layout import LayoutManager
-from src.translate import LocaleManager, Locale
+from src.translate import LocaleManager
 from src.scene_manager import SceneManager
 from src.options import OptionsManager
 from src.textbox import textbox_logic
@@ -52,10 +52,10 @@ class Options(BaseScene):
     def volume(self, volType=0, value = 1):
         if volType == 0:
             self.conduc.setVolume(value)
-            SceneManager["Game"].localConduc.setVolume(value)
+            SceneManager["Game"].conduc.setVolume(value)
         elif volType == 1:
             self.conduc.setMetronomeVolume(value)
-            self.conduc.bass.SetChannelVolume(SceneManager["Game"].beatSound.handle, value)
+            SceneManager["Game"].beat_sound_volume = value
             
     
     # --- INTERACT FUNCTIONS ---
@@ -94,7 +94,7 @@ class Options(BaseScene):
             leVar = optn["var"]
             #DisplayName
             if self.selectedItem == i and not self.isPickingOffset:
-                if int(self.conduc.currentBeat) % 2 == 1:
+                if int(self.conduc.current_beat) % 2 == 1:
                     print_at(0,i*2 + 3, term.reverse + f"- {optn['displayName']}{' '*(maxLength-titleLen+1)}>" + reset_color)
                 else:
                     print_at(0,i*2 + 3, reset_color  + f"- {optn['displayName']}{' '*(maxLength-titleLen+1)}>" + reset_color)

@@ -14,7 +14,7 @@ class NoteObject(GameplayObject):
     time_position:float = 0.0
     approach_rate:float = 1.0
     judgement:dict = {}
-    hit_sound:Song
+    hit_sound:Song = Song("assets/clap.wav")
     played_sound:bool = False
 
     @staticmethod
@@ -22,8 +22,9 @@ class NoteObject(GameplayObject):
         """Based on the beat position and a bpm table, returns the corresponding time."""
         return beat_position * (60/bpm_table[0])
 
-    def __init__(self, data:dict, keys:list) -> None:
+    def __init__(self, data:dict, bpm_table:list, keys:list) -> None:
         self.beat_position = data["beatpos"][0] * 4 + data["beatpos"][1]
+        self.time_position = NoteObject.compute_time_position(self.beat_position, bpm_table)
         self.key = keys[data["key"]]
         if isinstance(data["color"], int):
             self.color = colors[data["color"]]
@@ -37,8 +38,8 @@ class NoteObject(GameplayObject):
         based on the playfield size."""
         calc_pos = []
         topleft = Vector2i(
-            int((playfield_size.x-default_size.x) * 0.5), 
-            int((playfield_size.y-default_size.y) * 0.5)
+            int((term.width-playfield_size.x) * 0.5), 
+            int((term.height-playfield_size.y) * 0.5)
         )
         calc_pos = Vector2i(
                int(self.position.x*(default_size.x))+topleft.x,
@@ -49,14 +50,18 @@ class NoteObject(GameplayObject):
         return calc_pos
 
     def checkJudgement(self, current_time:float, wasnt_hit:bool = False, auto:bool = False):
-        remaining_time = current_time - self.time_position
+        remaining_time = self.time_position - current_time
+        if remaining_time <= 0.0 and not self.played_sound:
+            self.played_sound = True
+            self.hit_sound.move2position_seconds(0)
+            self.hit_sound.play()
         if not auto:
             if -0.6 < remaining_time < 0.6:
                 # self.hit_sound.move2position_seconds(0)
                 # self.hit_sound.play()
                 judgement = 5
-                for i in range(len(hitWindows)):
-                    if abs(remaining_time) <= hitWindows[i]:
+                for (i,win) in enumerate(hitWindows):
+                    if abs(remaining_time) <= win:
                         judgement = i
                         break
                 # if noteNum >= len(self.judgements):
@@ -77,9 +82,6 @@ class NoteObject(GameplayObject):
                 #     self.missesCount += 1
                 return True
             else:
-                if remaining_time <= 0.0 and not self.played_sound:
-                    self.hit_sound.move2position_seconds(0)
-                    self.hit_sound.play()
                 if remaining_time <= -0.6 and wasnt_hit:
                     judgement = 5
                     self.judgement = {
@@ -94,12 +96,10 @@ class NoteObject(GameplayObject):
                     # self.missesCount += 1
                 return False
         else:
-            if remaining_time >= 0:
-                self.hit_sound.move2position_seconds(0)
-                self.hit_sound.play()
+            if remaining_time <= 0:
                 judgement = 0
-                for i in range(len(hitWindows)):
-                    if abs(remaining_time) <= hitWindows[i]:
+                for (i,win) in enumerate(hitWindows):
+                    if abs(remaining_time) <= win:
                         judgement = i
                         break
                 self.judgement = {
@@ -113,7 +113,7 @@ class NoteObject(GameplayObject):
                 print_at(calc_pos[0], calc_pos[1], JUDGEMENT_NAMES_SHORT[judgement])
                 return True
 
-    def onscreen_print(self, current_beat:float = 0.0, judgement:dict = 0) -> None:
+    def onscreen_print(self, current_beat:float = 0.0) -> None:
         onscreen_position = self.calculate_position(default_size)
         to_print = "   \n   \n   \n"
         approached_beats = ((self.beat_position - current_beat) * self.approach_rate) + 1
@@ -152,10 +152,10 @@ class NoteObject(GameplayObject):
                      + f"{reset_color}{self.color}╚═╝{reset_color}"
 
         print_lines_at(onscreen_position.x-1, onscreen_position.y-1, to_print)
-        if judgement != {}:
+        if self.judgement != {}:
             print_at(onscreen_position.x,
                      onscreen_position.y,
-                     f"{term.bold}{JUDGEMENT_NAMES_SHORT[judgement['judgement']]}" +\
+                     f"{term.bold}{JUDGEMENT_NAMES_SHORT[self.judgement['judgement']]}" +\
                      f"{reset_color}{self.color}")
         else:
             print_at(onscreen_position.x,
@@ -170,7 +170,7 @@ class NoteObject(GameplayObject):
         remaining_time = remaining_beats * (60/bpm)
         approached_beats = (remaining_beats * self.approach_rate) + 1
         if approached_beats > -0.1 and approached_beats < 4 and self not in dont_draw_list:
-            self.onscreen_print()
+            self.onscreen_print(current_beat)
 
         if self not in dont_draw_list and (
             (remaining_time <= -0.6) or (self.judgement and -0.2 > remaining_time)
@@ -179,7 +179,7 @@ class NoteObject(GameplayObject):
                 dont_check_judgement.append(self)
             if not self.judgement:
                 # self.checkJudgement(note, len(notes) - (i+1), True)
-                self.judgement = {"judgement":5} #TODO: implement judgement logic in here
+                self.checkJudgement(current_beat, True)
             print_at(calc_pos[0]-1, calc_pos[1]-1, f"{self.color}   ")
             print_at(calc_pos[0]-1, calc_pos[1],   f"{self.color}   ")
             print_at(calc_pos[0]-1, calc_pos[1]+1, f"{self.color}   ")

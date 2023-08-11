@@ -28,7 +28,7 @@ class ChartSelect(BaseScene):
         for (i,val) in enumerate(ChartManager.chart_data):
             if i == self.selectedItem:
                 text = val["metadata"]["artist"] + " - " + val["metadata"]["title"] + " // "
-                print_cropped(0, i+1, 20, text, int(self.conduc.currentBeat), term.reverse)
+                print_cropped(0, i+1, 20, text, int(self.conduc.current_beat), term.reverse)
             else:
                 text = val["metadata"]["artist"] + " - " + val["metadata"]["title"]
                 print_cropped(0, i+1, 20, text, 0, reset_color, False)
@@ -155,6 +155,7 @@ class ChartSelect(BaseScene):
             SceneManager["Game"].loc = self.loc
             SceneManager["Game"].playername = OptionsManager["displayName"]
             SceneManager["Game"].play(ChartManager.chart_data[self.selectedItem], OptionsManager["layout"])
+            SceneManager.change_scene("Game")
 
             # toBeCheckSumd = dict((i,ChartManager.chart_data[self.selectedItem][i]) \
             #   for i in ChartManager.chart_data[self.selectedItem] if i != "actualSong")
@@ -164,10 +165,10 @@ class ChartSelect(BaseScene):
             # self.conduc.play()
         else:
             # print(term.clear)
-            self.resultsThing.resultsData = ChartManager.scores[ChartManager.chart_data[\
-                self.selectedItem]["foldername"]][self.selected_score]
-            self.resultsThing.setup()
-            self.resultsThing.isEnabled = True
+            SceneManager["ResultsScreen"].results_data = ChartManager.scores[\
+                ChartManager.chart_data[self.selectedItem]["foldername"]]\
+                    [self.selected_score]
+            SceneManager.change_scene("ResultsScreen")
 
     def change_chart(self, new_chart_number):
         if self.chartsize == 0:

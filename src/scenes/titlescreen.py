@@ -82,14 +82,14 @@ class TitleScreen(BaseScene):
                 print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"  {text}   ")
 
         text_beat = "○ ○ ○ ○"
-        text_beat = text_beat[:int(self.conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.conduc.currentBeat)%4 * 2) + 1:]
+        text_beat = text_beat[:int(self.conduc.current_beat)%4 * 2] + "●" + text_beat[(int(self.conduc.current_beat)%4 * 2) + 1:]
 
         print_at(0, 0, term.center(f"{text_beat}"))
         text_song_title = "[NO SONG PLAYING] // "
         if len(ChartManager.chart_data) != 0:
             text_song_title = ChartManager.chart_data[self.playing_num]["metadata"]["artist"] +\
                 " - " + ChartManager.chart_data[self.playing_num]["metadata"]["title"] + " // "
-        print_cropped(term.width - 31, 0, 30, text_song_title, int(self.conduc.currentBeat), reset_color)
+        print_cropped(term.width - 31, 0, 30, text_song_title, int(self.conduc.current_beat), reset_color)
 
         text_copyright = "© #Guigui, 2022-2023"
         text_version = "v"+__version__

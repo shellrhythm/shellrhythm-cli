@@ -583,20 +583,20 @@ class Editor(BaseScene):
 
     async def draw(self):
         # get background color
-        self.set_background(self.get_background(self.localConduc.currentBeat))
+        self.set_background(self.get_background(self.localConduc.current_beat))
         # print_at(0,term.height-5, reset_color+"-"*(term.width-1))
         print_at(0,term.height-3, reset_color+"-"*(term.width))
 
         #Timeline
         for i in range(-(int(term.width/80)+1),int(term.width/8)-(int(term.width/80))+1):
             char = "'"
-            if (4-(i%4))%4 == (int(self.localConduc.currentBeat)%4):
+            if (4-(i%4))%4 == (int(self.localConduc.current_beat)%4):
                 char = "|"
-            slightOffset = int(self.localConduc.currentBeat%1 * 8)
+            slightOffset = int(self.localConduc.current_beat%1 * 8)
             realDrawAt = int((i*8)+(term.width*0.1)-slightOffset)
             drawAt = max(realDrawAt, 0)
             # maxAfterwards = int(min(7,term.width - (drawAt+1)))
-            if i+self.localConduc.currentBeat >= 0 or realDrawAt == drawAt:
+            if i+self.localConduc.current_beat >= 0 or realDrawAt == drawAt:
                 print_at(drawAt, term.height-5, char+("-"*7))
             else:
                 print_at(drawAt, term.height-5, "-"*8)
@@ -606,8 +606,8 @@ class Editor(BaseScene):
         print_at(0,term.height-6, reset_color
         +f"{self.loc('editor.timelineInfos.bpm')}: {self.localConduc.bpm} | "
         +f"{self.loc('editor.timelineInfos.snap')}: 1/{self.snap} | "
-        +f"{self.loc('editor.timelineInfos.bar')}: {int(self.localConduc.currentBeat//4)} | "
-        +f"{self.loc('editor.timelineInfos.beat')}: {round(self.localConduc.currentBeat%4, 5)} | "
+        +f"{self.loc('editor.timelineInfos.bar')}: {int(self.localConduc.current_beat//4)} | "
+        +f"{self.loc('editor.timelineInfos.beat')}: {round(self.localConduc.current_beat%4, 5)} | "
         +term.clear_eol)
 
 
@@ -703,7 +703,7 @@ class Editor(BaseScene):
                     #         Game.renderText(None, " " * len(note["text"]), note["offset"], note["anchor"], note["align"], constOffset, self.localConduc.currentBeat)
                     #         self.dontDrawList.append(note)
                 elif note["type"] == "bg_color":
-                    remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
+                    remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.current_beat
                     # BACKGROUND_COLOR - TIMELINE
                     if remBeats*8+(term.width*0.1) >= 0:
                         if self.options["nerdFont"]:
@@ -718,7 +718,7 @@ class Editor(BaseScene):
 
                 else:
                     # END - TIMELINE
-                    remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
+                    remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.current_beat
                     if remBeats*8+(term.width*0.1) >= 0:
                         if self.selectedNote == j:
                             print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.bold_grey}▚{reset_color}")
@@ -756,7 +756,7 @@ class Editor(BaseScene):
         if self.mapToEdit["bpmChanges"] != []:
             for i in range(len(self.mapToEdit["bpmChanges"])):
                 change = self.mapToEdit["bpmChanges"][i]
-                remBeats = (change["atPosition"][0] + change["atPosition"][1]/4) - self.localConduc.currentBeat
+                remBeats = (change["atPosition"][0] + change["atPosition"][1]/4) - self.localConduc.current_beat
                 if int(remBeats*8+(term.width*0.1)) >= 0:
                     print_at(int(remBeats*8+(term.width*0.1)), term.height-3, f"{reset_color}\U000f07da{reset_color}")
 
@@ -911,7 +911,7 @@ class Editor(BaseScene):
         elif commandSplit[0] == "p":
             if len(commandSplit) > 1:
                 if commandSplit[1].isdigit():
-                    self.selectedNote = self.create_note(self.localConduc.currentBeat, int(commandSplit[1]))
+                    self.selectedNote = self.create_note(self.localConduc.current_beat, int(commandSplit[1]))
                     return True, self.loc("editor.commandResults.note.success")
             else:
                 self.keyPanelEnabled = True
@@ -970,9 +970,9 @@ class Editor(BaseScene):
         elif commandSplit[0] == "m":
             if len(commandSplit) > 1:
                 if commandSplit[1].startswith("~"):
-                    self.localConduc.currentBeat += float(commandSplit[1].replace("~", ""))
+                    self.localConduc.current_beat += float(commandSplit[1].replace("~", ""))
                 else:
-                    self.localConduc.currentBeat = float(commandSplit[1])
+                    self.localConduc.current_beat = float(commandSplit[1])
         
         # :mt - Metadata
         elif commandSplit[0] == "mt":
@@ -1034,7 +1034,7 @@ class Editor(BaseScene):
                     newbpm = int(commandSplit[1])
                 
                 newbpmObj = {
-                    "atPosition": [self.localConduc.currentBeat, (self.localConduc.currentBeat%1)*4],
+                    "atPosition": [self.localConduc.current_beat, (self.localConduc.current_beat%1)*4],
                     "toBPM": newbpm
                 }
 
@@ -1080,7 +1080,7 @@ class Editor(BaseScene):
 
         elif commandSplit[0] == "t":
             if len(commandSplit) > 1:
-                self.create_text(atPos=self.localConduc.currentBeat, text=" ".join(commandSplit[1:]))
+                self.create_text(atPos=self.localConduc.current_beat, text=" ".join(commandSplit[1:]))
                 return True, self.loc("editor.commandResults.note.success")
             else:
                 return False, "[cannot create empty text]"
@@ -1109,8 +1109,8 @@ class Editor(BaseScene):
                 newNote = {
                     "type": "bg_color",
                     "beatpos": [
-                        int(self.localConduc.currentBeat//4),
-                        round(self.localConduc.currentBeat%4, 5)
+                        int(self.localConduc.current_beat//4),
+                        round(self.localConduc.current_beat%4, 5)
                     ],
                     "color": commandSplit[1]
                 }
@@ -1132,7 +1132,7 @@ class Editor(BaseScene):
         if self.playtest:
             for note in self.mapToEdit["notes"]:
                 if note["type"] == "hit_object":
-                    remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
+                    remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.current_beat
                     if note not in self.dontBeat and remBeats <= 0:
                         self.beatSound.move2position_seconds(0)
                         self.beatSound.play()
@@ -1206,7 +1206,7 @@ class Editor(BaseScene):
                 elif val.name == "KEY_ENTER":
                     if self.keyPanelKey != -1:
                         if self.keyPanelSelected == -1:
-                            self.selectedNote = self.create_note(self.localConduc.currentBeat, self.keyPanelKey)
+                            self.selectedNote = self.create_note(self.localConduc.current_beat, self.keyPanelKey)
                         else:
                             self.mapToEdit["notes"][self.keyPanelSelected]["key"] = self.keyPanelKey
                         self.keyPanelEnabled = False
@@ -1226,25 +1226,25 @@ class Editor(BaseScene):
                     self.background_changes = Game.load_bg_changes(None, self.mapToEdit)
                     if not self.playtest:
                         for note in self.mapToEdit["notes"]:
-                            remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
+                            remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.current_beat
                             if remBeats < 0:
                                 self.dontBeat.append(note)
-                        self.localConduc.startAt(self.localConduc.currentBeat)
+                        self.localConduc.startAt(self.localConduc.current_beat)
                     else:
                         self.localConduc.stop()
-                        self.localConduc.currentBeat = round(self.localConduc.currentBeat/(self.snap/4)) * (self.snap/4)
+                        self.localConduc.current_beat = round(self.localConduc.current_beat/(self.snap/4)) * (self.snap/4)
                     self.playtest = not self.playtest
                 if val.name == "KEY_HOME":
-                    self.localConduc.currentBeat = 0
+                    self.localConduc.current_beat = 0
                 if val.name == "KEY_ESCAPE":
                     self.pauseMenuEnabled = True
                 if val.name in ("KEY_RIGHT", "KEY_SRIGHT"):
                     multiplier = {"KEY_RIGHT": 1, "KEY_SRIGHT": 4}[val.name]
-                    self.localConduc.currentBeat += (1/self.snap)*4*multiplier
+                    self.localConduc.current_beat += (1/self.snap)*4*multiplier
                     print_at(0,term.height-4, term.clear_eol)
                 if val.name in ("KEY_LEFT", "KEY_SLEFT"):
                     multiplier = {"KEY_LEFT": 1, "KEY_SLEFT": 4}[val.name]
-                    self.localConduc.currentBeat = max(self.localConduc.currentBeat - (1/self.snap)*4*multiplier, 0)
+                    self.localConduc.current_beat = max(self.localConduc.current_beat - (1/self.snap)*4*multiplier, 0)
                     print_at(0,term.height-4, term.clear_eol)
                 if val == "z":
                     self.keyPanelEnabled = True
@@ -1252,7 +1252,7 @@ class Editor(BaseScene):
                     self.keyPanelKey = 0
                     print_at(0,int(term.height*0.4), term.clear_eol)
                 if val == "Z":
-                    self.set_end_note(self.localConduc.currentBeat)
+                    self.set_end_note(self.localConduc.current_beat)
                 if val == "t":
                     self.localConduc.metronome = not self.localConduc.metronome
                 if val in ["1", "&"]:
@@ -1272,22 +1272,22 @@ class Editor(BaseScene):
                         print_at(0,term.height-4, term.clear_eol)
                         self.selectedNote = min(self.selectedNote + (1*multiplier), len(self.mapToEdit["notes"])-1)
                         note = self.mapToEdit["notes"][self.selectedNote]
-                        self.localConduc.currentBeat = (note["beatpos"][0] * 4 + note["beatpos"][1])
+                        self.localConduc.current_beat = (note["beatpos"][0] * 4 + note["beatpos"][1])
                     if val.name in ("KEY_UP", "KEY_SUP"):
                         multiplier = {"KEY_UP": 1, "KEY_SUP": 4}[val.name]
                         print_at(0,term.height-4, term.clear_eol)
                         self.selectedNote = max(self.selectedNote - (1*multiplier), 0)
                         note = self.mapToEdit["notes"][self.selectedNote]
-                        self.localConduc.currentBeat = (note["beatpos"][0] * 4 + note["beatpos"][1])
+                        self.localConduc.current_beat = (note["beatpos"][0] * 4 + note["beatpos"][1])
 
                     if val == "u":
-                        self.localConduc.currentBeat = max(self.localConduc.currentBeat - (1/self.snap)*4, 0)
+                        self.localConduc.current_beat = max(self.localConduc.current_beat - (1/self.snap)*4, 0)
                         print_at(0,term.height-4, term.clear_eol)
-                        note["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
+                        note["beatpos"] = [self.localConduc.current_beat//4, self.localConduc.current_beat%4]
                     if val == "i":
-                        self.localConduc.currentBeat += (1/self.snap)*4
+                        self.localConduc.current_beat += (1/self.snap)*4
                         print_at(0,term.height-4, term.clear_eol)
-                        note["beatpos"] = [self.localConduc.currentBeat//4, self.localConduc.currentBeat%4]
+                        note["beatpos"] = [self.localConduc.current_beat//4, self.localConduc.current_beat%4]
 
                     if val == "d" and note["type"] == "hit_object":
                         self.selectedNote = self.create_note(

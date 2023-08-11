@@ -35,7 +35,7 @@ class Calibration:
         val = term.inkey(timeout=1/120, esc_delay=0)
         if val:
             if self.calibration_menu == "CalibrationGlobal":
-                offset = (self.conduc.currentBeat - int(self.conduc.currentBeat)) * (60/self.conduc.bpm)
+                offset = (self.conduc.current_beat - int(self.conduc.current_beat)) * (60/self.conduc.bpm)
                 print_at(0,14, f"{term.center(str(round(offset, 3)))}")
                 self.hits.append(offset)
                 self.totalOffset += offset
@@ -83,7 +83,7 @@ class Calibration:
     def draw(self):
         if self.calibration_menu == "CalibrationGlobal":
             text_beat = "○ ○ ○ ○"
-            text_beat = text_beat[:int(self.conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.conduc.currentBeat)%4 * 2) + 1:]
+            text_beat = text_beat[:int(self.conduc.current_beat)%4 * 2] + "●" + text_beat[(int(self.conduc.current_beat)%4 * 2) + 1:]
 
             print_at(0,10,f"{term.center(self.loc('calibration.hit'))}")
             print_at(0,12,f"{term.center(text_beat)}")
@@ -95,7 +95,7 @@ class Calibration:
             print_at(0,10,f"{term.center(text_bpm)}")
 
             text_beat = "○ ○ ○ ○"
-            text_beat = text_beat[:int(self.conduc.currentBeat)%4 * 2] + "●" + text_beat[(int(self.conduc.currentBeat)%4 * 2) + 1:]
+            text_beat = text_beat[:int(self.conduc.current_beat)%4 * 2] + "●" + text_beat[(int(self.conduc.current_beat)%4 * 2) + 1:]
             print_at(0,12,f"{term.center(text_beat)}")
             print_at(0,14, f"{term.center(str(round(self.totalOffset, 3)))}")
             print_at(0,16,f"{term.center('Press Escape to save settings!')}")

@@ -1,4 +1,4 @@
-from src.scenes import BaseScene
+from src.scenes.base_scene import BaseScene
 from src.termutil import term
 from src.translate import LocaleManager
 
@@ -13,6 +13,7 @@ class SceneManager:
         "Editor": None,
         "Calibration": None,
         "LayoutEditor": None,
+        "Results": None,
         "Game": None,
     }
     turn_off:bool = False

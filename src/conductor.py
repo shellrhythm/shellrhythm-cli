@@ -1,5 +1,5 @@
 from pybass3 import *
-import time
+from time import time_ns
 from src.termutil import *
 
 def format_time(seconds):
@@ -17,19 +17,19 @@ def format_time(seconds):
 class Conductor:
     bpm = 120
     offset = 0
-    startTime = 0
-    currentTimeSec = 0
-    prevTimeSec = 0
-    currentBeat = 0
+    start_time = 0
+    cur_time_sec = 0
+    prev_time_sec = 0
+    current_beat = 0
     prevBeat = 0
     song = Song("./assets/clap.wav")
     previewChart = {}
     metronome = False
     metroSound = Song("./assets/metronome.wav")
-    startTimeNoOffset = 0
-    isPaused = False
-    pauseStartTime = 0
-    skippedTimeWithPause = 0
+    start_time_no_offset = 0
+    paused = False
+    pause_start_time = 0
+    skipped_time_with_pause = 0
     volume = 1
     metronomeVolume = 1
     bpmChanges = [
@@ -86,65 +86,66 @@ class Conductor:
         if self.metronome:
             self.metroSound.play()
 
-    def debugSound(self, term):
-        print_at(0, term.height-6, f"beat: {self.currentBeat} | time: {self.currentTimeSec} | start time: {self.startTime}")
+    def debugSound(self):
+        print_at(0, term.height-6, f"beat: {self.current_beat} | "+\
+                f"time: {self.cur_time_sec} | "+\
+                f"start time: {self.start_time}")
 
     def play(self):
-        self.skippedTimeWithPause = 0
-        self.startTimeNoOffset = (time.time_ns() / 10**9)
-        self.startTime = self.startTimeNoOffset + self.offset
+        self.skipped_time_with_pause = 0
+        self.start_time_no_offset = time_ns() / 10**9
+        self.start_time = self.start_time_no_offset + self.offset
         self.setVolume(self.volume)
         self.song.play()
 
     def pause(self):
         self.bpm = 0
-        self.isPaused = True
-        self.pauseStartTime = (time.time_ns() / 10**9)
+        self.paused = True
+        self.pause_start_time = time_ns() / 10**9
         if self.song.is_playing:
             self.song.pause()
-    
+
     def resume(self):
-        if self.isPaused:
-            self.isPaused = False
+        if self.paused:
+            self.paused = False
             self.bpm = self.previewChart["bpm"]
-            self.skippedTimeWithPause = (time.time_ns() / 10**9) - self.pauseStartTime
+            self.skipped_time_with_pause = (time_ns() / 10**9) - self.pause_start_time
             # self.song.move2position_seconds(max((time.time_ns() / 10**9) - (self.startTime + self.skippedTimeWithPause), 0))
             self.song.resume()
 
     def update(self):
-        if not self.isPaused and self.bpm > 0:
-            self.currentTimeSec = (time.time_ns() / 10**9) - (self.startTime + self.skippedTimeWithPause)
-            self.deltatime = self.currentTimeSec - self.prevTimeSec
-            self.currentBeat = self.getBeatPos(self.currentTimeSec)
-            self.prevTimeSec = self.currentTimeSec
+        if not self.paused and self.bpm > 0 and self.song.is_playing:
+            assert self.start_time != 0
+            self.cur_time_sec = (time_ns() / 10**9) - (self.start_time + self.skipped_time_with_pause)
+            self.deltatime = self.cur_time_sec - self.prev_time_sec
+            self.current_beat = self.getBeatPos(self.cur_time_sec)
+            self.prev_time_sec = self.cur_time_sec
 
-            if self.currentBeat < 0 and self.currentTimeSec + self.offset < 0:
+            if self.current_beat < 0 and self.cur_time_sec + self.offset < 0:
                 self.song.move2position_seconds(0)
-                self.currentBeat = 0
-                self.skippedTimeWithPause = 0
-                self.startTimeNoOffset = (time.time_ns() / 10**9)
-                self.startTime = self.startTimeNoOffset + self.offset
+                self.current_beat = 0
+                self.skipped_time_with_pause = 0
+                self.start_time_no_offset = (time_ns() / 10**9)
+                self.start_time = self.start_time_no_offset + self.offset
 
-            if int(self.currentBeat) > int(self.prevBeat):
+            if int(self.current_beat) > int(self.prevBeat):
                 self.onBeat()
 
-            self.prevBeat = self.currentBeat
+            self.prevBeat = self.current_beat
 
             if self.isLoop:
-                if self.currentTimeSec > self.loopEnd:
-                    differenceToSubstract = self.loopEnd - self.loopStart
-                    self.currentTimeSec = self.currentTimeSec - differenceToSubstract
-                    self.prevTimeSec = self.prevTimeSec - differenceToSubstract
-                    self.startTime = self.startTime + differenceToSubstract
-                    self.currentBeat = self.getBeatPos(self.currentTimeSec)
-                    self.song.move2position_seconds(self.currentTimeSec)
+                if self.cur_time_sec > self.loopEnd:
+                    difference = self.loopEnd - self.loopStart
+                    self.cur_time_sec = self.cur_time_sec - difference
+                    self.prev_time_sec = self.prev_time_sec - difference
+                    self.start_time = self.start_time + difference
+                    self.current_beat = self.getBeatPos(self.cur_time_sec)
+                    self.song.move2position_seconds(self.cur_time_sec)
             return self.deltatime
-        else:
-            if self.song.is_playing:
-                self.song.pause()
-            self.skippedTimeWithPause = (time.time_ns() / 10**9) - self.pauseStartTime
-            return 1/60
-        
+        if self.song.is_playing:
+            self.song.pause()
+        self.skipped_time_with_pause = (time_ns() / 10**9) - self.pause_start_time
+        return 1/60
 
     def stop(self):
         # self.song.pause()
@@ -152,18 +153,18 @@ class Conductor:
 
     def getLength(self):
         return self.song.duration
-    
+
     def setOffset(self, newOffset):
         self.offset = newOffset
-        self.startTime = self.startTimeNoOffset + self.offset
-    
+        self.start_time = self.start_time_no_offset + self.offset
+
     def startAt(self, beatpos):
         secPos = beatpos*(60/self.bpm)
-        self.startTimeNoOffset = (time.time_ns() / 10**9) - secPos
-        self.startTime = self.startTimeNoOffset + self.offset
-        self.currentTimeSec = secPos
-        self.prevTimeSec = 0
-        self.currentBeat = beatpos
+        self.start_time_no_offset = (time_ns() / 10**9) - secPos
+        self.start_time = self.start_time_no_offset + self.offset
+        self.cur_time_sec = secPos
+        self.prev_time_sec = 0
+        self.current_beat = beatpos
         if self.song.duration is not None:
             if self.song.duration >= secPos:
                 self.song.stop()

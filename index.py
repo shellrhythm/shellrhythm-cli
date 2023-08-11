@@ -3,7 +3,7 @@
 import random
 from blessed import Terminal
 
-from src.scenes import ChartSelect, TitleScreen, Options, Credits, Editor
+from src.scenes import ChartSelect, TitleScreen, Options, Credits, Editor, ResultsScreen
 from src.translate import load_locales, LocaleManager
 from src.options import OptionsManager
 from src.calibration import Calibration
@@ -35,6 +35,7 @@ if __name__ == "__main__":
         SceneManager.loadedMenus["Calibration"] = Calibration("CalibrationGlobal")
         SceneManager.loadedMenus["LayoutEditor"] = LayoutCreator()
         SceneManager.loadedMenus["Game"] = game.Game()
+        SceneManager.loadedMenus["Results"] = ResultsScreen()
 
         songLoaded = 0
         if len(ChartManager.chart_data) != 0:
