@@ -11,6 +11,7 @@ from src.scenes.results import scoreCalc
 from src.layout import LayoutManager
 from src.translate import Locale
 from src.scenes.game_objects.note import NoteObject
+from src.scenes.game_objects.text import TextObject
 
 from src.constants import colors, MAX_SCORE, accMultiplier, JUDGEMENT_NAMES,\
     default_size, INPUT_FREQUENCY, hitWindows
@@ -313,13 +314,21 @@ class Game(BaseScene):
     def setup_notes(self, notes):
         """Sets up notes in the self.notes variable"""
         self.background_changes = []
+        bpm_changes = []
+        if len(self.conduc.bpmChanges) == 0:
+            bpm_changes = [self.chart["bpm"]]
+        else:
+            bpm_changes = self.conduc.bpmChanges
         for note in notes:
             if note["type"] == "hit_object": # setup note
-                new_note = NoteObject(note, [self.chart["bpm"]], self.keys)
+                new_note = NoteObject(note, bpm_changes, self.keys)
                 new_note.approach_rate = self.chart["approachRate"]
                 SceneManager["Options"].conduc.bass.SetChannelVolume(
                     new_note.hit_sound.handle, self.beat_sound_volume
                 )
+                self.notes.append(new_note)
+            if note["type"] == "text":
+                new_note = TextObject(note, bpm_changes)
                 self.notes.append(new_note)
             elif note["type"] == "bg_color":
                 color = term.normal
@@ -347,9 +356,11 @@ class Game(BaseScene):
 
     def play(self, chart, options, layout = "qwerty"):
         self.chart = chart
+        self.conduc.loadsong(self.chart)
+        self.setup_notes(chart["notes"])
+
         self.setupKeys(layout)
 
-        self.setup_notes(chart["notes"])
         # self.load_bg_changes(chart)
         self.options = options
         self.judgements = []
@@ -360,7 +371,6 @@ class Game(BaseScene):
         self.misses_count = 0
         self.score = 0
 
-        self.conduc.loadsong(self.chart)
         self.conduc.song.move2position_seconds(0)
         self.conduc.play()
         assert self.conduc.start_time != 0

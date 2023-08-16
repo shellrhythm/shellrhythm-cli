@@ -17,14 +17,9 @@ class NoteObject(GameplayObject):
     hit_sound:Song = Song("assets/clap.wav")
     played_sound:bool = False
 
-    @staticmethod
-    def compute_time_position(beat_position, bpm_table) -> float:
-        """Based on the beat position and a bpm table, returns the corresponding time."""
-        return beat_position * (60/bpm_table[0])
-
     def __init__(self, data:dict, bpm_table:list, keys:list) -> None:
         self.beat_position = data["beatpos"][0] * 4 + data["beatpos"][1]
-        self.time_position = NoteObject.compute_time_position(self.beat_position, bpm_table)
+        self.time_position = GameplayObject.compute_time_position(self.beat_position, bpm_table)
         self.key = keys[data["key"]]
         if isinstance(data["color"], int):
             self.color = colors[data["color"]]
@@ -178,7 +173,6 @@ class NoteObject(GameplayObject):
             if self not in dont_check_judgement:
                 dont_check_judgement.append(self)
             if not self.judgement:
-                # self.checkJudgement(note, len(notes) - (i+1), True)
                 self.checkJudgement(current_beat, True)
             print_at(calc_pos[0]-1, calc_pos[1]-1, f"{self.color}   ")
             print_at(calc_pos[0]-1, calc_pos[1],   f"{self.color}   ")

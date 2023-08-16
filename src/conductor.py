@@ -1,6 +1,6 @@
-from pybass3 import *
+from pybass3 import Song, Bass
 from time import time_ns
-from src.termutil import *
+from src.termutil import print_at, term
 
 def format_time(seconds):
     hour = seconds // 3600
@@ -21,7 +21,7 @@ class Conductor:
     cur_time_sec = 0
     prev_time_sec = 0
     current_beat = 0
-    prevBeat = 0
+    previous_beat = 0
     song = Song("./assets/clap.wav")
     previewChart = {}
     metronome = False
@@ -52,23 +52,56 @@ class Conductor:
         self.volume = volume
         self.bass.SetChannelVolume(self.song.handle, volume)
 
+    @staticmethod
+    def get_bpm_at_time_from_bpm_table(time_pos:float, bpm_table:list) -> float:
+        result:float = 100.0
+        for change in bpm_table[1:]:
+            next_beat = change["atPosition"][0] + (change["atPosition"][1]/4)
+            bpm = change["toBPM"]
+            sec = (next_beat - last_bpm_change[0])/(last_bpm_change[2]/60) + last_bpm_change[1]
+            if sec > time_pos:
+                result = last_bpm_change[2]
+                return result
+            last_bpm_change = [next_beat, sec, bpm]
+        result = last_bpm_change[2]
+        return result
+
+    @staticmethod
+    def calculate_time_sec_from_bpm_table(beat_pos:float, bpm_table:list) -> float:
+        """bruh i most likely have to redo this from scratch i can't do it in reverse :("""
+        last_bpm_change = [0, 0, bpm_table[0]] #Beat to change at, corresponding time, bpm to go to
+        #Note: this assumes that the first bpm event is set at beat 0.0. If it isn't, you're weird.
+        bpm = bpm_table[0]
+        for change in bpm_table[1:]:
+            next_beat = change["atPosition"][0] + (change["atPosition"][1]/4)
+            bpm = change["toBPM"]
+            sec = (next_beat - last_bpm_change[0])/(last_bpm_change[2]/60) + last_bpm_change[1]
+            if next_beat > beat_pos:
+                break
+            last_bpm_change = [next_beat, sec, bpm]
+        beats_since_last_change = beat_pos - last_bpm_change[1]
+        return (beats_since_last_change/(bpm/60) + (last_bpm_change[0]))
+
+    @staticmethod
+    def calculate_beat_from_bpm_table(time_pos:float, bpm_table:list) -> float:
+        last_bpm_change = [0, 0, bpm_table[0]] #Beat to change at, corresponding time, bpm to go to
+        #Note: this assumes that the first bpm event is set at beat 0.0. If it isn't, you're weird.
+        for change in bpm_table[1:]:
+            next_beat = change["atPosition"][0] + (change["atPosition"][1]/4)
+            bpm = change["toBPM"]
+            sec = (next_beat - last_bpm_change[0])/(last_bpm_change[2]/60) + last_bpm_change[1]
+            if sec > time_pos:
+                break
+            last_bpm_change = [next_beat, sec, bpm]
+        time_since_last_change = time_pos - last_bpm_change[1]
+        return (time_since_last_change*(bpm/60) + (last_bpm_change[0]))
+
     def getBeatPos(self, position:float) -> float:
         if self.bpmChanges == []:
             return position * (self.bpm/60)
         else:
-            lastBPMChange = [0, 0, self.bpm] #Beat to change at, corresponding second, bpm to go to
-            for change in self.bpmChanges:
-                nextBeat = change["atPosition"][0] + (change["atPosition"][1]/4)
-                bpm = change["toBPM"]
-                sec = (nextBeat - lastBPMChange[0])/(lastBPMChange[2]/60) + lastBPMChange[1]
-                if sec > position:
-                    timeSinceLastChange = position - lastBPMChange[1]
-                    self.bpm = lastBPMChange[2]
-                    return (timeSinceLastChange*(lastBPMChange[2]/60) + (lastBPMChange[0]))
-                lastBPMChange = [nextBeat, sec, bpm]
-            timeSinceLastChange = position - lastBPMChange[1]
-            self.bpm = lastBPMChange[2]
-            return (timeSinceLastChange*(bpm/60) + (lastBPMChange[0]))
+            self.bpm = Conductor.get_bpm_at_time_from_bpm_table(position, self.bpmChanges)
+            return Conductor.calculate_beat_from_bpm_table(position, self.bpmChanges)
 
     def loadsong(self, chart:dict = None):
         self.bpm = chart["bpm"]
@@ -110,13 +143,13 @@ class Conductor:
             self.paused = False
             self.bpm = self.previewChart["bpm"]
             self.skipped_time_with_pause = (time_ns() / 10**9) - self.pause_start_time
-            # self.song.move2position_seconds(max((time.time_ns() / 10**9) - (self.startTime + self.skippedTimeWithPause), 0))
             self.song.resume()
 
     def update(self):
         if not self.paused and self.bpm > 0 and self.song.is_playing:
             assert self.start_time != 0
-            self.cur_time_sec = (time_ns() / 10**9) - (self.start_time + self.skipped_time_with_pause)
+            self.cur_time_sec = (time_ns() / 10**9) - \
+                (self.start_time + self.skipped_time_with_pause)
             self.deltatime = self.cur_time_sec - self.prev_time_sec
             self.current_beat = self.getBeatPos(self.cur_time_sec)
             self.prev_time_sec = self.cur_time_sec
@@ -125,13 +158,13 @@ class Conductor:
                 self.song.move2position_seconds(0)
                 self.current_beat = 0
                 self.skipped_time_with_pause = 0
-                self.start_time_no_offset = (time_ns() / 10**9)
+                self.start_time_no_offset = time_ns() / 10**9
                 self.start_time = self.start_time_no_offset + self.offset
 
-            if int(self.current_beat) > int(self.prevBeat):
+            if int(self.current_beat) > int(self.previous_beat):
                 self.onBeat()
 
-            self.prevBeat = self.current_beat
+            self.previous_beat = self.current_beat
 
             if self.isLoop:
                 if self.cur_time_sec > self.loopEnd:
@@ -154,22 +187,22 @@ class Conductor:
     def getLength(self):
         return self.song.duration
 
-    def setOffset(self, newOffset):
-        self.offset = newOffset
+    def setOffset(self, new_offset):
+        self.offset = new_offset
         self.start_time = self.start_time_no_offset + self.offset
 
     def startAt(self, beatpos):
-        secPos = beatpos*(60/self.bpm)
-        self.start_time_no_offset = (time_ns() / 10**9) - secPos
+        seconds_pos = beatpos*(60/self.bpm)
+        self.start_time_no_offset = (time_ns() / 10**9) - seconds_pos
         self.start_time = self.start_time_no_offset + self.offset
-        self.cur_time_sec = secPos
+        self.cur_time_sec = seconds_pos
         self.prev_time_sec = 0
         self.current_beat = beatpos
         if self.song.duration is not None:
-            if self.song.duration >= secPos:
+            if self.song.duration >= seconds_pos:
                 self.song.stop()
                 self.song.play()
-                self.song.move2position_seconds(secPos)
+                self.song.move2position_seconds(seconds_pos)
                 return True
         else:
             self.song.play()

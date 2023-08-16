@@ -11,7 +11,17 @@ class TextObject(GameplayObject):
     offset = Vector2i()
     anchor = CENTER
     align = ALIGN_CENTER
-    renderOffset = Vector2i
+    renderOffset = Vector2i()
+
+    def __init__(self, data, bpm_table) -> None:
+        super().__init__()
+        self.text = data["text"]
+        self.anchor = data["anchor"]
+        self.align = data["align"]
+        self.offset = Vector2i(data["offset"][0], data["offset"][1])
+        self.duration = data["length"]
+        self.beat_position = data["beatpos"][0] * 4 + data["beatpos"][1]
+        self.time_position = GameplayObject.compute_time_position(self.beat_position, bpm_table)
 
     def renderText(self, beat = 0.0, clear=False):
         #calculate position
@@ -67,15 +77,16 @@ class TextObject(GameplayObject):
                  rendered_text
                 )
 
-    def render(self, current_beat:float, dontDraw:list) -> list:
+    def render(self, current_beat:float, dont_draw_list:list,
+               bpm:float=120, dont_check_judgement:list = None) -> tuple:
         render_at = self.beat_position - current_beat
         stop_at = render_at + self.duration
-        if self not in dontDraw:
+        if self not in dont_draw_list:
             if render_at <= 0:
                 if stop_at > 0:
                     self.renderText(current_beat, False)
                 else:
                     self.renderText(current_beat, True)
-                    dontDraw.append(self)
-        return dontDraw
+                    dont_draw_list.append(self)
+        return (dont_draw_list, dont_check_judgement)
     
