@@ -195,10 +195,6 @@ class ChartSelect(BaseScene):
 
 
     async def handle_input(self):
-        """
-        This function is called every update cycle to get keyboard input.
-        (Note: it is called *after* the `draw()` function, and takes the entire frame to run.)
-        """
         val = ''
         val = term.inkey(timeout=1/60, esc_delay=0)
 
@@ -236,13 +232,11 @@ class ChartSelect(BaseScene):
             #load editor
             self.conduc.stop()
             self.conduc.song.stop()
-            SceneManager["Editor"].turnOff = False
+            SceneManager["Editor"].chart = ChartManager.chart_data[self.selectedItem]
+            SceneManager["Editor"].chart.pop("actualSong", None)
             SceneManager["Editor"].layoutname = OptionsManager["layout"]
             SceneManager["Editor"].layout = Game.setupKeys(None, OptionsManager["layout"])
-            SceneManager["Editor"].loc = self.loc
-            SceneManager["Editor"].mapToEdit = ChartManager.chart_data[self.selectedItem]
             SceneManager["Editor"].localConduc.loadsong(ChartManager.chart_data[self.selectedItem])
-            SceneManager["Editor"].mapToEdit.pop("actualSong", None)
             SceneManager["Editor"].fileLocation = f"./charts/{ChartManager.chart_data[self.selectedItem]['foldername']}/data.json"
             SceneManager.change_scene("Editor")
             self.turn_off = True

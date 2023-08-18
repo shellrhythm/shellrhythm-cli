@@ -8,6 +8,7 @@ from pybass3 import Song
 
 from src.scenes.game import Game
 from src.conductor import Conductor
+from src.options import OptionsManager
 from src.constants import colors, ALIGN_CENTER, CENTER, default_size
 from src.termutil import term, reset_color, print_at, print_lines_at, print_box, print_column,\
     hexcode_from_color_code, color_code_from_hex, set_reset_color, framerate
@@ -16,6 +17,10 @@ from src.translate import Locale
 from src.textbox import textbox_logic, TextEditor
 from src.filebrowser import FileBrowser
 from src.calibration import Calibration
+from src.layout import LayoutManager
+from src.scenes.game_objects.note import NoteObject
+from src.scenes.game_objects.text import TextObject
+from src.scenes.game_objects.base_object import GameplayObject
 
 term = Terminal()
 
@@ -27,11 +32,13 @@ blockStates = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
 class Editor(BaseScene):
 
     #Basics
-    mapToEdit = {}
+    chart = {}
+    notes:list[GameplayObject] = []
+    keys = []
     localConduc = Conductor()
     playtest = False
     beatSound = Song("assets/clap.wav")
-    dontDrawList = []
+    dont_draw_list = []
     dontBeat = [] #Notes that have already got their beatsound played
 
     #Saving
@@ -155,20 +162,20 @@ class Editor(BaseScene):
         file_paths = [] #this is where the paths go
     
         # crawling through directory and subdirectories
-        for _, _the_secondth, files in os.walk("./charts/" + self.mapToEdit["foldername"]):
+        for _, _the_secondth, files in os.walk("./charts/" + self.chart["foldername"]):
             for filename in files:
                 #gimme da full path plz :3
                 filepath = filename
                 file_paths.append(filepath)
         
         # actual exporting
-        with ZipFile("./charts/" + self.mapToEdit["foldername"] + '.zip','w') as zip_file:
+        with ZipFile("./charts/" + self.chart["foldername"] + '.zip','w') as zip_file:
             # add in the files
             for file in file_paths:
-                zip_file.write("./charts/" + self.mapToEdit["foldername"] + "/" + file, file)
+                zip_file.write("./charts/" + self.chart["foldername"] + "/" + file, file)
 
     def setupMap(self):
-        self.mapToEdit = {
+        self.chart = {
             "formatVersion": 1,
             "sound": None,
             "foldername": "",
@@ -189,11 +196,12 @@ class Editor(BaseScene):
             "difficulty": 0,
             "notes": []
         }
+        self.notes = []
         self.endNote = -1
     
     def create_note(self, atPos, key):
         print(term.clear)
-        if "notes" in self.mapToEdit:
+        if "notes" in self.chart:
             newNote = {
                 "type": "hit_object",
                 "beatpos": [
@@ -207,15 +215,17 @@ class Editor(BaseScene):
                 ],
                 "color": 0
             }
-            self.mapToEdit["notes"].append(newNote)
-            self.mapToEdit["notes"] = sorted(self.mapToEdit["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
-            if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
-                self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
-            return self.mapToEdit["notes"].index(newNote)
+            self.chart["notes"].append(newNote)
+            self.chart["notes"] = sorted(self.chart["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
+            if "end" in [note["type"] for note in self.chart["notes"]]:
+                self.endNote = [note["type"] for note in self.chart["notes"]].index("end")
+            note_obj = NoteObject(newNote, self.conduc.bpmChanges, LayoutManager.layouts[LayoutManager.layoutNames[0]])
+            self.notes.append(note_obj)
+            return self.chart["notes"].index(newNote)
             
     def create_text(self, atPos = 0, lasts = 1, text = "", anchor = CENTER, align = ALIGN_CENTER):
         print(term.clear)
-        if "notes" in self.mapToEdit:
+        if "notes" in self.chart:
             newNote = {
                 "type": "text",
                 "beatpos": [
@@ -228,10 +238,12 @@ class Editor(BaseScene):
                 "align": align,
                 "offset": [0,0],
             }
-            self.mapToEdit["notes"].append(newNote)
-            self.mapToEdit["notes"] = sorted(self.mapToEdit["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
-            if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
-                self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
+            self.chart["notes"].append(newNote)
+            self.chart["notes"] = sorted(self.chart["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
+            if "end" in [note["type"] for note in self.chart["notes"]]:
+                self.endNote = [note["type"] for note in self.chart["notes"]].index("end")
+            note_obj = TextObject(newNote, self.conduc.bpmChanges)
+            self.notes.append(note_obj)
 
     colorPickerEnabled = False
     colorPickerColor = [0,0,0]
@@ -243,22 +255,23 @@ class Editor(BaseScene):
     def draw_colorPicker(self):
         print_box((term.width - 40)//2, (term.height-9)//2, 40, 9, color=term.color_rgb(self.colorPickerColor[0], self.colorPickerColor[1], self.colorPickerColor[2]), caption="Select color")
         
-        for i in range(len(self.colorPickerColor)):
-            col = self.colorPickerColor[i]
-            textToPrint = blockStates[8]*int(col/8) + blockStates[col%8]
-            textToPrint += " "*(31-int(col/8))
-            realToPrint = term.underline
-            for j in range(len(textToPrint)):
-                char = textToPrint[j]
-                if i == 0: char = term.color_rgb(j*8,0,0) + char
-                if i == 1: char = term.color_rgb(0,j*8,0) + char
-                if i == 2: char = term.color_rgb(0,0,j*8) + char
-                realToPrint += char
+        for (i,col) in enumerate(self.colorPickerColor):
+            text_to_print = blockStates[8]*int(col/8) + blockStates[col%8]
+            text_to_print += " "*(31-int(col/8))
+            real_to_print = term.underline
+            for (j,char) in enumerate(text_to_print):
+                if i == 0:
+                    char = term.color_rgb(j*8,0,0) + char
+                if i == 1:
+                    char = term.color_rgb(0,j*8,0) + char
+                if i == 2:
+                    char = term.color_rgb(0,0,j*8) + char
+                real_to_print += char
             if i == self.colorPickerSelectedCol:
-                realToPrint += reset_color+"<"
+                real_to_print += reset_color+"<"
             else:
-                realToPrint += reset_color+" "
-            print_at((term.width - 40)//2 + 1, (term.height-9)//2 + (i*2+1), realToPrint+reset_color + "  " + term.reverse + str(col) + " "*(3-len(str(col))) + reset_color)
+                real_to_print += reset_color+" "
+            print_at((term.width - 40)//2 + 1, (term.height-9)//2 + (i*2+1), real_to_print+reset_color + "  " + term.reverse + str(col) + " "*(3-len(str(col))) + reset_color)
 
         if self.colorPickerSelectedCol == 3:
             print_at((term.width + 8)//2, (term.height-9)//2 + 7, "<")
@@ -292,23 +305,23 @@ class Editor(BaseScene):
             if val.name == "KEY_ENTER" and self.colorPickerSelectedCol == 3:
                 self.colorPickerFieldSelected = True
         if self.colorPickerNoteSelected > -1:
-            if self.mapToEdit["notes"][self.colorPickerNoteSelected]["type"] == "hit_object":
-                self.mapToEdit["notes"][self.colorPickerNoteSelected]["color"] = self.colorPickerFieldContent
-            if self.mapToEdit["notes"][self.colorPickerNoteSelected]["type"] == "bg_color":
-                self.mapToEdit["notes"][self.colorPickerNoteSelected]["color"] = "#" + self.colorPickerFieldContent
+            if self.chart["notes"][self.colorPickerNoteSelected]["type"] == "hit_object":
+                self.chart["notes"][self.colorPickerNoteSelected]["color"] = self.colorPickerFieldContent
+            if self.chart["notes"][self.colorPickerNoteSelected]["type"] == "bg_color":
+                self.chart["notes"][self.colorPickerNoteSelected]["color"] = "#" + self.colorPickerFieldContent
 
     delConfirmEnabled = False
     delConfirmObj = -1
     def draw_confirmDeletion(self):
+        confirm_text = self.loc("editor.deleteConfirmPrompt")
+        confirm_options = "[Y/Return] Yes    [N/Esc] No"
         print_box((term.width - 30)//2, (term.height - 5)//2, 30, 5)
-        confirmText = self.loc("editor.deleteConfirmPrompt")
-        print_at((term.width - len(confirmText))//2, (term.height - 5)//2+1, confirmText)
-        confirmOptions = "[Y/Return] Yes    [N/Esc] No"
-        print_at((term.width - len(confirmOptions))//2, (term.height - 5)//2+3, confirmOptions)
+        print_at((term.width - len(confirm_text))//2, (term.height - 5)//2+1, confirm_text)
+        print_at((term.width - len(confirm_options))//2, (term.height - 5)//2+3, confirm_options)
 
     def input_confirmDeletion(self, val):
         if val == "y" or val.name == "KEY_ENTER":
-            self.mapToEdit["notes"].remove(self.mapToEdit["notes"][self.delConfirmObj])
+            self.chart["notes"].remove(self.chart["notes"][self.delConfirmObj])
             self.delConfirmEnabled = False
         elif val == "n" or val.name == "KEY_ESCAPE":
             self.delConfirmEnabled = False
@@ -316,8 +329,8 @@ class Editor(BaseScene):
 
     def set_end_note(self, atPos):
         if self.endNote == -1:
-            if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
-                self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
+            if "end" in [note["type"] for note in self.chart["notes"]]:
+                self.endNote = [note["type"] for note in self.chart["notes"]].index("end")
             else:
                 newNote = {
                     "type": "end",
@@ -326,21 +339,34 @@ class Editor(BaseScene):
                         round(atPos%4, 5)
                     ]
                 }
-                self.mapToEdit["notes"].append(newNote)
-                self.endNote = len(self.mapToEdit["notes"])-1
+                self.chart["notes"].append(newNote)
+                self.endNote = len(self.chart["notes"])-1
         else:
-            self.mapToEdit["notes"][self.endNote]["beatpos"] = [int(atPos//4), round(atPos%4, 5)]
+            self.chart["notes"][self.endNote]["beatpos"] = [int(atPos//4), round(atPos%4, 5)]
 
     def draw_pauseMenu(self):
         width = max(len(self.loc("editor.pause." + option)) for option in self.pauseMenu)+4
         print_box((term.width-width)//2 - 1, (term.height//2) - len(self.pauseMenu) - 1, width+2, len(self.pauseMenu) * 2 + 1)
-        for i in range(len(self.pauseMenu)):
+        for (i,optn) in enumerate(self.pauseMenu):
             if i == self.pauseMenuSelected:
-                print_at((term.width-width)//2, (term.height//2) - len(self.pauseMenu) + i*2, term.reverse + term.center(self.loc("editor.pause." + self.pauseMenu[i]), width) + reset_color)
+                print_at(
+                    (term.width-width)//2,
+                    (term.height//2) - len(self.pauseMenu) + i*2,
+                    term.reverse + term.center(self.loc("editor.pause." + optn), width)\
+                        + reset_color
+                )
             else:
-                print_at((term.width-width)//2, (term.height//2) - len(self.pauseMenu) + i*2, term.center(self.loc("editor.pause." + self.pauseMenu[i]), width))
+                print_at(
+                    (term.width-width)//2,
+                    (term.height//2) - len(self.pauseMenu) + i*2,
+                    term.center(self.loc("editor.pause." + optn), width)
+                )
             if i != len(self.pauseMenu)-1:
-                print_at((term.width-width)//2, (term.height//2) - len(self.pauseMenu) + i*2 + 1, " "*width)
+                print_at(
+                    (term.width-width)//2,
+                    (term.height//2) - len(self.pauseMenu) + i*2 + 1,
+                    " "*width
+                )
 
     def run_pauseMenu(self, option):
         #what made you think this was a good idea
@@ -351,7 +377,7 @@ class Editor(BaseScene):
             print(term.clear)
         if option == 1:
             #playtest
-            self.game.play(self.mapToEdit, self.layoutname, self.options)
+            self.game.play(self.chart, self.layoutname, self.options)
             self.pauseMenuEnabled = False
         if option == 2:
             self.run_command("song") #uh yeah
@@ -363,10 +389,10 @@ class Editor(BaseScene):
             self.fileBrwsr.turnOff = False
             imageFileLocation = self.fileBrwsr.loop()
             try:
-                shutil.copyfile(imageFileLocation, f"./charts/{self.mapToEdit['foldername']}/{imageFileLocation.split('/')[-1]}")
+                shutil.copyfile(imageFileLocation, f"./charts/{self.chart['foldername']}/{imageFileLocation.split('/')[-1]}")
             except shutil.SameFileError:
                 pass
-            self.mapToEdit["icon"]["img"] = imageFileLocation.split("/")[-1]
+            self.chart["icon"]["img"] = imageFileLocation.split("/")[-1]
         if option == 4:
             #metadata
             self.metadataMenuEnabled = True
@@ -382,7 +408,7 @@ class Editor(BaseScene):
             self.pauseMenuEnabled = False
             self.export()
             print(term.clear)
-            print_at(0,term.height-2, term.on_green+f"Exported successfully to ./charts/{self.mapToEdit['foldername']}.zip" +term.clear_eol+reset_color)
+            print_at(0,term.height-2, term.on_green+f"Exported successfully to ./charts/{self.chart['foldername']}.zip" +term.clear_eol+reset_color)
         if option == 7:
             #quit
             self.run_command("q")
@@ -401,7 +427,7 @@ class Editor(BaseScene):
                 note["color"] %= len(colors)
                 return False
             elif option == 2:
-                self.mapToEdit["notes"].remove(note)
+                self.chart["notes"].remove(note)
                 return True
         elif note["type"] == "text":
             if option == 0:
@@ -418,7 +444,7 @@ class Editor(BaseScene):
                 note["anchor"] += 1
                 note["anchor"] %= 9
             elif option == 3:
-                self.mapToEdit["notes"].remove(note)
+                self.chart["notes"].remove(note)
                 return True
 
     def draw_changeKeyPanel(self, toptext = None, curKey = 0):
@@ -444,10 +470,10 @@ class Editor(BaseScene):
         if os.path.exists(self.fileLocation):
             print(term.clear)
             file_data = open(f"./charts/{chart_name}/{file}.json", encoding="utf8")
-            self.mapToEdit = json.load(file_data)
+            self.chart = json.load(file_data)
             file_data.close()
 
-            self.localConduc.loadsong(self.mapToEdit)
+            self.localConduc.loadsong(self.chart)
             return True
         else:
             return False
@@ -525,17 +551,17 @@ class Editor(BaseScene):
         sections = []
         if not self.commandMode:
             sections.append("basic")
-            if self.mapToEdit["notes"] != []:
+            if self.notes != []:
                 sections.append("objects")
-                if self.mapToEdit["notes"][self.selectedNote]["type"] == "hit_object":
+                if isinstance(self.notes[self.selectedNote], NoteObject):
                     sections.append("note")
-                elif self.mapToEdit["notes"][self.selectedNote]["type"] == "text":
+                elif isinstance(self.notes[self.selectedNote], TextObject):
                     sections.append("text")
         else:
             sections.append("command")
         # ypos = 0
         lines = []
-        
+
         # check max
         maxKeyLen = 0
         maxValLen = 0
@@ -546,9 +572,9 @@ class Editor(BaseScene):
                 else:
                     key = self.loc(f"editor.cheatsheet.{k}")
                     val = str(v)
-                    if type(v) is int:
+                    if isinstance(v, int):
                         val = self.layout[v].upper()
-                    if type(v) is list:
+                    if isinstance(v, list):
                         val = v[0]
                         for arg in v[1:]: #Parse command line arguments
                             # Thank you, random stackoverflow post!
@@ -592,16 +618,15 @@ class Editor(BaseScene):
             char = "'"
             if (4-(i%4))%4 == (int(self.localConduc.current_beat)%4):
                 char = "|"
-            slightOffset = int(self.localConduc.current_beat%1 * 8)
-            realDrawAt = int((i*8)+(term.width*0.1)-slightOffset)
-            drawAt = max(realDrawAt, 0)
+            slight_offset = int(self.localConduc.current_beat%1 * 8)
+            real_draw_at = int((i*8)+(term.width*0.1)-slight_offset)
+            draw_at = max(real_draw_at, 0)
             # maxAfterwards = int(min(7,term.width - (drawAt+1)))
-            if i+self.localConduc.current_beat >= 0 or realDrawAt == drawAt:
-                print_at(drawAt, term.height-5, char+("-"*7))
+            if i+self.localConduc.current_beat >= 0 or real_draw_at == draw_at:
+                print_at(draw_at, term.height-5, char+("-"*7))
             else:
-                print_at(drawAt, term.height-5, "-"*8)
-        if self.playtest:
-            print_at(0,term.height-4, term.clear_eol)
+                print_at(draw_at, term.height-5, "-"*8)
+        print_at(0,term.height-4, " "*(term.width-1))
         print_at(int(term.width*0.1), term.height-4, "@")
         print_at(0,term.height-6, reset_color
         +f"{self.loc('editor.timelineInfos.bpm')}: {self.localConduc.bpm} | "
@@ -614,27 +639,50 @@ class Editor(BaseScene):
         if self.metadataMenuEnabled:
             length = max(len(self.loc('editor.metadata.'+i)) for i in self.metadataParts)
             for (i,part) in enumerate(self.metadataParts):
+                category_name = self.loc('editor.metadata.'+part)
+                category_name += ' '*(length-len(category_name)+1)
                 if i == self.metadataMenuSelection:
+                    full_category_name = term.reverse + category_name
                     if self.metadataTyping:
-                        print_at(1,1+i,f"{term.reverse}{self.loc('editor.metadata.'+part)}{' '*(length-len(self.loc('editor.metadata.'+part))+1)}: {term.underline}{self.metadataString}{reset_color}")
+                        print_at(1,1+i,f"{full_category_name}: {term.underline}{self.metadataString}{reset_color}")
                     else:
-                        print_at(1,1+i,f"{term.reverse}{self.loc('editor.metadata.'+part)}{' '*(length-len(self.loc('editor.metadata.'+part))+1)}: {term.underline}{self.mapToEdit['metadata'][part]}{reset_color}")
+                        print_at(1,1+i,f"{full_category_name}: {term.underline}{self.chart['metadata'][part]}{reset_color}")
                 else:
-                    print_at(1,1+i,f"{self.loc('editor.metadata.'+part)}{' '*(length-len(self.loc('editor.metadata.'+part))+1)}: {self.mapToEdit['metadata'][part]}")
+                    print_at(1,1+i,f"{category_name}: {self.chart['metadata'][part]}")
             print_box(0,0,40,len(self.metadataParts) + 2,reset_color,0)
-        
 
-        if self.mapToEdit["notes"] != [] and not self.isTextEditing:
-            self.selectedNote %= len(self.mapToEdit["notes"])
-            note = self.mapToEdit["notes"][self.selectedNote]
-            
-            topleft = [int((term.width-default_size.x) * 0.5)-1, int((term.height-default_size.y) * 0.5)-1]
+
+        if self.notes and not self.isTextEditing:
+            self.selectedNote %= len(self.notes)
+            note = self.notes[self.selectedNote]
+
+            topleft = [
+                int((term.width-default_size.x) * 0.5)-1,
+                int((term.height-default_size.y) * 0.5)-1
+            ]
             print_box(topleft[0],topleft[1]-1,default_size.x+2,default_size.y+2,reset_color,1)
-            for i in range(len(self.mapToEdit["notes"])):
-                j = len(self.mapToEdit["notes"]) - (i+1)
-                note = self.mapToEdit["notes"][j]
-                if note["type"] == "hit_object": # HIT OBJECT STUFF
-                    pass
+            for i in range(len(self.notes)):
+                j = len(self.notes) - (i+1)
+                note = self.notes[j]
+                remaining_beats = note.beat_position - self.localConduc.current_beat
+
+                #TIMELINE
+                if remaining_beats*8+(term.width*0.1) >= 0:
+                    rendered_string = note.editor_timeline_icon(self.selectedNote == j)
+                    print_at(
+                        int(remaining_beats*8+(term.width*0.1)),
+                        term.height-4,
+                        rendered_string
+                    )
+
+                #PLAYFIELD
+                (self.dont_draw_list, _) = note.render(
+                    self.localConduc.current_beat,
+                    self.dont_draw_list,
+                    self.localConduc.cur_time_sec)
+
+                # if note["type"] == "hit_object": # HIT OBJECT STUFF
+                #     pass
                     # screenPos = note["screenpos"]
                     # characterDisplayed = self.layout[note["key"]]
                     # calculatedPos = Game.trueCalcPos(None, screenPos[0], screenPos[1], "setSize")
@@ -647,12 +695,6 @@ class Editor(BaseScene):
                     #     colorSplit = color_code_from_hex(note["color"])
                     #     color = term.color_rgb(colorSplit[0], colorSplit[1], colorSplit[2])
 
-                    # #TIMELINE
-                    # if remBeats*8+(term.width*0.1) >= 0:
-                    #     if self.selectedNote == j:
-                    #         print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{color}{term.reverse}{term.bold}{characterDisplayed.upper()}{reset_color}")
-                    #     else:
-                    #         print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{reset_color}{color}{term.bold}{characterDisplayed.upper()}{reset_color}")
 
 
                     # if note in self.dontDrawList and remBeats > -0.1:
@@ -670,8 +712,8 @@ class Editor(BaseScene):
                     #     print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{reset_color}   ")
                     #     print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{reset_color}   ")
                     #     self.dontDrawList.append(note)
-                elif note["type"] == "text": # TEXT STUFF
-                    pass
+                # elif note["type"] == "text": # TEXT STUFF
+                #     pass
                     # remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.currentBeat
                     # stopAt = remBeats + note["length"]
                     
@@ -702,63 +744,55 @@ class Editor(BaseScene):
                     #     else:
                     #         Game.renderText(None, " " * len(note["text"]), note["offset"], note["anchor"], note["align"], constOffset, self.localConduc.currentBeat)
                     #         self.dontDrawList.append(note)
-                elif note["type"] == "bg_color":
-                    remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.current_beat
-                    # BACKGROUND_COLOR - TIMELINE
-                    if remBeats*8+(term.width*0.1) >= 0:
-                        if self.options["nerdFont"]:
-                            char = "\ue22b"
-                        else:
-                            char = "¶"
-                        symbol_color = self.get_background(note['beatpos'][0]*4 + note['beatpos'][1])
-                        if self.selectedNote == j:
-                            print_at(int(remBeats*8+(term.width*0.1)), term.height-3, f"{term.reverse}{symbol_color}{term.bold}{char} {reset_color}")
-                        else:
-                            print_at(int(remBeats*8+(term.width*0.1)), term.height-3, f"{reset_color}{symbol_color}{term.bold}{char}{reset_color}")
+                # elif note["type"] == "bg_color":
+                #     remaining_beats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.current_beat
+                #     # BACKGROUND_COLOR - TIMELINE
+                #     if remaining_beats*8+(term.width*0.1) >= 0:
+                #         if self.options["nerdFont"]:
+                #             char = "\ue22b"
+                #         else:
+                #             char = "¶"
+                #         symbol_color = self.get_background(note['beatpos'][0]*4 + note['beatpos'][1])
+                #         if self.selectedNote == j:
+                #             print_at(int(remaining_beats*8+(term.width*0.1)), term.height-3, f"{term.reverse}{symbol_color}{term.bold}{char} {reset_color}")
+                #         else:
+                #             print_at(int(remaining_beats*8+(term.width*0.1)), term.height-3, f"{reset_color}{symbol_color}{term.bold}{char}{reset_color}")
 
-                else:
-                    # END - TIMELINE
-                    remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.current_beat
-                    if remBeats*8+(term.width*0.1) >= 0:
-                        if self.selectedNote == j:
-                            print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.bold_grey}▚{reset_color}")
-                        else:
-                            print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{reset_color}{term.bold_grey}▚{reset_color}")
+                # else:
+                #     # END - TIMELINE
+                #     remaining_beats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.current_beat
+                #     if remaining_beats*8+(term.width*0.1) >= 0:
+                #         if self.selectedNote == j:
+                #             print_at(int(remaining_beats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.bold_grey}▚{reset_color}")
+                #         else:
+                #             print_at(int(remaining_beats*8+(term.width*0.1)), term.height-4, f"{reset_color}{term.bold_grey}▚{reset_color}")
             #Current note info
-            selectedNote = self.mapToEdit['notes'][self.selectedNote]
-            if selectedNote["type"] == "hit_object":
-                if type(selectedNote["color"]) is int:
-                    color = colors[selectedNote["color"]]
-                else:
-                    # Formatting: "RRGGBB"
-                    colorSplit = color_code_from_hex(selectedNote["color"])
-                    color = term.color_rgb(colorSplit[0], colorSplit[1], colorSplit[2])
-                print_at(0, term.height-7, reset_color
-                +f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | "
-                +f"{self.loc('editor.timelineInfos.color')}: {color}[{selectedNote['color']}]{reset_color} | "
-                +f"{self.loc('editor.timelineInfos.screenpos')}: {selectedNote['screenpos']} | "
-                +f"{self.loc('editor.timelineInfos.beatpos')}: {selectedNote['beatpos']}")
-            elif selectedNote["type"] == "text":
-                print_at(0, term.height-7, reset_color
-                +f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | "
-                # +f"{self.loc('editor.timelineInfos.color')}: {color}[{selectedNote['color']}]{reset_color} | "
-                +f"{self.loc('editor.timelineInfos.screenpos')}: {selectedNote['offset']} | "
-                +f"{self.loc('editor.timelineInfos.beatpos')}: {selectedNote['beatpos']}") # I need to add more stuff yes
-            elif selectedNote["type"] == "end":
-                print_at(0, term.height-7, reset_color+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | {self.loc('editor.timelineInfos.endpos')}: {selectedNote['beatpos']}")
+            selected_note = self.notes[self.selectedNote]
+            print_at(0, term.height-7, selected_note.display_informations(self.selectedNote))
+
+            #Render selected note on top in the timeline
+            if remaining_beats*8+(term.width*0.1) >= 0:
+                rendered_string = note.editor_timeline_icon(self.selectedNote == j)
+                print_at(
+                    int(remaining_beats*8+(term.width*0.1)),
+                    term.height-4,
+                    rendered_string
+                )
+            # elif selectedNote["type"] == "end":
+            #     print_at(0, term.height-7, reset_color+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | {self.loc('editor.timelineInfos.endpos')}: {selectedNote['beatpos']}")
         else:
             if not self.keyPanelEnabled and not self.isTextEditing:
                 text_nomaploaded = self.loc("editor.emptyChart")
                 print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), reset_color+text_nomaploaded)
 
-        if not "bpmChanges" in self.mapToEdit:
-            self.mapToEdit["bpmChanges"] = []
-        if self.mapToEdit["bpmChanges"] != []:
-            for i in range(len(self.mapToEdit["bpmChanges"])):
-                change = self.mapToEdit["bpmChanges"][i]
-                remBeats = (change["atPosition"][0] + change["atPosition"][1]/4) - self.localConduc.current_beat
-                if int(remBeats*8+(term.width*0.1)) >= 0:
-                    print_at(int(remBeats*8+(term.width*0.1)), term.height-3, f"{reset_color}\U000f07da{reset_color}")
+        if "bpmChanges" not in self.chart:
+            self.chart["bpmChanges"] = []
+        if self.chart["bpmChanges"] != []:
+            for i in range(len(self.chart["bpmChanges"])):
+                change = self.chart["bpmChanges"][i]
+                remaining_beats = (change["atPosition"][0] + change["atPosition"][1]/4) - self.localConduc.current_beat
+                if int(remaining_beats*8+(term.width*0.1)) >= 0:
+                    print_at(int(remaining_beats*8+(term.width*0.1)), term.height-3, f"{reset_color}\U000f07da{reset_color}")
 
         if self.keyPanelEnabled:
             if self.keyPanelSelected == -1:
@@ -801,47 +835,55 @@ class Editor(BaseScene):
         if self.pauseMenuEnabled:
             self.draw_pauseMenu()
 
-        print_at(term.width-len(str(framerate()) + "fps"), 0, str(framerate()) + "fps" )
+        framerate_display = str(framerate()) + "fps"
+        print_at(term.width-10, 0, term.rjust(framerate_display, 10) )
 
+    @staticmethod
+    def recreate_note_data(notes):
+        notes_list:list = []
+        for note in notes:
+            notes_list.append(note.serialize())
+        return notes_list
 
     def run_command(self, command = ""):
-        commandSplit = command.split(" ")
+        cmd_argv = command.split(" ")
         print_at(0,term.height-2, term.clear_eol)
         # :q - Quit
-        if commandSplit[0] == "q!" or (commandSplit[0] == "q" and not self.needsSaving):
+        if cmd_argv[0] == "q!" or (cmd_argv[0] == "q" and not self.needsSaving):
             self.turn_off = True
             return True, ""
-        
-        elif commandSplit[0] == "loop" or commandSplit[0] == "lp":
-            if len(commandSplit) < 2:
-                commandSplit = "1"
-            return None, "START_LOOP:"+commandSplit[1]
 
-        elif commandSplit[0] == "cl":
+        elif cmd_argv[0] == "loop" or cmd_argv[0] == "lp":
+            if len(cmd_argv) < 2:
+                cmd_argv = "1"
+            return None, "START_LOOP:"+cmd_argv[1]
+
+        elif cmd_argv[0] == "cl":
             return None, "END_LOOP"
 
         # :w - Write (Save) | 1 optional argument (where to save it)
-        elif commandSplit[0] == "w":
-            if self.mapToEdit["formatVersion"] != 1:
-                self.mapToEdit["formatVersion"] = 1
-            output = json.dumps(self.mapToEdit, indent=4)
-            if len(commandSplit) > 1:
-                self.mapToEdit["foldername"] = commandSplit[1]
-            if len(commandSplit) == 2:
-                self.fileLocation = f"./charts/{commandSplit[1]}/data.json"
-            elif len(commandSplit) == 3:
-                self.fileLocation = f"./charts/{commandSplit[1]}/{commandSplit[2]}.json"
-            elif self.fileLocation == "" and len(commandSplit) == 1:
+        elif cmd_argv[0] == "w":
+            if self.chart["formatVersion"] != 1:
+                self.chart["formatVersion"] = 1
+            self.chart["notes"] = self.recreate_note_data(self.notes)
+            output = json.dumps(self.chart, indent=4)
+            if len(cmd_argv) > 1:
+                self.chart["foldername"] = cmd_argv[1]
+            if len(cmd_argv) == 2:
+                self.fileLocation = f"./charts/{cmd_argv[1]}/data.json"
+            elif len(cmd_argv) == 3:
+                self.fileLocation = f"./charts/{cmd_argv[1]}/{cmd_argv[2]}.json"
+            elif self.fileLocation == "" and len(cmd_argv) == 1:
                 self.fileBrwsr.fileExtFilter = "(?:\\/$)"
                 self.fileBrwsr.load_folder(os.getcwd())
                 self.fileBrwsr.selectFolderMode = True
                 self.fileBrwsr.caption = "Select a folder"
                 self.fileBrwsr.turnOff = False
-                getFolderLocation = self.fileBrwsr.loop()
+                folder_location = self.fileBrwsr.loop()
 
-                if getFolderLocation != "?":
-                    self.fileLocation = getFolderLocation + "/data.json"
-                    self.mapToEdit["foldername"] = getFolderLocation.split("/")[-1]
+                if folder_location != "?":
+                    self.fileLocation = folder_location + "/data.json"
+                    self.chart["foldername"] = folder_location.split("/")[-1]
                 # return False, getFolderLocation
                 # return False, self.loc("editor.commandResults.common.notEnoughArgs")
             if os.path.exists(self.fileLocation):
@@ -849,21 +891,21 @@ class Editor(BaseScene):
             else:
                 if not os.path.exists("./charts/"):
                     os.mkdir("./charts")
-                if len(commandSplit) > 1:
-                    if not os.path.exists(f"./charts/{commandSplit[1]}"):
-                        os.mkdir(f"./charts/{commandSplit[1]}")
+                if len(cmd_argv) > 1:
+                    if not os.path.exists(f"./charts/{cmd_argv[1]}"):
+                        os.mkdir(f"./charts/{cmd_argv[1]}")
                 file_data = open(self.fileLocation, "x", encoding="utf8")
             file_data.write(output)
             file_data.close()
             return True, self.loc("editor.commandResults.save")
-        
+
         # :wq - Save and Quit | 1 optional argument (where to save it)
-        elif commandSplit[0] == "wq!" or (commandSplit[0] == "wq" and not self.needsSaving):
-            output = json.dumps(self.mapToEdit, indent=4)
-            if len(commandSplit) == 2:
-                self.fileLocation = f"./charts/{commandSplit[1]}/data.json"
-            elif len(commandSplit) == 3:
-                self.fileLocation = f"./charts/{commandSplit[1]}/{commandSplit[2]}.json"
+        elif cmd_argv[0] == "wq!" or (cmd_argv[0] == "wq" and not self.needsSaving):
+            output = json.dumps(self.chart, indent=4)
+            if len(cmd_argv) == 2:
+                self.fileLocation = f"./charts/{cmd_argv[1]}/data.json"
+            elif len(cmd_argv) == 3:
+                self.fileLocation = f"./charts/{cmd_argv[1]}/{cmd_argv[2]}.json"
             if os.path.exists(self.fileLocation):
                 file_data = open(self.fileLocation, "w", encoding="utf8")
             else:
@@ -874,44 +916,44 @@ class Editor(BaseScene):
             return True, self.loc("editor.commandResults.save")
 
         # :ar - Approach Rate
-        elif commandSplit[0] == "ar":
-            if len(commandSplit) >= 2:
-                if commandSplit[1].replace(".", "", 1).isdigit():
-                    self.mapToEdit["approachRate"] = float(commandSplit[1])
-                    return True, "[ar_set_to]"+commandSplit[1]
+        elif cmd_argv[0] == "ar":
+            if len(cmd_argv) >= 2:
+                if cmd_argv[1].replace(".", "", 1).isdigit():
+                    self.chart["approachRate"] = float(cmd_argv[1])
+                    return True, "[ar_set_to]"+cmd_argv[1]
                 else:
                     return False, "[ar_not_a_number]"
-            
-        # :diff - Difficulty
-        elif commandSplit[0] == "diff":
-            if len(commandSplit) >= 2:
-                if commandSplit[1].isdigit():
-                    self.mapToEdit["difficulty"] = int(commandSplit[1])
-                else:
-                    self.mapToEdit["difficulty"] = commandSplit[1]
-                return True, "[diff_set_to]"+commandSplit[1]
 
-        # :o - Open 
-        elif commandSplit[0] == "o":
-            if len(commandSplit) == 2:
-                fileExists = self.load_chart(commandSplit[1])
-                if not fileExists:
-                    return fileExists, self.loc("editor.commandResults.open.notFound")
+        # :diff - Difficulty
+        elif cmd_argv[0] == "diff":
+            if len(cmd_argv) >= 2:
+                if cmd_argv[1].isdigit():
+                    self.chart["difficulty"] = int(cmd_argv[1])
                 else:
-                    return fileExists, self.loc("editor.commandResults.open.success")
-            elif len(commandSplit) == 3:
-                self.load_chart(commandSplit[1], commandSplit[2])
+                    self.chart["difficulty"] = cmd_argv[1]
+                return True, "[diff_set_to]"+cmd_argv[1]
+
+        # :o - Open
+        elif cmd_argv[0] == "o":
+            if len(cmd_argv) == 2:
+                file_exists = self.load_chart(cmd_argv[1])
+                if not file_exists:
+                    return file_exists, self.loc("editor.commandResults.open.notFound")
+                else:
+                    return file_exists, self.loc("editor.commandResults.open.success")
+            elif len(cmd_argv) == 3:
+                self.load_chart(cmd_argv[1], cmd_argv[2])
             else:
-                if len(commandSplit) < 2:
+                if len(cmd_argv) < 2:
                     return False, self.loc("editor.commandResults.common.notEnoughArgs")
                 else:
                     return False, self.loc("editor.commandResults.common.tooManyArgs")
         
         # :p - Place
-        elif commandSplit[0] == "p":
-            if len(commandSplit) > 1:
-                if commandSplit[1].isdigit():
-                    self.selectedNote = self.create_note(self.localConduc.current_beat, int(commandSplit[1]))
+        elif cmd_argv[0] == "p":
+            if len(cmd_argv) > 1:
+                if cmd_argv[1].isdigit():
+                    self.selectedNote = self.create_note(self.localConduc.current_beat, int(cmd_argv[1]))
                     return True, self.loc("editor.commandResults.note.success")
             else:
                 self.keyPanelEnabled = True
@@ -920,15 +962,15 @@ class Editor(BaseScene):
                 return True, ""
 
         # :song - Change song
-        elif commandSplit[0] == "song":
+        elif cmd_argv[0] == "song":
             if self.fileLocation == "":
                 return False, "You need to save this file first! To do that, type :w <some_chart_name>"
-            if len(commandSplit) > 1:
-                if os.path.exists(commandSplit[1]) and commandSplit[1].split(".")[-1] in ["ogg", "mp3", "wav"]:
-                    soundFileLocation = commandSplit[1]
-                    self.mapToEdit["sound"] = soundFileLocation.split('/')[-1]
-                    shutil.copyfile(soundFileLocation, f"./charts/{self.mapToEdit['foldername']}/{soundFileLocation.split('/')[-1]}")
-                    self.localConduc.loadsong(self.mapToEdit)
+            if len(cmd_argv) > 1:
+                if os.path.exists(cmd_argv[1]) and cmd_argv[1].split(".")[-1] in ["ogg", "mp3", "wav"]:
+                    soundFileLocation = cmd_argv[1]
+                    self.chart["sound"] = soundFileLocation.split('/')[-1]
+                    shutil.copyfile(soundFileLocation, f"./charts/{self.chart['foldername']}/{soundFileLocation.split('/')[-1]}")
+                    self.localConduc.loadsong(self.chart)
             else:
                 self.fileBrwsr.fileExtFilter = "(?:\\.ogg$)|(?:\\.wav$)|(?:\\.mp3$)"
                 self.fileBrwsr.load_folder(os.getcwd())
@@ -936,190 +978,197 @@ class Editor(BaseScene):
                 self.fileBrwsr.turnOff = False
                 soundFileLocation = self.fileBrwsr.loop()
                 if soundFileLocation != "?":
-                    self.mapToEdit["sound"] = soundFileLocation.split('/')[-1]
+                    self.chart["sound"] = soundFileLocation.split('/')[-1]
                     try:
-                        shutil.copyfile(soundFileLocation, f"./charts/{self.mapToEdit['foldername']}/{soundFileLocation.split('/')[-1]}")
+                        shutil.copyfile(soundFileLocation, f"./charts/{self.chart['foldername']}/{soundFileLocation.split('/')[-1]}")
                     except shutil.SameFileError:
                         pass
-                    self.localConduc.loadsong(self.mapToEdit)
+                    self.localConduc.loadsong(self.chart)
                 else:
                     return False, "File selection aborted."
 
         # :off - Change song offset
-        elif commandSplit[0] == "off":
+        elif cmd_argv[0] == "off":
             offset = 0
-            if len(commandSplit) > 1:
-                offset = float(commandSplit[1])
+            if len(cmd_argv) > 1:
+                offset = float(cmd_argv[1])
             else:
-                self.calib.startCalibSong(self.mapToEdit)
+                self.calib.startCalibSong(self.chart)
                 offset = self.calib.init(False)
                 self.calib.conduc.stop()
                 self.calib.turnOff = False
             offset = round(offset, 6) # 6 is completely arbitrary, it's mostly to deal with floating point fuckery
-            self.mapToEdit["offset"] = offset
+            self.chart["offset"] = offset
             self.localConduc.setOffset(offset)
             return True, f"New offset: {offset}"
 
         # :s - Snap
-        elif commandSplit[0] == "s":
-            if len(commandSplit) > 1:
-                if commandSplit[1].replace('.', '', 1).isdigit():
-                    self.snap = float(commandSplit[1])
+        elif cmd_argv[0] == "s":
+            if len(cmd_argv) > 1:
+                if cmd_argv[1].replace('.', '', 1).isdigit():
+                    self.snap = float(cmd_argv[1])
 
         # :m - Move cursor
-        elif commandSplit[0] == "m":
-            if len(commandSplit) > 1:
-                if commandSplit[1].startswith("~"):
-                    self.localConduc.current_beat += float(commandSplit[1].replace("~", ""))
+        elif cmd_argv[0] == "m":
+            if len(cmd_argv) > 1:
+                if cmd_argv[1].startswith("~"):
+                    self.localConduc.current_beat += float(cmd_argv[1].replace("~", ""))
                 else:
-                    self.localConduc.current_beat = float(commandSplit[1])
+                    self.localConduc.current_beat = float(cmd_argv[1])
         
         # :mt - Metadata
-        elif commandSplit[0] == "mt":
-            if len(commandSplit) >= 3:
-                valueChanged = ""
-                changedTo = ""
-                if commandSplit[1] in ["title", "t"]:
-                    self.mapToEdit["metadata"]["title"] = " ".join(commandSplit[2:])
-                    valueChanged = "title"
-                    changedTo = self.mapToEdit["metadata"]["title"]
-                if commandSplit[1] in ["artist", "a"]:
-                    self.mapToEdit["metadata"]["artist"] = " ".join(commandSplit[2:])
-                    valueChanged = "artist"
-                    changedTo = self.mapToEdit["metadata"]["artist"]
-                if commandSplit[1] in ["author", "charter", "au", "c"]:
-                    self.mapToEdit["metadata"]["author"] = " ".join(commandSplit[2:])
-                    valueChanged = "author"
-                    changedTo = self.mapToEdit["metadata"]["author"]
-                if commandSplit[1] in ["description", "desc", "d"]:
-                    self.mapToEdit["metadata"]["description"] = " ".join(commandSplit[2:])
-                    valueChanged = "description"
-                    changedTo = self.mapToEdit["metadata"]["description"]
-                return True, self.loc("editor.commandResults.meta.success").format(valueChanged, changedTo)
-            elif len(commandSplit) == 2:
-                returnMessage = ""
-                if commandSplit[1] in ["title", "t"]:
-                    returnMessage = self.mapToEdit["metadata"]["title"]
-                if commandSplit[1] in ["artist", "a"]:
-                    returnMessage = self.mapToEdit["metadata"]["artist"]
-                if commandSplit[1] in ["author", "charter", "au", "c"]:
-                    returnMessage = self.mapToEdit["metadata"]["author"]
-                if commandSplit[1] in ["description", "desc", "d"]:
-                    returnMessage = self.mapToEdit["metadata"]["description"]
-                return True, returnMessage
+        elif cmd_argv[0] == "mt":
+            if len(cmd_argv) >= 3:
+                value_changed = ""
+                changed_to = ""
+                if cmd_argv[1] in ["title", "t"]:
+                    self.chart["metadata"]["title"] = " ".join(cmd_argv[2:])
+                    value_changed = "title"
+                    changed_to = self.chart["metadata"]["title"]
+                if cmd_argv[1] in ["artist", "a"]:
+                    self.chart["metadata"]["artist"] = " ".join(cmd_argv[2:])
+                    value_changed = "artist"
+                    changed_to = self.chart["metadata"]["artist"]
+                if cmd_argv[1] in ["author", "charter", "au", "c"]:
+                    self.chart["metadata"]["author"] = " ".join(cmd_argv[2:])
+                    value_changed = "author"
+                    changed_to = self.chart["metadata"]["author"]
+                if cmd_argv[1] in ["description", "desc", "d"]:
+                    self.chart["metadata"]["description"] = " ".join(cmd_argv[2:])
+                    value_changed = "description"
+                    changed_to = self.chart["metadata"]["description"]
+                return True, self.loc("editor.commandResults.meta.success").format(value_changed, changed_to)
+            elif len(cmd_argv) == 2:
+                return_message = ""
+                if cmd_argv[1] in ["title", "t"]:
+                    return_message = self.chart["metadata"]["title"]
+                if cmd_argv[1] in ["artist", "a"]:
+                    return_message = self.chart["metadata"]["artist"]
+                if cmd_argv[1] in ["author", "charter", "au", "c"]:
+                    return_message = self.chart["metadata"]["author"]
+                if cmd_argv[1] in ["description", "desc", "d"]:
+                    return_message = self.chart["metadata"]["description"]
+                return True, return_message
 
         # :bpm - Change BPM
-        elif commandSplit[0] == "bpm":
-            if len(commandSplit) == 2:
+        elif cmd_argv[0] == "bpm":
+            if len(cmd_argv) == 2:
                 newbpm = 120
-                if commandSplit[1].find(".") != -1:
-                    newbpm = float(commandSplit[1])
+                if cmd_argv[1].find(".") != -1:
+                    newbpm = float(cmd_argv[1])
                 else:
-                    newbpm = int(commandSplit[1])
+                    newbpm = int(cmd_argv[1])
                 
-                self.mapToEdit["bpm"] = newbpm
+                self.chart["bpm"] = newbpm
                 self.localConduc.bpm = newbpm
 
                 return True, ""
-            elif len(commandSplit) > 2:
+            elif len(cmd_argv) > 2:
                 return False, self.loc("editor.commandResults.common.tooManyArgs")
             return False, self.loc("editor.commandResults.common.notEnoughArgs")
         
-        elif commandSplit[0] == "bpmc":
-            if len(commandSplit) == 2:
+        elif cmd_argv[0] == "bpmc":
+            if len(cmd_argv) == 2:
                 newbpm = 120
-                if commandSplit[1].find(".") != -1:
-                    newbpm = float(commandSplit[1])
+                if cmd_argv[1].find(".") != -1:
+                    newbpm = float(cmd_argv[1])
                 else:
-                    newbpm = int(commandSplit[1])
+                    newbpm = int(cmd_argv[1])
                 
-                newbpmObj = {
-                    "atPosition": [self.localConduc.current_beat, (self.localConduc.current_beat%1)*4],
+                new_bpm_object = {
+                    "atPosition": [
+                        self.localConduc.current_beat, 
+                        (self.localConduc.current_beat%1)*4
+                    ],
                     "toBPM": newbpm
                 }
 
-                self.mapToEdit["bpmChanges"].append(newbpmObj)
-                self.localConduc.bpmChanges.append(newbpmObj)
+                self.chart["bpmChanges"].append(new_bpm_object)
+                self.localConduc.bpmChanges.append(new_bpm_object)
 
                 return True, ""
-            elif len(commandSplit) > 2:
+            elif len(cmd_argv) > 2:
                 return False, self.loc("editor.commandResults.common.tooManyArgs")
             return False, self.loc("editor.commandResults.common.notEnoughArgs")
 
-        elif commandSplit[0] == "delbpmc":
-            if len(commandSplit) == 2:
-                self.localConduc.bpmChanges.remove(self.mapToEdit["bpmChanges"][int(commandSplit[1])])
-                self.mapToEdit["bpmChanges"].remove(self.mapToEdit["bpmChanges"][int(commandSplit[1])])
+        elif cmd_argv[0] == "delbpmc":
+            if len(cmd_argv) == 2:
+                self.localConduc.bpmChanges.remove(self.chart["bpmChanges"][int(cmd_argv[1])])
+                self.chart["bpmChanges"].remove(self.chart["bpmChanges"][int(cmd_argv[1])])
 
         # :cp - Copy
-        elif commandSplit[0] == "cp":
-            if len(commandSplit) == 3:
+        elif cmd_argv[0] == "cp":
+            if len(cmd_argv) == 3:
                 #XX-YY : Range of notes to copy
-                rangeToPick = commandSplit[1].split("-")
+                rangeToPick = cmd_argv[1].split("-")
                 if len(rangeToPick) >= 2:
                     pass
                 else:
                     return False, self.loc("editor.commandResults.common.notEnoughArgs")
 
-                notesToCopy = [copy.deepcopy(self.mapToEdit["notes"][i]) for i in range(int(rangeToPick[0]), int(rangeToPick[1])+1)]
+                notes_to_copy = [copy.deepcopy(self.chart["notes"][i]) \
+                               for i in range(int(rangeToPick[0]), int(rangeToPick[1])+1)]
                 #BB : How many beats to offset it by?
 
-                for i in range(len(notesToCopy)):
-                    notesToCopy[i]["beatpos"][1] += float(commandSplit[2])
-                    notesToCopy[i]["beatpos"][0] += notesToCopy[i]["beatpos"][1]//4
-                    notesToCopy[i]["beatpos"][1] %= 4
-                    self.mapToEdit["notes"].append(notesToCopy[i])
-                self.mapToEdit["notes"] = sorted(self.mapToEdit["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
-                if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
-                    self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
+                for (_,note) in enumerate(notes_to_copy):
+                    note["beatpos"][1] += float(cmd_argv[2])
+                    note["beatpos"][0] += note["beatpos"][1]//4
+                    note["beatpos"][1] %= 4
+                    self.chart["notes"].append(note)
+                self.chart["notes"] = sorted(
+                    self.chart["notes"], 
+                    key=lambda d: d['beatpos'][0]*4+d['beatpos'][1]
+                )
+                if "end" in [note["type"] for note in self.chart["notes"]]:
+                    self.endNote = [note["type"] for note in self.chart["notes"]].index("end")
                 return True, ""
-                
-            elif len(commandSplit) > 3:
+
+            elif len(cmd_argv) > 3:
                 return False, self.loc("editor.commandResults.common.tooManyArgs")
             return False, self.loc("editor.commandResults.common.notEnoughArgs")
 
-        elif commandSplit[0] == "t":
-            if len(commandSplit) > 1:
-                self.create_text(atPos=self.localConduc.current_beat, text=" ".join(commandSplit[1:]))
+        elif cmd_argv[0] == "t":
+            if len(cmd_argv) > 1:
+                self.create_text(atPos=self.localConduc.current_beat, text=" ".join(cmd_argv[1:]))
                 return True, self.loc("editor.commandResults.note.success")
             else:
                 return False, "[cannot create empty text]"
-            
-        elif commandSplit[0] == "c":
-            note = self.mapToEdit["notes"][self.selectedNote]
-            if commandSplit[1].startswith("#") and len(commandSplit[1].replace("#", "", 1)) == 6:
-                note["color"] = commandSplit[1].replace("#", "", 1)
-            elif commandSplit[1].isDigit():
-                note["color"] = int(commandSplit[1])
 
-        elif commandSplit[0] == "sel":
-            if commandSplit[1].startswith("~"):
-                self.selectedNote += int(commandSplit[1].replace("~", ""))
+        elif cmd_argv[0] == "c":
+            note = self.chart["notes"][self.selectedNote]
+            if cmd_argv[1].startswith("#") and len(cmd_argv[1].replace("#", "", 1)) == 6:
+                note["color"] = cmd_argv[1].replace("#", "", 1)
+            elif cmd_argv[1].isDigit():
+                note["color"] = int(cmd_argv[1])
+
+        elif cmd_argv[0] == "sel":
+            if cmd_argv[1].startswith("~"):
+                self.selectedNote += int(cmd_argv[1].replace("~", ""))
             else:
-                self.selectedNote = int(commandSplit[1])
+                self.selectedNote = int(cmd_argv[1])
 
-        elif commandSplit[0] == "del":
-            if len(commandSplit) < 2:
-                self.mapToEdit["notes"].remove(self.mapToEdit["notes"][self.selectedNote])
+        elif cmd_argv[0] == "del":
+            if len(cmd_argv) < 2:
+                self.notes.remove(self.notes[self.selectedNote])
             else:
-                self.mapToEdit["notes"].remove(self.mapToEdit["notes"][int(commandSplit[1])])
+                self.notes.remove(self.notes[int(cmd_argv[1])])
 
-        elif commandSplit[0] == "bgc":
-            if len(commandSplit) > 1:
+        elif cmd_argv[0] == "bgc":
+            if len(cmd_argv) > 1:
                 newNote = {
                     "type": "bg_color",
                     "beatpos": [
                         int(self.localConduc.current_beat//4),
                         round(self.localConduc.current_beat%4, 5)
                     ],
-                    "color": commandSplit[1]
+                    "color": cmd_argv[1]
                 }
-                self.mapToEdit["notes"].append(newNote)
-                self.background_changes = Game.load_bg_changes(None, self.mapToEdit)
+                self.chart["notes"].append(newNote)
+                self.background_changes = Game.load_bg_changes(self.chart)
                 return True, "this is gonna crash the game isn't it"
 
         else:
-            if len(commandSplit[0]) > 128:
+            if len(cmd_argv[0]) > 128:
                 return False, self.loc("editor.commandResults.common.tooLong")
             return False, self.loc("editor.commandResults.common.notFound")
 
@@ -1130,15 +1179,15 @@ class Editor(BaseScene):
         val = term.inkey(timeout=1/120, esc_delay=0)
 
         if self.playtest:
-            for note in self.mapToEdit["notes"]:
-                if note["type"] == "hit_object":
-                    remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.current_beat
-                    if note not in self.dontBeat and remBeats <= 0:
+            for actual_note in self.notes:
+                if isinstance(actual_note, NoteObject):
+                    remaining_beats = actual_note.beat_position - self.localConduc.current_beat
+                    if actual_note not in self.dontBeat and remaining_beats <= 0:
                         self.beatSound.move2position_seconds(0)
                         self.beatSound.play()
-                        self.dontBeat.append(note)
-                    if note in self.dontBeat and remBeats > 0:
-                        self.dontBeat.remove(note)
+                        self.dontBeat.append(actual_note)
+                    if actual_note in self.dontBeat and remaining_beats > 0:
+                        self.dontBeat.remove(actual_note)
 
         if self.metadataMenuEnabled:
             if not self.metadataTyping:
@@ -1153,7 +1202,7 @@ class Editor(BaseScene):
                     self.metadataMenuSelection = min(self.metadataMenuSelection, len(self.metadataParts) - 1)
                 if val.name == "KEY_ENTER":
                     self.metadataTyping = True
-                    self.metadataString = self.mapToEdit["metadata"][self.metadataParts[self.metadataMenuSelection]]
+                    self.metadataString = self.chart["metadata"][self.metadataParts[self.metadataMenuSelection]]
             else:
                 if val.name == "KEY_ESCAPE":
                     self.metadataTyping = False
@@ -1161,7 +1210,7 @@ class Editor(BaseScene):
                     print_at(0,term.height-2, term.clear_eol+reset_color)
                 elif val.name == "KEY_ENTER":
                     self.metadataTyping = False
-                    self.mapToEdit["metadata"][self.metadataParts[self.metadataMenuSelection]] = self.metadataString
+                    self.chart["metadata"][self.metadataParts[self.metadataMenuSelection]] = self.metadataString
                     #there was a todo here but i forgor what it was for
                 else:
                     if self.metadataString == "" and val.name == "KEY_BACKSPACE":
@@ -1181,7 +1230,7 @@ class Editor(BaseScene):
         elif self.isTextEditing:
             if val.name == "KEY_ESCAPE" and self.textEdit.isSelectingText == False:
                 self.isTextEditing = False
-                self.mapToEdit["notes"][self.textobjectedited]["text"] = self.textEdit.textContent
+                self.notes[self.textobjectedited].text = self.textEdit.textContent
             else:
                 self.textEdit.handle_input(val)
 
@@ -1208,7 +1257,7 @@ class Editor(BaseScene):
                         if self.keyPanelSelected == -1:
                             self.selectedNote = self.create_note(self.localConduc.current_beat, self.keyPanelKey)
                         else:
-                            self.mapToEdit["notes"][self.keyPanelSelected]["key"] = self.keyPanelKey
+                            self.notes[self.keyPanelSelected]._key_index = self.keyPanelKey
                         self.keyPanelEnabled = False
                         self.keyPanelJustDisabled = True
                         self.keyPanelSelected = -1
@@ -1223,12 +1272,12 @@ class Editor(BaseScene):
                     self.commandMode = True
                     self.commandString = ""
                 if val == " ":
-                    self.background_changes = Game.load_bg_changes(None, self.mapToEdit)
+                    self.background_changes = Game.load_bg_changes(self.chart["notes"])
                     if not self.playtest:
-                        for note in self.mapToEdit["notes"]:
-                            remBeats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.current_beat
-                            if remBeats < 0:
-                                self.dontBeat.append(note)
+                        for actual_note in self.notes:
+                            remaining_beats = actual_note.beat_position - self.localConduc.current_beat
+                            if remaining_beats < 0:
+                                self.dontBeat.append(actual_note)
                         self.localConduc.startAt(self.localConduc.current_beat)
                     else:
                         self.localConduc.stop()
@@ -1241,11 +1290,9 @@ class Editor(BaseScene):
                 if val.name in ("KEY_RIGHT", "KEY_SRIGHT"):
                     multiplier = {"KEY_RIGHT": 1, "KEY_SRIGHT": 4}[val.name]
                     self.localConduc.current_beat += (1/self.snap)*4*multiplier
-                    print_at(0,term.height-4, term.clear_eol)
                 if val.name in ("KEY_LEFT", "KEY_SLEFT"):
                     multiplier = {"KEY_LEFT": 1, "KEY_SLEFT": 4}[val.name]
                     self.localConduc.current_beat = max(self.localConduc.current_beat - (1/self.snap)*4*multiplier, 0)
-                    print_at(0,term.height-4, term.clear_eol)
                 if val == "z":
                     self.keyPanelEnabled = True
                     self.keyPanelSelected = -1
@@ -1265,104 +1312,109 @@ class Editor(BaseScene):
                     self.snap = self.snapPossible[self.selectedSnap]
 
                     
-                if self.mapToEdit["notes"] != []:
-                    note = self.mapToEdit["notes"][self.selectedNote]
+                if self.chart["notes"] != []:
+                    actual_note:NoteObject|TextObject = self.notes[self.selectedNote]
+                    json_note = self.chart["notes"][self.selectedNote]
                     if val.name in ("KEY_DOWN", "KEY_SDOWN"):
                         multiplier = {"KEY_DOWN": 1, "KEY_SDOWN": 4}[val.name]
-                        print_at(0,term.height-4, term.clear_eol)
-                        self.selectedNote = min(self.selectedNote + (1*multiplier), len(self.mapToEdit["notes"])-1)
-                        note = self.mapToEdit["notes"][self.selectedNote]
-                        self.localConduc.current_beat = (note["beatpos"][0] * 4 + note["beatpos"][1])
+                        self.selectedNote = min(self.selectedNote + (1*multiplier), len(self.chart["notes"])-1)
+                        actual_note = self.notes[self.selectedNote]
+                        self.localConduc.current_beat = actual_note.beat_position
                     if val.name in ("KEY_UP", "KEY_SUP"):
                         multiplier = {"KEY_UP": 1, "KEY_SUP": 4}[val.name]
-                        print_at(0,term.height-4, term.clear_eol)
                         self.selectedNote = max(self.selectedNote - (1*multiplier), 0)
-                        note = self.mapToEdit["notes"][self.selectedNote]
-                        self.localConduc.current_beat = (note["beatpos"][0] * 4 + note["beatpos"][1])
+                        actual_note = self.notes[self.selectedNote]
+                        self.localConduc.current_beat = actual_note.beat_position
 
                     if val == "u":
                         self.localConduc.current_beat = max(self.localConduc.current_beat - (1/self.snap)*4, 0)
-                        print_at(0,term.height-4, term.clear_eol)
-                        note["beatpos"] = [self.localConduc.current_beat//4, self.localConduc.current_beat%4]
+                        actual_note.beat_position = self.localConduc.current_beat
                     if val == "i":
                         self.localConduc.current_beat += (1/self.snap)*4
-                        print_at(0,term.height-4, term.clear_eol)
-                        note["beatpos"] = [self.localConduc.current_beat//4, self.localConduc.current_beat%4]
+                        actual_note.beat_position = self.localConduc.current_beat
 
-                    if val == "d" and note["type"] == "hit_object":
+                    if val == "d" and json_note["type"] == "hit_object":
                         self.selectedNote = self.create_note(
-                            note["beatpos"][0]*4 + note["beatpos"][1], 
-                            note["key"]
+                            actual_note.beat_position,
+                            actual_note.key_index
                         )
-                        self.mapToEdit["notes"][self.selectedNote] = copy.deepcopy(note)
-                    if val == "d" and note["type"] == "text":
-                        newNote = copy.deepcopy(note)
-                        self.mapToEdit["notes"].append(newNote)
-                        self.mapToEdit["notes"] = sorted(self.mapToEdit["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
-                        if "end" in [note["type"] for note in self.mapToEdit["notes"]]:
-                            self.endNote = [note["type"] for note in self.mapToEdit["notes"]].index("end")
-                        self.selectedNote = self.mapToEdit["notes"].index(newNote)
+                        self.chart["notes"][self.selectedNote] = copy.deepcopy(json_note)
+                    if val == "d" and json_note["type"] == "text":
+                        newNote = copy.deepcopy(json_note)
+                        self.chart["notes"].append(newNote)
+                        self.chart["notes"] = sorted(self.chart["notes"], key=lambda d: d['beatpos'][0]*4+d['beatpos'][1])
+                        if "end" in [note["type"] for note in self.chart["notes"]]:
+                            self.endNote = [note["type"] for note in self.chart["notes"]].index("end")
+                        self.selectedNote = self.chart["notes"].index(newNote)
 
-                    if note["type"] == "hit_object" and val:
-                        screenPos = note["screenpos"]
-                        calculatedPos = Game.calculate_position(screenPos, 5, 3, term.width-10, term.height-11)
+                    if json_note["type"] == "hit_object" and val:
+                        screen_position = actual_note.position
+                        calculated_pos = Game.calculate_position(
+                            screen_position,
+                            5, 3,
+                            term.width-10, term.height-11
+                        )
                         # erase hitbox
                         if val in "hjklHJKL":
-                            print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{reset_color}   ")
-                            print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{reset_color}   ")
-                            print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{reset_color}   ")
+                            print_at(calculated_pos[0]-1, calculated_pos[1]-1, f"{reset_color}   ")
+                            print_at(calculated_pos[0]-1, calculated_pos[1]+0, f"{reset_color}   ")
+                            print_at(calculated_pos[0]-1, calculated_pos[1]+1, f"{reset_color}   ")
                         # calculate new x/y position
+                        direc = val.lower()
+                        multiplier = (3 if direc in "hl" else 2) if val.isupper() else 1
                         if val in "hH":
-                            multiplier = {"h": 1, "H": 3}[val]
-                            note["screenpos"][0] = max(round(note["screenpos"][0] - multiplier/(default_size[0]-1), 3), 0)
+                            actual_note.position.x = max(round(
+                                actual_note.position.x - multiplier/default_size[0], 4
+                            ), 0)
                         if val in "jJ":
-                            multiplier = {"j": 1, "J": 2}[val]
-                            note["screenpos"][1] = min(round(note["screenpos"][1] + multiplier/default_size[1], 3), 1)
+                            actual_note.position.y = min(round(
+                                actual_note.position.y + multiplier/default_size[1], 4
+                            ), 1)
                         if val in "kK":
-                            multiplier = {"k": 1, "K": 2}[val]
-                            note["screenpos"][1] = max(round(note["screenpos"][1] - multiplier/default_size[1], 3), 0)
+                            actual_note.position.y = max(round(
+                                actual_note.position.y - multiplier/default_size[1], 4
+                            ), 0)
                         if val in "lL":
-                            multiplier = {"l": 1, "L": 3}[val]
-                            note["screenpos"][0] = min(round(note["screenpos"][0] + multiplier/(default_size[0]-1), 3), 1)
+                            actual_note.position.x = min(round(
+                                actual_note.position.x + multiplier/default_size[0], 4
+                            ), 1)
                         if val == "e":
-                            self.run_noteSettings(note, self.selectedNote, 0)
+                            self.run_noteSettings(actual_note, self.selectedNote, 0)
                         if val == "E":
                             self.colorPickerEnabled = not self.colorPickerEnabled
-                        if val == "x":
-                            note["color"] += 1
-                            note["color"] %= len(colors)
-                        if val == "X":
-                            note["color"] -= 1
-                            note["color"] %= len(colors)
-                    if note["type"] == "text" and val:
+                        # if val == "x":
+                        #     json_note["color"] += 1
+                        #     json_note["color"] %= len(colors)
+                        # if val == "X":
+                        #     json_note["color"] -= 1
+                        #     json_note["color"] %= len(colors)
+                    if actual_note["type"] == "text" and val:
+                        direc = val.lower()
+                        multiplier = (3 if direc in "hl" else 2) if val.isupper() else 1
                         if val in "hH":
-                            multiplier = 3 if val.isupper() else 1
-                            note["offset"][0] = note["offset"][0] - multiplier
+                            actual_note.offset.x -= multiplier
                         if val in "jJ":
-                            multiplier = 2 if val.isupper() else 1
-                            note["offset"][1] = note["offset"][1] + multiplier
+                            actual_note.offset.y += multiplier
                         if val in "kK":
-                            multiplier = 2 if val.isupper() else 1
-                            note["offset"][1] = note["offset"][1] - multiplier
+                            actual_note.offset.y -= multiplier
                         if val in "lL":
-                            multiplier = 3 if val.isupper() else 1
-                            note["offset"][0] = note["offset"][0] + multiplier
+                            actual_note.offset.x += multiplier
                         if val == "U":
-                            note["length"] = max(note["length"] - (1/self.snap)*4, 0)
+                            actual_note.duration = max(actual_note.duration - (1/self.snap)*4, 0)
                         if val == "I":
-                            note["length"] += (1/self.snap)*4
+                            actual_note.duration += (1/self.snap)*4
                         if val == "e":
-                            self.run_noteSettings(note, self.selectedNote, 0)
-    
+                            self.run_noteSettings(actual_note, self.selectedNote, 0)
+
                         if val == "x":
-                            note["color"] = note.get('color', -1) + 1
-                            note["color"] %= len(colors)
+                            actual_note["color"] = actual_note.get('color', -1) + 1
+                            actual_note["color"] %= len(colors)
                         if val == "X":
-                            note["color"] = note.get('color', len(colors)) - 1
-                            note["color"] %= len(colors)
+                            actual_note["color"] = actual_note.get('color', len(colors)) - 1
+                            actual_note["color"] %= len(colors)
                         if val == "c":
-                            self.run_noteSettings(note, self.selectedNote, 2)
-                    if note["type"] == "bg_color" and val:
+                            self.run_noteSettings(actual_note, self.selectedNote, 2)
+                    if actual_note["type"] == "bg_color" and val:
                         if val == "e":
                             self.colorPickerEnabled = not self.colorPickerEnabled
 
@@ -1407,9 +1459,9 @@ class Editor(BaseScene):
                     errors = []
                     index = 0
                     for comm in splitCommands:
-                        isValid, errorStr = self.run_command(comm)
-                        if isValid is None: #LOOP CHECK
-                            if errorStr.split(":")[0] == "START_LOOP":
+                        is_valid, error_string = self.run_command(comm)
+                        if is_valid is None: #LOOP CHECK
+                            if error_string.split(":")[0] == "START_LOOP":
                                 endLoop = index+1
                                 for i in splitCommands[index+1:]:
                                     endLoop += 1
@@ -1418,14 +1470,14 @@ class Editor(BaseScene):
                                         # endLoop -= 1
                                         break
                                 toLoop = splitCommands[index+1:endLoop]
-                                for _ in range(int(errorStr.split(":")[1]) - 1):
+                                for _ in range(int(error_string.split(":")[1]) - 1):
                                     count = index
                                     for loopcomm in toLoop:
                                         if loopcomm != "cl":
                                             splitCommands.insert(index+1+count, loopcomm)
                                             count+=1
                         else:
-                            command_results.append([isValid, errorStr])
+                            command_results.append([is_valid, error_string])
                         index += 1
                     for (_,rsult) in enumerate(command_results):
                         col = term.on_green
@@ -1438,26 +1490,36 @@ class Editor(BaseScene):
                         self.commandFooterMessage += term.on_red+errors[-1]
                     self.commandMode = False
                     self.commandString = ""
-                
+
                 else:
-                    isValid, errorStr = self.run_command(self.commandString)
+                    is_valid, error_string = self.run_command(self.commandString)
                     self.commandMode = False
                     self.commandString = ""
-                    if isValid is not None:
-                        if isValid:
-                            if errorStr != "":
-                                self.commandFooterMessage = term.on_green+errorStr
+                    if is_valid is not None:
+                        if is_valid:
+                            if error_string != "":
+                                self.commandFooterMessage = term.on_green+error_string
                         else:
                             self.commandMode = False
                             self.commandString = ""
-                            self.commandFooterMessage = term.on_red+errorStr
+                            self.commandFooterMessage = term.on_red+error_string
                 self.commandFooterEnabled = True
             else:
                 if self.commandString == "" and val.name == "KEY_BACKSPACE":
                     self.commandMode = False
                     print_at(0,term.height-2, term.clear_eol+reset_color)
-                self.commandString, self.commandSelectPos = textbox_logic(self.commandString, self.commandSelectPos, val, self.autocomplete)
+                self.commandString, self.commandSelectPos = textbox_logic(
+                    self.commandString, 
+                    self.commandSelectPos, 
+                    val, self.autocomplete
+                )
 
+    def on_open(self):
+        if not self.chart:
+            self.setupMap()
+        else:
+            self.keys = LayoutManager[OptionsManager["layout"]]
+            Game.setup_notes(self, self.chart["notes"])
 
     def loop(self):
         super().loop()

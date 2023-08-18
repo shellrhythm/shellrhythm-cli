@@ -5,6 +5,7 @@ import hashlib
 from src.termutil import term, print_at, set_reset_color, framerate, print_column,\
     color_code_from_hex, print_box, reset_color
 from src.conductor import Conductor, format_time
+from src.options import OptionsManager
 from src.scene_manager import SceneManager
 from src.scenes.base_scene import BaseScene
 from src.scenes.results import scoreCalc
@@ -12,6 +13,8 @@ from src.layout import LayoutManager
 from src.translate import Locale
 from src.scenes.game_objects.note import NoteObject
 from src.scenes.game_objects.text import TextObject
+from src.scenes.game_objects.bg_color import BackgroundColorObject
+from src.scenes.game_objects.end_level import EndLevelObject
 
 from src.constants import colors, MAX_SCORE, accMultiplier, JUDGEMENT_NAMES,\
     default_size, INPUT_FREQUENCY, hitWindows
@@ -127,7 +130,7 @@ class Game(BaseScene):
         for i in range(len(self.notes)):
             note = self.notes[len(self.notes) - (i+1)] #It's inverted so that the ones with the lowest remaining_beats are rendered on top of the others.
             offseted_beat = self.conduc.current_beat - (self.conduc.offset/(60/self.conduc.bpm))
-            note.render(offseted_beat,self.dontDraw,self.conduc.bpm,self.outOfHere)
+            note.render(offseted_beat,self.dontDraw,self.conduc.cur_time_sec,self.outOfHere)
                     
                 
         text_beat = "○ ○ ○ ○"
@@ -139,24 +142,27 @@ class Game(BaseScene):
         self.set_background(self.get_background(self.conduc.current_beat))
         print_at(0, term.height-2, str(framerate()) + "fps" )
         if not self.conduc.paused:
-            timer_text = str(format_time(int(self.conduc.cur_time_sec))) + " / " + str(format_time(int(self.end_time)))
+            timer_text = str(format_time(int(self.conduc.cur_time_sec))) + " / "\
+                + str(format_time(int(self.end_time)))
             print_at(0,0, f"{reset_color}{term.center(timer_text)}")
-            print_at(0,0,reset_color + self.chart["metadata"]["artist"] + " - " + self.chart["metadata"]["title"])
+            print_at(0,0,reset_color + self.chart["metadata"]["artist"] + " - "\
+                     + self.chart["metadata"]["title"])
             print_at(term.width - (len(str(self.accuracy)) + 2), 0, str(self.accuracy) + "%")
-            print_at(term.width - (len(str(self.score)) + 1), 1, str(self.score))
+            print_at(term.width - (len(str(int(self.score))) + 1), 1, str(int(self.score)))
 
             if self.auto:
                 print_at(0,1, f"{term.reverse}[AUTO ENABLED]{reset_color}")
 
-            if self.lastHit != {}:
-                print_at(15, 1, JUDGEMENT_NAMES[self.lastHit["judgement"]] + "   " + reset_color + str(round(self.lastHit["offset"]*1000, 4)) + "ms")
-            
+            if self.lastHit:
+                print_at(15, 1, JUDGEMENT_NAMES[self.lastHit["judgement"]] + "   " +\
+                         reset_color + str(round(self.lastHit["offset"]*1000, 4)) + "ms")
+
             # if PLAYFIELD_MODE == "scale":
             #     print_box(4,2,term.width-7,term.height-4,reset_color,1)
             # elif PLAYFIELD_MODE == "setSize":
             topleft = [int((term.width-default_size[0]) * 0.5)-1, int((term.height-default_size[1]) * 0.5)-1]
             print_box(topleft[0],topleft[1],default_size[0]+2,default_size[1]+2,reset_color,1)
-            
+
             self.actualKeysRendering()
         else:
             # global locales
@@ -237,21 +243,44 @@ class Game(BaseScene):
                 #     for (x, key) in enumerate(row):
                 #         if key == val:
                 #             pos = [x, y]
-                for (_, note) in enumerate(self.notes):
+                for (note_id, note) in enumerate(self.notes):
                     if isinstance(note, NoteObject):
                         if note not in self.outOfHere:
                             if note.key == val:
-                                hit_detected = note.checkJudgement(self.conduc.cur_time_sec, wasnt_hit=False, auto=self.auto)
-                                if hit_detected:
+                                hit_detected = note.checkJudgement(
+                                    self.conduc.cur_time_sec, 
+                                    wasnt_hit=False, 
+                                    auto=self.auto
+                                )
+                                if hit_detected is not None:
+                                    self.score = scoreCalc(
+                                        MAX_SCORE,
+                                        self.judgements,
+                                        self.accuracy,
+                                        self.misses_count,
+                                        self.chart
+                                    )
+                                    self.judgements[note_id] = note.judgement
                                     self.outOfHere.append(note)
                                     break
 
             if self.auto and not self.conduc.paused:
-                for (_, note) in enumerate(self.notes):
+                for (note_id, note) in enumerate(self.notes):
                     if isinstance(note, NoteObject):
                         if note not in self.outOfHere:
-                            hit_detected = note.checkJudgement(self.conduc.cur_time_sec, auto=self.auto)
-                            if hit_detected:
+                            hit_detected = note.checkJudgement(
+                                self.conduc.cur_time_sec,
+                                auto=self.auto
+                            )
+                            if hit_detected is not None:
+                                self.score = scoreCalc(
+                                    MAX_SCORE,
+                                    self.judgements,
+                                    self.accuracy,
+                                    self.misses_count,
+                                    self.chart
+                                )
+                                self.judgements[note_id] = note.judgement
                                 self.outOfHere.append(note)
                                 break
         else:
@@ -282,8 +311,8 @@ class Game(BaseScene):
         SceneManager["Results"].gameTurnOff = False
         SceneManager["Results"].isEnabled = False
 
-    def load_bg_changes(self, notes):
-        """TODO: REWRITE THIS"""
+    @staticmethod
+    def load_bg_changes(notes):
         out = []
         for note in notes:
             if note["type"] == "bg_color":
@@ -306,13 +335,11 @@ class Game(BaseScene):
                     else: # reset
                         color = term.normal
                 out.append([(note["beatpos"][0] * 4 + note["beatpos"][1]), color])
-        if self is not None:
-            self.background_changes = out
-        else:
-            return out
+        return out
 
     def setup_notes(self, notes):
         """Sets up notes in the self.notes variable"""
+        self.notes = []
         self.background_changes = []
         bpm_changes = []
         if len(self.conduc.bpmChanges) == 0:
@@ -320,38 +347,22 @@ class Game(BaseScene):
         else:
             bpm_changes = self.conduc.bpmChanges
         for note in notes:
+            new_note = None
             if note["type"] == "hit_object": # setup note
                 new_note = NoteObject(note, bpm_changes, self.keys)
                 new_note.approach_rate = self.chart["approachRate"]
                 SceneManager["Options"].conduc.bass.SetChannelVolume(
-                    new_note.hit_sound.handle, self.beat_sound_volume
+                    new_note.hit_sound.handle, OptionsManager["hitSoundVolume"]
                 )
-                self.notes.append(new_note)
             if note["type"] == "text":
                 new_note = TextObject(note, bpm_changes)
-                self.notes.append(new_note)
             elif note["type"] == "bg_color":
-                color = term.normal
-                for col in note["color"].split("/"):
-                    if col.startswith("#"): # background color
-                        parsed_color = color_code_from_hex(note["color"][1:])
-                        color += term.on_color_rgb(
-                            parsed_color[0],
-                            parsed_color[1],
-                            parsed_color[2]
-                        )
-                    elif col.startswith("%"): # foreground color
-                        parsed_color = color_code_from_hex(note["color"][1:])
-                        color += term.color_rgb(
-                            parsed_color[0],
-                            parsed_color[1],
-                            parsed_color[2]
-                        )
-                    else: # reset
-                        color = term.normal
+                new_note = BackgroundColorObject(note, bpm_changes)
+                self.background_changes.append((new_note.beat_position, new_note.new_color))
             elif note["type"] == "end":
-                ends_at_beat = note["beatpos"][0] * 4 + note["beatpos"][1]
-                self.end_time = ends_at_beat * (60/self.conduc.bpm)
+                new_note = EndLevelObject(note, bpm_changes)
+                self.end_time = new_note.time_position
+            self.notes.append(new_note)
 
 
     def play(self, chart, options, layout = "qwerty"):
@@ -379,4 +390,3 @@ class Game(BaseScene):
 
     def __init__(self) -> None:
         print("Wow, look, nothing!")
-

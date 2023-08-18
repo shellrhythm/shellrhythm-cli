@@ -2,24 +2,34 @@
 
 from pybass3 import Song
 from .base_object import GameplayObject
+from ...translate import LocaleManager
 from ...termutil import print_at, print_lines_at, reset_color, term, color_code_from_hex
-from ...constants import colors, JUDGEMENT_NAMES, JUDGEMENT_NAMES_SHORT, Vector2, Vector2i, default_size, hitWindows
+from ...constants import colors, JUDGEMENT_NAMES, JUDGEMENT_NAMES_SHORT,\
+    Vector2, Vector2i, default_size, hitWindows
 
 class NoteObject(GameplayObject):
     """Note object."""
     key:str = "?"
     position:Vector2 = Vector2() #0-1 on every axis
     color:str = colors[0]
+    color_string:str = "NOTHING"
     beat_position:float = 0.0
     time_position:float = 0.0
     approach_rate:float = 1.0
     judgement:dict = {}
     hit_sound:Song = Song("assets/clap.wav")
     played_sound:bool = False
+    render_offset:Vector2i = Vector2i()
+    key_index:int = -1
+    _keys:list = []
+    _color:int|str = ""
 
     def __init__(self, data:dict, bpm_table:list, keys:list) -> None:
         self.beat_position = data["beatpos"][0] * 4 + data["beatpos"][1]
         self.time_position = GameplayObject.compute_time_position(self.beat_position, bpm_table)
+        self._keys = keys
+        self.key_index = data["key"]
+        self._color = data["color"]
         self.key = keys[data["key"]]
         if isinstance(data["color"], int):
             self.color = colors[data["color"]]
@@ -27,6 +37,15 @@ class NoteObject(GameplayObject):
             color_split = color_code_from_hex(data["color"])
             self.color = term.color_rgb(color_split[0], color_split[1], color_split[2])
         self.position = Vector2i(data["screenpos"][0], data["screenpos"][1])
+
+    def serialize(self):
+        return {
+            "key":      self.key_index,
+            "color":    self._color,
+            "beatpos":  [self.beat_position//4, self.beat_position%4],
+            "screenpos":[self.position.x, self.position.y],
+            "type":     "hit_object"
+        }
 
     def calculate_position(self, playfield_size:Vector2i) -> Vector2i:
         """Converts position (normalized) into an actual onscreen position \
@@ -44,7 +63,7 @@ class NoteObject(GameplayObject):
         #     int(y*(f.height-9))+4]
         return calc_pos
 
-    def checkJudgement(self, current_time:float, wasnt_hit:bool = False, auto:bool = False):
+    def checkJudgement(self, current_time:float, wasnt_hit:bool = False, auto:bool = False) -> bool | None:
         remaining_time = self.time_position - current_time
         if remaining_time <= 0.0 and not self.played_sound:
             self.played_sound = True
@@ -52,8 +71,6 @@ class NoteObject(GameplayObject):
             self.hit_sound.play()
         if not auto:
             if -0.6 < remaining_time < 0.6:
-                # self.hit_sound.move2position_seconds(0)
-                # self.hit_sound.play()
                 judgement = 5
                 for (i,win) in enumerate(hitWindows):
                     if abs(remaining_time) <= win:
@@ -103,13 +120,35 @@ class NoteObject(GameplayObject):
                 }
                 # self.lastHit = self.judgements[noteNum]
                 # self.accuracyUpdate()
-                # self.score = int(scoreCalc(MAX_SCORE, self.judgements, self.accuracy, self.missesCount, self.chart))
+                # self.score = int(scoreCalc(
+                #   MAX_SCORE,
+                #   self.judgements,
+                #   self.accuracy,
+                #   self.missesCount,
+                #   self.chart
+                # ))
                 calc_pos = self.calculate_position(default_size)
                 print_at(calc_pos[0], calc_pos[1], JUDGEMENT_NAMES_SHORT[judgement])
                 return True
+        return None
+
+    def editor_timeline_icon(self, selected:bool = False):
+        output = self.color + self.key.upper() + reset_color
+        if selected:
+            output = term.reverse + output
+        return output
+
+    def display_informations(self, note_id:int = 0) -> str:
+        loc = LocaleManager.current_locale()
+        return reset_color\
+                +f"{loc('editor.timelineInfos.curNote')}: {note_id} | "\
+                +f"{loc('editor.timelineInfos.color')}: " \
+                    +f"{self.color}[{self.color_string}]{reset_color} | "\
+                +f"{loc('editor.timelineInfos.screenpos')}: {self.position} | "\
+                +f"{loc('editor.timelineInfos.beatpos')}: {self.beat_position}"
 
     def onscreen_print(self, current_beat:float = 0.0) -> None:
-        onscreen_position = self.calculate_position(default_size)
+        onscreen_position = self.calculate_position(default_size) + self.render_offset
         to_print = "   \n   \n   \n"
         approached_beats = ((self.beat_position - current_beat) * self.approach_rate) + 1
         val = int(approached_beats*2)
@@ -147,7 +186,7 @@ class NoteObject(GameplayObject):
                      + f"{reset_color}{self.color}╚═╝{reset_color}"
 
         print_lines_at(onscreen_position.x-1, onscreen_position.y-1, to_print)
-        if self.judgement != {}:
+        if self.judgement:
             print_at(onscreen_position.x,
                      onscreen_position.y,
                      f"{term.bold}{JUDGEMENT_NAMES_SHORT[self.judgement['judgement']]}" +\
@@ -158,22 +197,24 @@ class NoteObject(GameplayObject):
                      f"{reset_color}{term.bold}{self.key.upper()}{reset_color}{self.color}")
 
     def render(self, current_beat:float, dont_draw_list:list,
-               bpm:float=120, dont_check_judgement:list = None) -> tuple:
-        calc_pos = self.calculate_position(self.position)
+               current_time:float, dont_check_judgement:list = None) -> tuple:
+        calc_pos = self.calculate_position(default_size) + self.render_offset
 
         remaining_beats = self.beat_position - current_beat
-        remaining_time = remaining_beats * (60/bpm)
+        remaining_time = self.time_position - current_time
         approached_beats = (remaining_beats * self.approach_rate) + 1
-        if approached_beats > -0.1 and approached_beats < 4 and self not in dont_draw_list:
+        if 4 > approached_beats > -0.1 and self not in dont_draw_list:
             self.onscreen_print(current_beat)
+        # print_at(calc_pos[0], calc_pos[1]+1, str(int(remaining_time)))
 
         if self not in dont_draw_list and (
             (remaining_time <= -0.6) or (self.judgement and -0.2 > remaining_time)
         ):
-            if self not in dont_check_judgement:
-                dont_check_judgement.append(self)
-            if not self.judgement:
-                self.checkJudgement(current_beat, True)
+            if dont_check_judgement is not None:
+                if self not in dont_check_judgement:
+                    dont_check_judgement.append(self)
+                if not self.judgement:
+                    self.checkJudgement(current_beat, True)
             print_at(calc_pos[0]-1, calc_pos[1]-1, f"{self.color}   ")
             print_at(calc_pos[0]-1, calc_pos[1],   f"{self.color}   ")
             print_at(calc_pos[0]-1, calc_pos[1]+1, f"{self.color}   ")

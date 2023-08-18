@@ -1,5 +1,4 @@
 import json, os
-from typing import Any
 
 class OptionsManager:
     """If you need to check options, use this!"""

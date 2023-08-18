@@ -20,6 +20,13 @@ class Vector2(object):
         self.x = x
         self.y = y
 
+    def __add__(self, other):
+        if isinstance(other, Vector2):
+            return Vector2(
+                self.x + other.x,
+                self.y + other.y
+            )
+
     def __getitem__(self, item) -> float:
         return self.x if item == 0 else (self.y if item == 1 else getattr(self, item))
 
@@ -27,6 +34,13 @@ class Vector2i(Vector2):
     """Vector2 but integers only"""
     x:int = 0
     y:int = 0
+
+    def __add__(self, other):
+        if isinstance(other, Vector2i):
+            return Vector2i(
+                self.x + other.x,
+                self.y + other.y
+            )
 
 
 #Text object anchors

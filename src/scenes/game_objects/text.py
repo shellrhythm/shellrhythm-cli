@@ -2,7 +2,9 @@ from src.scenes.game_objects.base_object import GameplayObject
 from src.constants import\
     CENTER, LEFT, UP_LEFT, UP, UP_RIGHT, RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT,\
     ALIGN_CENTER, ALIGN_LEFT, ALIGN_RIGHT, Vector2i, default_size
-from src.termutil import color_text, print_at, term
+from src.termutil import color_text, print_at, term, reset_color
+from src.translate import LocaleManager
+from src.options import OptionsManager
 
 class TextObject(GameplayObject):
     beat_position = 0.0
@@ -22,6 +24,17 @@ class TextObject(GameplayObject):
         self.duration = data["length"]
         self.beat_position = data["beatpos"][0] * 4 + data["beatpos"][1]
         self.time_position = GameplayObject.compute_time_position(self.beat_position, bpm_table)
+
+    def serialize(self) -> dict:
+        return {
+            "type": "text",
+            "beatpos": [self.beat_position//4, self.beat_position%4],
+            "length": self.duration,
+            "text": self.text,
+            "anchor": self.anchor,
+            "align": self.align,
+            "offset": [self.offset.x, self.offset.y]
+        }
 
     def renderText(self, beat = 0.0, clear=False):
         #calculate position
@@ -77,8 +90,23 @@ class TextObject(GameplayObject):
                  rendered_text
                 )
 
+    def editor_timeline_icon(self, selected:bool = False):
+        char = "\U000f150f" if OptionsManager["nerdFont"] else "§"
+        char += term.move_right*int(8*self.duration-1) + "*"
+        output = term.turquoise + char + reset_color
+        if selected:
+            output = term.reverse + output
+        return output
+
+    def display_informations(self, note_id:int = 0) -> str:
+        loc = LocaleManager.current_locale()
+        return reset_color\
+                +f"{loc('editor.timelineInfos.curNote')}: {note_id} | "\
+                +f"{loc('editor.timelineInfos.screenpos')}: {self.offset} | "\
+                +f"{loc('editor.timelineInfos.beatpos')}: {self.beat_position}"
+
     def render(self, current_beat:float, dont_draw_list:list,
-               bpm:float=120, dont_check_judgement:list = None) -> tuple:
+               current_time:float, dont_check_judgement:list = None) -> tuple:
         render_at = self.beat_position - current_beat
         stop_at = render_at + self.duration
         if self not in dont_draw_list:

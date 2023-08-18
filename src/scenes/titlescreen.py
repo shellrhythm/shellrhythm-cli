@@ -3,7 +3,6 @@ import random
 import webbrowser
 from src.constants import __version__
 from src.scene_manager import SceneManager
-from src.translate import Locale
 from src.scenes.game import Game
 from src.termutil import print_at, print_lines_at, print_cropped, term, reset_color
 from src.conductor import Conductor
@@ -46,9 +45,9 @@ class TitleScreen(BaseScene):
             # Edit
             self.conduc.stop()
             self.conduc.song.stop()
-            SceneManager["Editor"].options = self.options
-            SceneManager["Editor"].layoutname = self.options["layout"]
-            SceneManager["Editor"].layout = Game.setupKeys(None, self.options["layout"])
+            # SceneManager["Editor"].options = self.options
+            SceneManager["Editor"].layoutname = OptionsManager["layout"]
+            SceneManager["Editor"].layout = Game.setupKeys(None, OptionsManager["layout"])
             SceneManager.change_scene("Editor")
 
         if self.selectedItem == 2:
