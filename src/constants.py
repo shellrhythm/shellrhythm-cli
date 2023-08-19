@@ -1,6 +1,6 @@
 """Defines constants used all over the codebase"""
 
-from src.termutil import term, reset_color
+from src.termutil import term
 
 class Vector2(object):
     """I needed this Vector2. I had enough of using arrays"""
@@ -26,6 +26,9 @@ class Vector2(object):
                 self.x + other.x,
                 self.y + other.y
             )
+
+    def __str__(self) -> str:
+        return f"[{self.x}, {self.y}]"
 
     def __getitem__(self, item) -> float:
         return self.x if item == 0 else (self.y if item == 1 else getattr(self, item))
@@ -60,7 +63,7 @@ ALIGN_CENTER = 1
 ALIGN_RIGHT = 2
 
 colors = [
-    reset_color,
+    term.normal,
     term.red,
     term.orange,
     term.yellow,

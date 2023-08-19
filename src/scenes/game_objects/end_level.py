@@ -1,5 +1,5 @@
 from .base_object import GameplayObject
-from ...termutil import term, reset_color
+from ...termutil import term
 from ...translate import LocaleManager
 
 class EndLevelObject(GameplayObject):
@@ -7,13 +7,13 @@ class EndLevelObject(GameplayObject):
     beat_position:float = 0.0
     time_position:float = 0.0
 
-    def display_informations(self, note_id:int = 0) -> str:
+    def display_informations(self, reset_color:str, note_id:int = 0) -> str:
         loc = LocaleManager.current_locale()
         return reset_color\
                 +f"{loc('editor.timelineInfos.curNote')}: {note_id} | "\
                 +f"{loc('editor.timelineInfos.beatpos')}: {self.beat_position}"
 
-    def editor_timeline_icon(self, selected:bool = False):
+    def editor_timeline_icon(self, reset_color:str, selected:bool = False):
         char = "🮕"
         output = term.grey + char + reset_color
         if selected:

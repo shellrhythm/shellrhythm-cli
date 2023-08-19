@@ -1,5 +1,5 @@
 import datetime
-from src.termutil import print_at, print_lines_at, term, reset_color, print_box
+from src.termutil import print_at, print_lines_at, term, print_box
 from src.constants import RANKS, INPUT_FREQUENCY
 from src.scenes.base_scene import BaseScene
 from src.scene_manager import SceneManager
@@ -132,18 +132,18 @@ class ResultsScreen(BaseScene):
                  datetime.datetime.fromtimestamp(self.results_data["time"])\
                     .strftime('%d %b %y, %H:%M:%S'))
         print_at(60, 5, "Chart SHA256: " + term.underline + \
-                 self.results_data["checksum"][:6] + reset_color + \
+                 self.results_data["checksum"][:6] + self.reset_color + \
                     self.results_data["checksum"][6:])
 
     def render_accuracy_view(self, cursor_pos = 0):
         for i in range(5):
-            print_at(5, self.centerRow+(i*2)+2, RANKS[i+1][3]+" "*(term.width-9)+ reset_color)
-            print_at(5, self.centerRow+(i*2)+1, RANKS[i+1][3]+" "*(term.width-9)+ reset_color)
-            print_at(5, self.centerRow-(i*2)-1, RANKS[i+1][3]+" "*(term.width-9)+ reset_color)
-            print_at(5, self.centerRow-(i*2)-2, RANKS[i+1][3]+" "*(term.width-9)+ reset_color)
+            print_at(5, self.centerRow+(i*2)+2, RANKS[i+1][3]+" "*(term.width-9)+ self.reset_color)
+            print_at(5, self.centerRow+(i*2)+1, RANKS[i+1][3]+" "*(term.width-9)+ self.reset_color)
+            print_at(5, self.centerRow-(i*2)-1, RANKS[i+1][3]+" "*(term.width-9)+ self.reset_color)
+            print_at(5, self.centerRow-(i*2)-2, RANKS[i+1][3]+" "*(term.width-9)+ self.reset_color)
         if self.results_data:
             print_at(3, self.centerRow, f"{RANKS[0][2]+RANKS[0][3]}0" + \
-                     " "*(term.width-8)+ reset_color)
+                     " "*(term.width-8)+ self.reset_color)
             print_at(3, self.centerRow-10, "+")
             print_at(3, self.centerRow+10, "-")
             self.grid.draw(cursor_pos)
@@ -151,27 +151,27 @@ class ResultsScreen(BaseScene):
 
     async def draw(self):
         if self.results_data:
-            print_box(4, 2, term.width-7, term.height-4, reset_color, 0)
+            print_box(4, 2, term.width-7, term.height-4, self.reset_color, 0)
             rank = getRank(self.results_data["score"])
             print_lines_at(5,3, self.rank_image_images[rank[1]], color=rank[2])
-            print_at(16, 4, f"{rank[2]}SCORE{reset_color}: " +\
+            print_at(16, 4, f"{rank[2]}SCORE{self.reset_color}: " +\
                      str(int(self.results_data['score'])))
-            print_at(16, 6, f"{rank[2]}ACCURACY{reset_color}: " +\
+            print_at(16, 6, f"{rank[2]}ACCURACY{self.reset_color}: " +\
                      str(int(self.results_data['accuracy'])) + "%")
             print_at(31, 4, f"{RANKS[0][2]}Marvelous: {RANKS[0][4]}"+ \
-                        f"{self.judgement_count[0]}{reset_color}")
+                        f"{self.judgement_count[0]}{self.reset_color}")
             print_at(31, 5, f"{RANKS[1][2]}Perfect:   {RANKS[1][4]}"+ \
-                        f"{self.judgement_count[1]}{reset_color}")
+                        f"{self.judgement_count[1]}{self.reset_color}")
             print_at(31, 6, f"{RANKS[2][2]}Epic:      {RANKS[2][4]}"+ \
-                        f"{self.judgement_count[2]}{reset_color}")
+                        f"{self.judgement_count[2]}{self.reset_color}")
             print_at(31, 7, f"{RANKS[3][2]}Good:      {RANKS[3][4]}"+ \
-                        f"{self.judgement_count[3]}{reset_color}")
+                        f"{self.judgement_count[3]}{self.reset_color}")
             print_at(31, 8, f"{RANKS[4][2]}Eh:        {RANKS[4][4]}"+ \
-                        f"{self.judgement_count[4]}{reset_color}")
+                        f"{self.judgement_count[4]}{self.reset_color}")
             print_at(31, 9, f"{RANKS[5][2]}Misses:    {RANKS[5][4]}"+ \
-                        f"{self.judgement_count[5]}{reset_color}")
+                        f"{self.judgement_count[5]}{self.reset_color}")
             if self.auto:
-                print_at(16, 8, f"{term.reverse}[AUTO ENABLED]{reset_color}")
+                print_at(16, 8, f"{term.reverse}[AUTO ENABLED]{self.reset_color}")
             if self.debug:
                 self.draw_debug_info()
             self.render_accuracy_view()

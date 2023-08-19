@@ -1,5 +1,5 @@
 import colorsys
-from src.termutil import term, print_at, print_box, print_lines_at, refresh, color_text, hexcode_from_color_code, reset_color
+from src.termutil import term, print_at, print_box, print_lines_at, refresh, color_text, hexcode_from_color_code
 
 def textbox_logic(curText, cursorPos, val, autocomplete = None):
     if val.name == "KEY_BACKSPACE":
@@ -34,6 +34,7 @@ class TextEditor:
     isSelectingText = True
     selectedColorSection = 0
     pickTheColor = [0, 0, 1]
+    reset_color = term.normal
     
     def draw(self):
         print_box(5,2, term.width-10, term.height-4)
@@ -69,7 +70,12 @@ class TextEditor:
         print_at(int(self.pickTheColor[0]*(term.width-13)) + 6, {True:term.height-10, False:10}[self.isSelectingText], term.color_rgb(int(color[0]), int(color[1]), int(color[2])) + "^")
         print_at(int(self.pickTheColor[1]*(term.width-13)) + 6, {True:term.height-8, False:12}[self.isSelectingText], term.color_rgb(int(color[0]), int(color[1]), int(color[2])) + "^")
         print_at(int(self.pickTheColor[2]*(term.width-13)) + 6, {True:term.height-6, False:14}[self.isSelectingText], term.color_rgb(int(color[0]), int(color[1]), int(color[2])) + "^")
-        print_at(6, {True:term.height-4, False:16}[self.isSelectingText], term.color_rgb(color[0], color[1], color[2]) + term.bold + term.reverse + term.center("#" + hexcode_from_color_code(color), term.width - 12) + reset_color)
+        print_at(
+            6,
+            {True:term.height-4, False:16}[self.isSelectingText],
+            term.color_rgb(color[0], color[1], color[2]) + term.bold + term.reverse + \
+                term.center("#" + hexcode_from_color_code(color), term.width - 12) + self.reset_color
+        )
 
     def handle_input(self, val):
         if val.name == "KEY_TAB":
@@ -131,6 +137,6 @@ if __name__ == "__main__":
             edit.draw()
             refresh()
 
-            val = ''
-            val = term.inkey(timeout=1/120, esc_delay=0)
-            edit.handle_input(val)
+            the_val = ''
+            the_val = term.inkey(timeout=1/120, esc_delay=0)
+            edit.handle_input(the_val)

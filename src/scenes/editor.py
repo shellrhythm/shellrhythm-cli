@@ -10,8 +10,8 @@ from src.scenes.game import Game
 from src.conductor import Conductor
 from src.options import OptionsManager
 from src.constants import colors, ALIGN_CENTER, CENTER, default_size
-from src.termutil import term, reset_color, print_at, print_lines_at, print_box, print_column,\
-    hexcode_from_color_code, color_code_from_hex, set_reset_color, framerate
+from src.termutil import term, print_at, print_lines_at, print_box, print_column,\
+    hexcode_from_color_code, color_code_from_hex, framerate
 from src.scenes.base_scene import BaseScene
 from src.translate import Locale
 from src.textbox import textbox_logic, TextEditor
@@ -144,7 +144,7 @@ class Editor(BaseScene):
 
     def set_background(self, background):
         colors[0] = background
-        set_reset_color(background)
+        self.reset_color = background
 
     def autocomplete(self, command = ""):
         output = []
@@ -268,14 +268,14 @@ class Editor(BaseScene):
                     char = term.color_rgb(0,0,j*8) + char
                 real_to_print += char
             if i == self.colorPickerSelectedCol:
-                real_to_print += reset_color+"<"
+                real_to_print += self.reset_color+"<"
             else:
-                real_to_print += reset_color+" "
-            print_at((term.width - 40)//2 + 1, (term.height-9)//2 + (i*2+1), real_to_print+reset_color + "  " + term.reverse + str(col) + " "*(3-len(str(col))) + reset_color)
+                real_to_print += self.reset_color+" "
+            print_at((term.width - 40)//2 + 1, (term.height-9)//2 + (i*2+1), real_to_print+self.reset_color + "  " + term.reverse + str(col) + " "*(3-len(str(col))) + self.reset_color)
 
         if self.colorPickerSelectedCol == 3:
             print_at((term.width + 8)//2, (term.height-9)//2 + 7, "<")
-        print_at((term.width - 8)//2-1, (term.height-9)//2 + 7, reset_color + "#" + term.reverse + f" {self.colorPickerFieldContent} "+reset_color)
+        print_at((term.width - 8)//2-1, (term.height-9)//2 + 7, self.reset_color + "#" + term.reverse + f" {self.colorPickerFieldContent} "+self.reset_color)
 
     def input_colorPicker(self, val):
         if self.colorPickerFieldSelected:
@@ -353,7 +353,7 @@ class Editor(BaseScene):
                     (term.width-width)//2,
                     (term.height//2) - len(self.pauseMenu) + i*2,
                     term.reverse + term.center(self.loc("editor.pause." + optn), width)\
-                        + reset_color
+                        + self.reset_color
                 )
             else:
                 print_at(
@@ -408,7 +408,7 @@ class Editor(BaseScene):
             self.pauseMenuEnabled = False
             self.export()
             print(term.clear)
-            print_at(0,term.height-2, term.on_green+f"Exported successfully to ./charts/{self.chart['foldername']}.zip" +term.clear_eol+reset_color)
+            print_at(0,term.height-2, term.on_green+f"Exported successfully to ./charts/{self.chart['foldername']}.zip" +term.clear_eol+self.reset_color)
         if option == 7:
             #quit
             self.run_command("q")
@@ -458,10 +458,10 @@ class Editor(BaseScene):
             print_at(int((term.width-len(toptext))*0.5), int((term.height-height)*0.5)+1, toptext)
             if curKey > 0 and curKey < 30:
                 print_at(int(term.width*0.5)-1, int(term.height *0.5),
-                         term.reverse + f" {self.layout[curKey]} " + reset_color)
+                         term.reverse + f" {self.layout[curKey]} " + self.reset_color)
             else:
                 print_at(int(term.width*0.5)-1, int(term.height *0.5),
-                         term.reverse + "   " + reset_color)
+                         term.reverse + "   " + self.reset_color)
         else:
             print_lines_at(int((term.width-width)*0.5), int((term.height-height)*0.5), (" "*(width+1)+"\n")*(height+1))
 
@@ -584,12 +584,12 @@ class Editor(BaseScene):
                                 val += "<"
                                 if len(arg) > 2: #Prefix
                                     val += arg[2]
-                                val += term.italic + arg[1] + reset_color + ">"
+                                val += term.italic + arg[1] + self.reset_color + ">"
                             else: 						#Optional arguments
                                 val += "["
                                 if len(arg) > 2: #Prefix
                                     val += arg[2]
-                                val += term.italic + arg[1] + reset_color + "]"
+                                val += term.italic + arg[1] + self.reset_color + "]"
                     if len(term.strip_seqs(key)) > maxKeyLen: maxKeyLen = len(term.strip_seqs(key))
                     if len(term.strip_seqs(val)) > maxValLen: maxValLen = len(term.strip_seqs(val))
 
@@ -610,8 +610,8 @@ class Editor(BaseScene):
     async def draw(self):
         # get background color
         self.set_background(self.get_background(self.localConduc.current_beat))
-        # print_at(0,term.height-5, reset_color+"-"*(term.width-1))
-        print_at(0,term.height-3, reset_color+"-"*(term.width))
+        # print_at(0,term.height-5, self.reset_color+"-"*(term.width-1))
+        print_at(0,term.height-3, self.reset_color+"-"*(term.width))
 
         #Timeline
         for i in range(-(int(term.width/80)+1),int(term.width/8)-(int(term.width/80))+1):
@@ -628,7 +628,7 @@ class Editor(BaseScene):
                 print_at(draw_at, term.height-5, "-"*8)
         print_at(0,term.height-4, " "*(term.width-1))
         print_at(int(term.width*0.1), term.height-4, "@")
-        print_at(0,term.height-6, reset_color
+        print_at(0,term.height-6, self.reset_color
         +f"{self.loc('editor.timelineInfos.bpm')}: {self.localConduc.bpm} | "
         +f"{self.loc('editor.timelineInfos.snap')}: 1/{self.snap} | "
         +f"{self.loc('editor.timelineInfos.bar')}: {int(self.localConduc.current_beat//4)} | "
@@ -644,12 +644,12 @@ class Editor(BaseScene):
                 if i == self.metadataMenuSelection:
                     full_category_name = term.reverse + category_name
                     if self.metadataTyping:
-                        print_at(1,1+i,f"{full_category_name}: {term.underline}{self.metadataString}{reset_color}")
+                        print_at(1,1+i,f"{full_category_name}: {term.underline}{self.metadataString}{self.reset_color}")
                     else:
-                        print_at(1,1+i,f"{full_category_name}: {term.underline}{self.chart['metadata'][part]}{reset_color}")
+                        print_at(1,1+i,f"{full_category_name}: {term.underline}{self.chart['metadata'][part]}{self.reset_color}")
                 else:
                     print_at(1,1+i,f"{category_name}: {self.chart['metadata'][part]}")
-            print_box(0,0,40,len(self.metadataParts) + 2,reset_color,0)
+            print_box(0,0,40,len(self.metadataParts) + 2,self.reset_color,0)
 
 
         if self.notes and not self.isTextEditing:
@@ -660,7 +660,7 @@ class Editor(BaseScene):
                 int((term.width-default_size.x) * 0.5)-1,
                 int((term.height-default_size.y) * 0.5)-1
             ]
-            print_box(topleft[0],topleft[1]-1,default_size.x+2,default_size.y+2,reset_color,1)
+            print_box(topleft[0],topleft[1]-1,default_size.x+2,default_size.y+2,self.reset_color,1)
             for i in range(len(self.notes)):
                 j = len(self.notes) - (i+1)
                 note = self.notes[j]
@@ -679,7 +679,9 @@ class Editor(BaseScene):
                 (self.dont_draw_list, _) = note.render(
                     self.localConduc.current_beat,
                     self.dont_draw_list,
-                    self.localConduc.cur_time_sec)
+                    self.localConduc.cur_time_sec,
+                    self.reset_color
+                )
 
                 # if note["type"] == "hit_object": # HIT OBJECT STUFF
                 #     pass
@@ -704,13 +706,13 @@ class Editor(BaseScene):
                     # appeoachedBeats = (remBeats * self.mapToEdit["approachRate"])
                     # if appeoachedBeats > -0.1 and appeoachedBeats < 4:
                     #     if self.selectedNote == j:
-                    #         Game.renderNote(None, calculatedPos, color+term.reverse, characterDisplayed, appeoachedBeats+1, resetcol=reset_color)
+                    #         Game.renderNote(None, calculatedPos, color+term.reverse, characterDisplayed, appeoachedBeats+1, resetcol=self.reset_color)
                     #     else:
-                    #         Game.renderNote(None, calculatedPos, color, characterDisplayed, appeoachedBeats+1, resetcol=reset_color)
+                    #         Game.renderNote(None, calculatedPos, color, characterDisplayed, appeoachedBeats+1, resetcol=self.reset_color)
                     # elif appeoachedBeats < -0.1 and note not in self.dontDrawList:
-                    #     print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{reset_color}   ")
-                    #     print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{reset_color}   ")
-                    #     print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{reset_color}   ")
+                    #     print_at(calculatedPos[0]-1, calculatedPos[1]-1, f"{self.reset_color}   ")
+                    #     print_at(calculatedPos[0]-1, calculatedPos[1]+0, f"{self.reset_color}   ")
+                    #     print_at(calculatedPos[0]-1, calculatedPos[1]+1, f"{self.reset_color}   ")
                     #     self.dontDrawList.append(note)
                 # elif note["type"] == "text": # TEXT STUFF
                 #     pass
@@ -724,10 +726,10 @@ class Editor(BaseScene):
                     #     else:
                     #         char = "§"
                     #     if self.selectedNote == j:
-                    #         print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.turquoise}{term.bold}{char} {reset_color}")
-                    #         print_at(int(stopAt*8+(term.width*0.1)), term.height-4, f"{term.turquoise}|{reset_color}")
+                    #         print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.turquoise}{term.bold}{char} {self.reset_color}")
+                    #         print_at(int(stopAt*8+(term.width*0.1)), term.height-4, f"{term.turquoise}|{self.reset_color}")
                     #     else:
-                    #         print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{reset_color}{term.turquoise}{term.bold}{char}{reset_color}")
+                    #         print_at(int(remBeats*8+(term.width*0.1)), term.height-4, f"{self.reset_color}{term.turquoise}{term.bold}{char}{self.reset_color}")
 
                     # # TEXT - ON SCREEN
                     # constOffset = [0,-1]
@@ -754,36 +756,36 @@ class Editor(BaseScene):
                 #             char = "¶"
                 #         symbol_color = self.get_background(note['beatpos'][0]*4 + note['beatpos'][1])
                 #         if self.selectedNote == j:
-                #             print_at(int(remaining_beats*8+(term.width*0.1)), term.height-3, f"{term.reverse}{symbol_color}{term.bold}{char} {reset_color}")
+                #             print_at(int(remaining_beats*8+(term.width*0.1)), term.height-3, f"{term.reverse}{symbol_color}{term.bold}{char} {self.reset_color}")
                 #         else:
-                #             print_at(int(remaining_beats*8+(term.width*0.1)), term.height-3, f"{reset_color}{symbol_color}{term.bold}{char}{reset_color}")
+                #             print_at(int(remaining_beats*8+(term.width*0.1)), term.height-3, f"{self.reset_color}{symbol_color}{term.bold}{char}{self.reset_color}")
 
                 # else:
                 #     # END - TIMELINE
                 #     remaining_beats = (note["beatpos"][0] * 4 + note["beatpos"][1]) - self.localConduc.current_beat
                 #     if remaining_beats*8+(term.width*0.1) >= 0:
                 #         if self.selectedNote == j:
-                #             print_at(int(remaining_beats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.bold_grey}▚{reset_color}")
+                #             print_at(int(remaining_beats*8+(term.width*0.1)), term.height-4, f"{term.reverse}{term.bold_grey}▚{self.reset_color}")
                 #         else:
-                #             print_at(int(remaining_beats*8+(term.width*0.1)), term.height-4, f"{reset_color}{term.bold_grey}▚{reset_color}")
+                #             print_at(int(remaining_beats*8+(term.width*0.1)), term.height-4, f"{self.reset_color}{term.bold_grey}▚{self.reset_color}")
             #Current note info
-            selected_note = self.notes[self.selectedNote]
-            print_at(0, term.height-7, selected_note.display_informations(self.selectedNote))
+            selected_note:GameplayObject = self.notes[self.selectedNote]
+            print_at(0, term.height-7, selected_note.display_informations(self.reset_color, self.selectedNote))
 
             #Render selected note on top in the timeline
             if remaining_beats*8+(term.width*0.1) >= 0:
-                rendered_string = note.editor_timeline_icon(self.selectedNote == j)
+                rendered_string = note.editor_timeline_icon(self.reset_color, self.selectedNote == j)
                 print_at(
                     int(remaining_beats*8+(term.width*0.1)),
                     term.height-4,
                     rendered_string
                 )
             # elif selectedNote["type"] == "end":
-            #     print_at(0, term.height-7, reset_color+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | {self.loc('editor.timelineInfos.endpos')}: {selectedNote['beatpos']}")
+            #     print_at(0, term.height-7, self.reset_color+f"{self.loc('editor.timelineInfos.curNote')}: {self.selectedNote} | {self.loc('editor.timelineInfos.endpos')}: {selectedNote['beatpos']}")
         else:
             if not self.keyPanelEnabled and not self.isTextEditing:
                 text_nomaploaded = self.loc("editor.emptyChart")
-                print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), reset_color+text_nomaploaded)
+                print_at(int((term.width - len(text_nomaploaded))*0.5),int(term.height*0.4), self.reset_color+text_nomaploaded)
 
         if "bpmChanges" not in self.chart:
             self.chart["bpmChanges"] = []
@@ -792,7 +794,7 @@ class Editor(BaseScene):
                 change = self.chart["bpmChanges"][i]
                 remaining_beats = (change["atPosition"][0] + change["atPosition"][1]/4) - self.localConduc.current_beat
                 if int(remaining_beats*8+(term.width*0.1)) >= 0:
-                    print_at(int(remaining_beats*8+(term.width*0.1)), term.height-3, f"{reset_color}\U000f07da{reset_color}")
+                    print_at(int(remaining_beats*8+(term.width*0.1)), term.height-3, f"{self.reset_color}\U000f07da{self.reset_color}")
 
         if self.keyPanelEnabled:
             if self.keyPanelSelected == -1:
@@ -805,16 +807,16 @@ class Editor(BaseScene):
             self.keyPanelJustDisabled = False
 
         if self.commandMode:
-            print_at(0,term.height-2, reset_color+":"+self.commandString+term.clear_eol)
+            print_at(0,term.height-2, self.reset_color+":"+self.commandString+term.clear_eol)
             chrAtCursor = ""
             if len(self.commandString) != 0:
                 if self.commandSelectPos != 0:
                     chrAtCursor = self.commandString[len(self.commandString)-(self.commandSelectPos)]
                 else:
                     chrAtCursor = " "
-                print_at(len(self.commandString)-self.commandSelectPos + 1, term.height-2, term.underline + chrAtCursor + reset_color)
+                print_at(len(self.commandString)-self.commandSelectPos + 1, term.height-2, term.underline + chrAtCursor + self.reset_color)
         elif self.commandFooterEnabled:
-            print_at(0,term.height-2, self.commandFooterMessage + reset_color)
+            print_at(0,term.height-2, self.commandFooterMessage + self.reset_color)
 
         if self.cheatsheetEnabled:
             self.draw_cheatsheet()
@@ -1207,7 +1209,7 @@ class Editor(BaseScene):
                 if val.name == "KEY_ESCAPE":
                     self.metadataTyping = False
                     # self.commandString = ""
-                    print_at(0,term.height-2, term.clear_eol+reset_color)
+                    print_at(0,term.height-2, term.clear_eol+self.reset_color)
                 elif val.name == "KEY_ENTER":
                     self.metadataTyping = False
                     self.chart["metadata"][self.metadataParts[self.metadataMenuSelection]] = self.metadataString
@@ -1215,7 +1217,7 @@ class Editor(BaseScene):
                 else:
                     if self.metadataString == "" and val.name == "KEY_BACKSPACE":
                         self.commandMode = False
-                        # print_at(0,term.height-2, term.clear_eol+reset_color)
+                        # print_at(0,term.height-2, term.clear_eol+self.reset_color)
                     self.metadataString, self.metadataTypingCursor = textbox_logic(self.metadataString, self.metadataTypingCursor, val)
         elif self.pauseMenuEnabled:
             if val.name == "KEY_UP":
@@ -1257,7 +1259,7 @@ class Editor(BaseScene):
                         if self.keyPanelSelected == -1:
                             self.selectedNote = self.create_note(self.localConduc.current_beat, self.keyPanelKey)
                         else:
-                            self.notes[self.keyPanelSelected]._key_index = self.keyPanelKey
+                            self.notes[self.keyPanelSelected].key_index = self.keyPanelKey
                         self.keyPanelEnabled = False
                         self.keyPanelJustDisabled = True
                         self.keyPanelSelected = -1
@@ -1356,9 +1358,9 @@ class Editor(BaseScene):
                         )
                         # erase hitbox
                         if val in "hjklHJKL":
-                            print_at(calculated_pos[0]-1, calculated_pos[1]-1, f"{reset_color}   ")
-                            print_at(calculated_pos[0]-1, calculated_pos[1]+0, f"{reset_color}   ")
-                            print_at(calculated_pos[0]-1, calculated_pos[1]+1, f"{reset_color}   ")
+                            print_at(calculated_pos[0]-1, calculated_pos[1]-1, f"{self.reset_color}   ")
+                            print_at(calculated_pos[0]-1, calculated_pos[1]+0, f"{self.reset_color}   ")
+                            print_at(calculated_pos[0]-1, calculated_pos[1]+1, f"{self.reset_color}   ")
                         # calculate new x/y position
                         direc = val.lower()
                         multiplier = (3 if direc in "hl" else 2) if val.isupper() else 1
@@ -1485,7 +1487,7 @@ class Editor(BaseScene):
                             errors.append(rsult[1])
                             col = term.on_red
                         self.commandFooterMessage += col + "*"
-                    self.commandFooterMessage += reset_color + "     "
+                    self.commandFooterMessage += self.reset_color + "     "
                     if len(errors) != 0:
                         self.commandFooterMessage += term.on_red+errors[-1]
                     self.commandMode = False
@@ -1507,7 +1509,7 @@ class Editor(BaseScene):
             else:
                 if self.commandString == "" and val.name == "KEY_BACKSPACE":
                     self.commandMode = False
-                    print_at(0,term.height-2, term.clear_eol+reset_color)
+                    print_at(0,term.height-2, term.clear_eol+self.reset_color)
                 self.commandString, self.commandSelectPos = textbox_logic(
                     self.commandString, 
                     self.commandSelectPos, 

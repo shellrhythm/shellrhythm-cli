@@ -1,5 +1,5 @@
 from .base_object import GameplayObject
-from ...termutil import term, color_code_from_hex, reset_color
+from ...termutil import term, color_code_from_hex
 from ...translate import LocaleManager
 from ...options import OptionsManager
 
@@ -11,7 +11,7 @@ class BackgroundColorObject(GameplayObject):
     beat_position:float = 0.0
     time_position:float = 0.0
 
-    def display_informations(self, note_id:int = 0) -> str:
+    def display_informations(self, reset_color:str, note_id:int = 0) -> str:
         loc = LocaleManager.current_locale()
         return reset_color\
                 +f"{loc('editor.timelineInfos.curNote')}: {note_id} | "\
@@ -19,7 +19,7 @@ class BackgroundColorObject(GameplayObject):
                 +f"{loc('editor.timelineInfos.bgColor')}: {self.background_col} | "\
                 +f"{loc('editor.timelineInfos.fgColor')}: {self.foreground_col} | "
 
-    def editor_timeline_icon(self, selected:bool = False):
+    def editor_timeline_icon(self, reset_color:str, selected:bool = False):
         char = "\ue22b" if OptionsManager["nerdFont"] else "¶"
         output = self.new_color + char + reset_color
         if selected:

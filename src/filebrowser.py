@@ -1,6 +1,6 @@
 import os
 import re
-from src.termutil import print_at, print_cropped, print_box, term, reset_color, refresh
+from src.termutil import print_at, print_cropped, print_box, term, refresh
 from src.textbox import textbox_logic
 
 class FileBrowser:
@@ -13,6 +13,7 @@ class FileBrowser:
     selectFolderMode = False
     caption = "TODO: Come up with a better placeholder"
     offset = 0
+    reset_color = term.normal
 
     newFolderMode = False
     newFolderName = ""
@@ -35,11 +36,11 @@ class FileBrowser:
         print_at(0,0,str(self.selectedItem))
 
         print_box(10,3,term.width-20, term.height-6, caption=self.caption)
-        print_cropped(11,4,term.width-22,self.curPath,max(len(self.curPath)-(term.width-22), 0), reset_color, False)
+        print_cropped(11,4,term.width-22,self.curPath,max(len(self.curPath)-(term.width-22), 0), self.reset_color, False)
         print_at(11,5,"─"*(term.width-22))
 
         if self.selectFolderMode:
-            print_at(11,term.height-2, term.reverse + "[SPACE] Select folder" + reset_color + " " + term.reverse + "[n] New Folder")
+            print_at(11,term.height-2, term.reverse + "[SPACE] Select folder" + self.reset_color + " " + term.reverse + "[n] New Folder")
 
         if self.newFolderMode:
             print_at(11,term.height-3, term.reverse + self.newFolderName)
@@ -48,7 +49,7 @@ class FileBrowser:
             if y > term.height-11:
                 break
             if self.selectedItem == y-self.offset:
-                print_at(12,6 + y, term.reverse + "\uea83 " + self.curSubFolders[i] + "/" + reset_color)
+                print_at(12,6 + y, term.reverse + "\uea83 " + self.curSubFolders[i] + "/" + self.reset_color)
             else:
                 print_at(12,6 + y, "\uea83 " + self.curSubFolders[i] + "/")
             y+=1
@@ -56,7 +57,7 @@ class FileBrowser:
             if y > term.height-11:
                 break
             if self.selectedItem == y-self.offset:
-                print_at(14,6 + y, term.reverse + self.curFilesInFolder[i] + reset_color)
+                print_at(14,6 + y, term.reverse + self.curFilesInFolder[i] + self.reset_color)
             else:
                 print_at(14,6 + y, self.curFilesInFolder[i])
             y+=1
@@ -98,7 +99,6 @@ class FileBrowser:
                     # print(term.clear)
                     self.selectedItem = 0
                     self.offset = 0
-                    pass
             if val == " ":
                 if self.selectFolderMode:
                     self.output = self.curPath + "/" + self.curSubFolders[self.selectedItem]

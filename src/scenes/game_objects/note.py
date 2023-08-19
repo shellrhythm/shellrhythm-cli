@@ -3,7 +3,7 @@
 from pybass3 import Song
 from .base_object import GameplayObject
 from ...translate import LocaleManager
-from ...termutil import print_at, print_lines_at, reset_color, term, color_code_from_hex
+from ...termutil import print_at, print_lines_at, term, color_code_from_hex
 from ...constants import colors, JUDGEMENT_NAMES, JUDGEMENT_NAMES_SHORT,\
     Vector2, Vector2i, default_size, hitWindows
 
@@ -31,6 +31,7 @@ class NoteObject(GameplayObject):
         self.key_index = data["key"]
         self._color = data["color"]
         self.key = keys[data["key"]]
+
         if isinstance(data["color"], int):
             self.color = colors[data["color"]]
         else:
@@ -132,13 +133,13 @@ class NoteObject(GameplayObject):
                 return True
         return None
 
-    def editor_timeline_icon(self, selected:bool = False):
+    def editor_timeline_icon(self, reset_color:str, selected:bool = False):
         output = self.color + self.key.upper() + reset_color
         if selected:
             output = term.reverse + output
         return output
 
-    def display_informations(self, note_id:int = 0) -> str:
+    def display_informations(self, reset_color:str, note_id:int = 0) -> str:
         loc = LocaleManager.current_locale()
         return reset_color\
                 +f"{loc('editor.timelineInfos.curNote')}: {note_id} | "\
@@ -147,7 +148,7 @@ class NoteObject(GameplayObject):
                 +f"{loc('editor.timelineInfos.screenpos')}: {self.position} | "\
                 +f"{loc('editor.timelineInfos.beatpos')}: {self.beat_position}"
 
-    def onscreen_print(self, current_beat:float = 0.0) -> None:
+    def onscreen_print(self, reset_color:str, current_beat:float = 0.0) -> None:
         onscreen_position = self.calculate_position(default_size) + self.render_offset
         to_print = "   \n   \n   \n"
         approached_beats = ((self.beat_position - current_beat) * self.approach_rate) + 1
@@ -197,14 +198,14 @@ class NoteObject(GameplayObject):
                      f"{reset_color}{term.bold}{self.key.upper()}{reset_color}{self.color}")
 
     def render(self, current_beat:float, dont_draw_list:list,
-               current_time:float, dont_check_judgement:list = None) -> tuple:
+               current_time:float, reset_color:str, dont_check_judgement:list = None) -> tuple:
         calc_pos = self.calculate_position(default_size) + self.render_offset
 
         remaining_beats = self.beat_position - current_beat
         remaining_time = self.time_position - current_time
         approached_beats = (remaining_beats * self.approach_rate) + 1
         if 4 > approached_beats > -0.1 and self not in dont_draw_list:
-            self.onscreen_print(current_beat)
+            self.onscreen_print(reset_color, current_beat)
         # print_at(calc_pos[0], calc_pos[1]+1, str(int(remaining_time)))
 
         if self not in dont_draw_list and (

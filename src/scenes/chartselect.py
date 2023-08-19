@@ -8,7 +8,7 @@ from src.translate import LocaleManager
 from src.options import OptionsManager
 from src.scenes.game import Game
 from src.termutil import print_cropped, print_column, print_at, \
-    print_lines_at, print_image, term, reset_color, prettydate, \
+    print_lines_at, print_image, term, prettydate, \
     color_text, strip_seqs
 
 # Chart selection menu
@@ -31,8 +31,8 @@ class ChartSelect(BaseScene):
                 print_cropped(0, i+1, 20, text, int(self.conduc.current_beat), term.reverse)
             else:
                 text = val["metadata"]["artist"] + " - " + val["metadata"]["title"]
-                print_cropped(0, i+1, 20, text, 0, reset_color, False)
-        print_column(20, 0, term.height-2, reset_color+"┃")
+                print_cropped(0, i+1, 20, text, 0, self.reset_color, False)
+        print_column(20, 0, term.height-2, self.reset_color+"┃")
         # Actual chart info display
         if len(ChartManager.chart_data) == 0:
             print_at(25,5, self.loc("chartSelect.no_charts"))
@@ -67,28 +67,28 @@ class ChartSelect(BaseScene):
             #region metadata
             print_at(27 + img_width, 2, term.blue
                 + self.loc("chartSelect.metadata.song")
-                + reset_color
+                + self.reset_color
                 + ": "
                 + chart_in_question["metadata"]["title"]
             )
 
             print_at(27 + img_width, 3, term.blue
                 + self.loc("chartSelect.metadata.artist")
-                + reset_color
+                + self.reset_color
                 + ": "
                 + chart_in_question["metadata"]["artist"]
             )
 
             print_at(27 + img_width, 5, term.blue
                 + self.loc("chartSelect.metadata.author")
-                + reset_color
+                + self.reset_color
                 + ": "
                 + chart_in_question["metadata"]["author"]
             )
 
             print_at(27 + img_width, 6, term.blue
                 + self.loc("chartSelect.difficulty")
-                + reset_color
+                + self.reset_color
                 + ": "
                 + str(chart_in_question["difficulty"])
             )
@@ -96,7 +96,7 @@ class ChartSelect(BaseScene):
             #endregion
             print_at(25 + img_width, 8, "┠" + ("─"*(term.width - (26 + img_width))))
             print_at(28 + img_width, 8, 
-                     term.reverse + self.loc("chartSelect.metadata.description") + reset_color
+                     term.reverse + self.loc("chartSelect.metadata.description") + self.reset_color
                     )
             print_lines_at(26 + img_width, 9, chart_in_question["metadata"]["description"])
             print_at(25 + img_width, 19, "┸" + ("─"*(term.width - (26 + img_width))))
@@ -107,7 +107,7 @@ class ChartSelect(BaseScene):
                     term.reverse(term.center(text_auto, img_width))
                 )
             else:
-                print_at(23, 18, reset_color+(" "*img_width))
+                print_at(23, 18, self.reset_color+(" "*img_width))
 
             #Scores!
             max_rendered_scores = min(len(ChartManager.scores[chart_in_question["foldername"]]), term.height-23)
@@ -124,15 +124,15 @@ class ChartSelect(BaseScene):
 
                         playername = score['playername'] if 'playername' in score else 'Unknown'
                         if score["isOutdated"]:
-                            print_at(23, 20+i, f"{term.grey}{color}{rank[0]} {playername} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + reset_color)
+                            print_at(23, 20+i, f"{term.grey}{color}{rank[0]} {playername} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + self.reset_color)
                         else:
-                            print_at(23, 20+i, f"{color}{rank[2]}{rank[0]} {playername} - {int(score['score'])} ({score['accuracy']}%)" + reset_color)
-                        print_at(term.width - (len(text_date_format)+1), 20+i, term.reverse + text_date_format + reset_color)
+                            print_at(23, 20+i, f"{color}{rank[2]}{rank[0]} {playername} - {int(score['score'])} ({score['accuracy']}%)" + self.reset_color)
+                        print_at(term.width - (len(text_date_format)+1), 20+i, term.reverse + text_date_format + self.reset_color)
                     else:
                         if score["isOutdated"]:
                             print_at(23, 20+i, f"{term.grey}{rank[0]} {playername} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" )
                         else:
-                            print_at(23, 20+i, f"{rank[2]}{rank[0]}{reset_color} {playername} - {int(score['score'])} ({score['accuracy']}%)" )
+                            print_at(23, 20+i, f"{rank[2]}{rank[0]}{self.reset_color} {playername} - {int(score['score'])} ({score['accuracy']}%)" )
                         print_at(term.width - (len(text_date_format)+1), 20+i, text_date_format)
                 else:
                     print_at(25, 20+i, "[INVALID SCORE]")
@@ -140,11 +140,11 @@ class ChartSelect(BaseScene):
                 print_at(35, int((term.height-18)/2)+17, "No scores yet!")
         # Controls
         print_at(1,term.height - 2,
-        f"{term.reverse}[ENTER] {self.loc('chartSelect.controls.play')} {reset_color} "+
-        f"{term.reverse}[j/↓] {self.loc('chartSelect.controls.down')} {reset_color} "+
-        f"{term.reverse}[k/↑] {self.loc('chartSelect.controls.up')} {reset_color} "+
-        f"{term.reverse}[a] {self.loc('chartSelect.controls.auto')} {reset_color} "+
-        f"{term.reverse}[e] {self.loc('chartSelect.controls.editor')} {reset_color} "
+        f"{term.reverse}[ENTER] {self.loc('chartSelect.controls.play')} {self.reset_color} "+
+        f"{term.reverse}[j/↓] {self.loc('chartSelect.controls.down')} {self.reset_color} "+
+        f"{term.reverse}[k/↑] {self.loc('chartSelect.controls.up')} {self.reset_color} "+
+        f"{term.reverse}[a] {self.loc('chartSelect.controls.auto')} {self.reset_color} "+
+        f"{term.reverse}[e] {self.loc('chartSelect.controls.editor')} {self.reset_color} "
         )
 
     def enterPressed(self):

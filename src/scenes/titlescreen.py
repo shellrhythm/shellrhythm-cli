@@ -4,7 +4,7 @@ import webbrowser
 from src.constants import __version__
 from src.scene_manager import SceneManager
 from src.scenes.game import Game
-from src.termutil import print_at, print_lines_at, print_cropped, term, reset_color
+from src.termutil import print_at, print_lines_at, print_cropped, term
 from src.conductor import Conductor
 from src.charts_manager import ChartManager
 from src.scenes.base_scene import BaseScene
@@ -74,21 +74,36 @@ class TitleScreen(BaseScene):
             text = self.loc(optn)
             if self.selectedItem == i:
                 if OptionsManager["nerdFont"]:
-                    print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"{term.reverse}   {text} {reset_color}\ue0b0")
+                    print_at(
+                        0,
+                        term.height * 0.5 - len(self.menuOptions) + i*2,
+                        f"{term.reverse}   {text} {self.reset_color}\ue0b0"
+                    )
                 else:
-                    print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"{term.reverse}   {text} >{reset_color}")
+                    print_at(
+                        0,
+                        term.height * 0.5 - len(self.menuOptions) + i*2,
+                        f"{term.reverse}   {text} >{self.reset_color}"
+                    )
             else:
                 print_at(0, term.height * 0.5 - len(self.menuOptions) + i*2, f"  {text}   ")
 
         text_beat = "○ ○ ○ ○"
-        text_beat = text_beat[:int(self.conduc.current_beat)%4 * 2] + "●" + text_beat[(int(self.conduc.current_beat)%4 * 2) + 1:]
+        text_beat = text_beat[:int(self.conduc.current_beat)%4 * 2] + "●"\
+            + text_beat[(int(self.conduc.current_beat)%4 * 2) + 1:]
 
         print_at(0, 0, term.center(f"{text_beat}"))
         text_song_title = "[NO SONG PLAYING] // "
         if len(ChartManager.chart_data) != 0:
             text_song_title = ChartManager.chart_data[self.playing_num]["metadata"]["artist"] +\
                 " - " + ChartManager.chart_data[self.playing_num]["metadata"]["title"] + " // "
-        print_cropped(term.width - 31, 0, 30, text_song_title, int(self.conduc.current_beat), reset_color)
+        print_cropped(
+            term.width - 31, 0,
+            30,
+            text_song_title,
+            int(self.conduc.current_beat),
+            self.reset_color
+        )
 
         text_copyright = "© #Guigui, 2022-2023"
         text_version = "v"+__version__
@@ -121,7 +136,8 @@ class TitleScreen(BaseScene):
     def on_open(self):
         self.bottom_text = self.bottom_text_lines[random.randint(0, len(self.bottom_text_lines)-1)]
         print_lines_at(0,1,self.logo,True)
-        print_at(int((term.width - len(self.bottom_text)) / 2), len(self.logo.splitlines()) + 2, self.bottom_text)
+        print_at(int((term.width - len(self.bottom_text)) / 2),
+                 len(self.logo.splitlines()) + 2, self.bottom_text)
         self.conduc.play()
 
     def on_close(self):

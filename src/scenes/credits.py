@@ -3,7 +3,7 @@ import json
 from src.scenes.base_scene import BaseScene
 from src.scene_manager import SceneManager
 from src.options import OptionsManager
-from src.termutil import print_at, term, reset_color
+from src.termutil import print_at, term
 
 class Credits(BaseScene):
     """The class that displays game credits."""
@@ -24,11 +24,13 @@ class Credits(BaseScene):
             if self.selected_item == i:
                 print_at(0,(i*2)+3,term.reverse + term.bold + "    " +
                          (" "*(max_length-len(data_line["role"]))) + data_line["role"]
-                         + " " + reset_color + term.underline + data_line["name"] + reset_color
+                         + " " + self.reset_color + term.underline + data_line["name"]
+                         + self.reset_color
                         )
             else:
                 print_at(0,(i*2)+3,term.bold + "    " + (" "*(max_length-len(data_line["role"])))
-                         + data_line["role"] + " " + reset_color + data_line["name"] + reset_color)
+                         + data_line["role"] + " " + self.reset_color + data_line["name"]
+                         + self.reset_color)
         if self.state_viewing_profile:
             for i in range(len(self.credits_data[self.selected_item]["links"])):
                 text = self.credits_data[self.selected_item]["links"][i]["label"]

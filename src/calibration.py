@@ -1,11 +1,8 @@
 from blessed import Terminal
 from src.charts_manager import ChartManager
-from src.termutil import *
+from src.termutil import term, print_at, refresh
 from src.conductor import Conductor
 from src.translate import Locale, LocaleManager
-from src.charts_manager import ChartManager
-
-from pybass3 import Song
 
 term = Terminal()
 
@@ -27,6 +24,8 @@ class Calibration:
     calibselec = 0
     selected_song_id = -1
     selected_song:dict = None
+
+    reset_color:str = term.normal
 
     loc:Locale = LocaleManager.current_locale()
 
@@ -106,17 +105,17 @@ class Calibration:
             text_second = self.loc('calibration.perSong')
             text_quit = self.loc('calibration.quit')
             if self.calibselec == 0:
-                print_at(int((term.width - len(text_first))*0.5)+2, int(term.height*0.5) - 2, term.reverse + "> " + text_first + " <" + reset_color)
+                print_at(int((term.width - len(text_first))*0.5)+2, int(term.height*0.5) - 2, term.reverse + "> " + text_first + " <" + self.reset_color)
             else:
                 print_at(int((term.width - len(text_first))*0.5)+2, int(term.height*0.5) - 2, "< " + text_first + " >")
 
             if self.calibselec == 1:
-                print_at(int((term.width - len(text_second))*0.5)+2, int(term.height*0.5), term.reverse + "> " + text_second + " <" + reset_color)
+                print_at(int((term.width - len(text_second))*0.5)+2, int(term.height*0.5), term.reverse + "> " + text_second + " <" + self.reset_color)
             else:
                 print_at(int((term.width - len(text_second))*0.5)+2, int(term.height*0.5), "< " + text_second + " >")
 
             if self.calibselec == 2:
-                print_at(int((term.width - len(text_quit))*0.5)+2, int(term.height*0.5) + 2, term.reverse + "> " + text_quit + " <" + reset_color)
+                print_at(int((term.width - len(text_quit))*0.5)+2, int(term.height*0.5) + 2, term.reverse + "> " + text_quit + " <" + self.reset_color)
             else:
                 print_at(int((term.width - len(text_quit))*0.5)+2, int(term.height*0.5) + 2, "< " + text_quit + " >")
 

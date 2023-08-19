@@ -9,7 +9,6 @@ from src.framebuffer import Framebuffer
 from src.translate import LocaleManager
 from term_image.image import from_file
 
-cur_locale = LocaleManager().current_locale()
 
 def strip_seqs(text):
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\([0-?]*[ -/]*[@-~])')
@@ -17,11 +16,13 @@ def strip_seqs(text):
 
 box_styles = [
     "┌─┐││└─┘", #Base box
-    ".-.||'-'"  #Minimal box
+    ".-.||'-'", #Minimal box
+    "*-*||*-*", #Pause box
     #Maybe add more styles later?
 ]
 
 def prettydate(d, longFormat = False):
+    cur_locale = LocaleManager().current_locale()
     diff = datetime.datetime.fromtimestamp(time.time()) - d
     if longFormat:
         output = d.strftime('%d %b %y, %H:%M:%S')
@@ -60,12 +61,6 @@ def prettydate(d, longFormat = False):
 
 term = Terminal()
 framebuffer = Framebuffer()
-
-reset_color = term.normal
-
-def set_reset_color(color):
-    global reset_color
-    reset_color = color
 
 
 def prng (beat = 0.0, seed = 0):
@@ -184,14 +179,17 @@ def print_at(x, y, text:str):
     y = int(y)
     framebuffer.PrintText(term.move_xy(x, y) + text)
 
-def refresh():
+def refresh(reset_color:str = ""):
     """
 Pro tip: only call this at the end of a frame! Or else, this may reduce the framerate greatly!
     """
     # global toDraw
     # print(toDraw)
     # toDraw = ""
-    framebuffer.Draw(term.move_xy(0,0) + reset_color)
+    framebuffer.Draw(term.move_xy(0,0)\
+                     + reset_color\
+                     + " "*(term.width*term.height)\
+                     + term.move_xy(0,0))
 
 def debug_val(val):
     if not val:
@@ -201,7 +199,7 @@ def debug_val(val):
     elif val:
         print_at(0,term.height-2,f"got {val}.")
 
-def print_lines_at(x:int, y:int, text:str, center = False, color = None):
+def print_lines_at(x:int, y:int, text:str, center = False, color = None, reset_color = term.normal):
     if color is None:
         color = reset_color
     lines = text.split("\n")
@@ -219,19 +217,19 @@ def print_image(x,y,image_path,scale):
         return True
     else:
         return False
-    
+
 def print_column(x, y, size, char):
     for i in range(size):
         print_at(x, y + i, char)
 
-def print_cropped(x, y, maxsize, text, offset, color, is_wrap_around = True):
+def print_cropped(x, y, maxsize, text, offset, color, is_wrap_around = True, reset_color = term.normal):
     if is_wrap_around:
         print_at(x, y, color + (text*(3+int(maxsize/len(text))))[(offset%len(text))+len(text):maxsize+(offset%len(text))+len(text)] + reset_color)
     else:
         actual_text = text[offset%len(text):maxsize+(offset%len(text))]
         print_at(x, y, color + actual_text + reset_color + (" "*(maxsize - len(actual_text))))
 
-def print_box(x,y,width, height, color = reset_color, style = 0, caption = ""):
+def print_box(x,y,width, height, color = term.normal, style = 0, caption = "", reset_color = term.normal):
     current_box_style = "????????"
     if isinstance(style, int):
         current_box_style = box_styles[style]
@@ -249,8 +247,8 @@ def print_box(x,y,width, height, color = reset_color, style = 0, caption = ""):
     print_at(x,y+height-1,
             color + current_box_style[5] + (current_box_style[6]*(width-2))
             + current_box_style[7] + reset_color)
-    print_column(x,y+1,height-2,color + current_box_style[3])
-    print_column(x+width-1,y+1,height-2,color + current_box_style[4])
+    print_column(x,y+1,height-2,color + current_box_style[3] + " "*(width-2) + current_box_style[4])
+    # print_column(x+width-1,y+1,height-2,color + current_box_style[4])
 
 def too_small(bypass = False):
     """Checks if the screen size is smaller than what the game requires.

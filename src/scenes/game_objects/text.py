@@ -2,7 +2,7 @@ from src.scenes.game_objects.base_object import GameplayObject
 from src.constants import\
     CENTER, LEFT, UP_LEFT, UP, UP_RIGHT, RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT,\
     ALIGN_CENTER, ALIGN_LEFT, ALIGN_RIGHT, Vector2i, default_size
-from src.termutil import color_text, print_at, term, reset_color
+from src.termutil import color_text, print_at, term
 from src.translate import LocaleManager
 from src.options import OptionsManager
 
@@ -85,12 +85,12 @@ class TextObject(GameplayObject):
 
         if clear:
             rendered_text = " "*len(term.strip_seqs(rendered_text))
-        print_at(calculatedPosition[0] + topleft[0], 
-                 calculatedPosition[1] + topleft[1], 
+        print_at(calculatedPosition[0] + topleft[0],
+                 calculatedPosition[1] + topleft[1],
                  rendered_text
                 )
 
-    def editor_timeline_icon(self, selected:bool = False):
+    def editor_timeline_icon(self, reset_color:str, selected:bool = False):
         char = "\U000f150f" if OptionsManager["nerdFont"] else "§"
         char += term.move_right*int(8*self.duration-1) + "*"
         output = term.turquoise + char + reset_color
@@ -98,7 +98,7 @@ class TextObject(GameplayObject):
             output = term.reverse + output
         return output
 
-    def display_informations(self, note_id:int = 0) -> str:
+    def display_informations(self, reset_color:str, note_id:int = 0) -> str:
         loc = LocaleManager.current_locale()
         return reset_color\
                 +f"{loc('editor.timelineInfos.curNote')}: {note_id} | "\
@@ -106,7 +106,7 @@ class TextObject(GameplayObject):
                 +f"{loc('editor.timelineInfos.beatpos')}: {self.beat_position}"
 
     def render(self, current_beat:float, dont_draw_list:list,
-               current_time:float, dont_check_judgement:list = None) -> tuple:
+               current_time:float, reset_color:str, dont_check_judgement:list = None) -> tuple:
         render_at = self.beat_position - current_beat
         stop_at = render_at + self.duration
         if self not in dont_draw_list:

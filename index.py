@@ -3,12 +3,12 @@
 import random
 from blessed import Terminal
 
-from src.scenes import ChartSelect, TitleScreen, Options, Credits, Editor, ResultsScreen
+from src.scenes import ChartSelect, TitleScreen, Options, Credits, Editor, ResultsScreen, LayoutCreator
 from src.translate import load_locales, LocaleManager
 from src.options import OptionsManager
 from src.calibration import Calibration
 from src.charts_manager import ChartManager
-from src.layout import LayoutCreator, LayoutManager
+from src.layout import LayoutManager
 from src.constants import __version__
 from src.scene_manager import SceneManager
 import src.scenes.game as game
@@ -46,8 +46,10 @@ if __name__ == "__main__":
             if "previewLoop" in ChartManager.chart_data[songLoaded]:
                 beginPos = ChartManager.chart_data[songLoaded]["previewLoop"]["start"]
                 endPos = ChartManager.chart_data[songLoaded]["previewLoop"]["end"]
-                SceneManager["Titlescreen"].conduc.loopStart = (beginPos[0] + beginPos[1]/4) * (SceneManager["Titlescreen"].conduc.bpm/60)
-                SceneManager["Titlescreen"].conduc.loopEnd = (endPos[0] + endPos[1]/4) * (SceneManager["Titlescreen"].conduc.bpm/60)
+                SceneManager["Titlescreen"].conduc.loopStart = (beginPos[0] + beginPos[1]/4) *\
+                    (SceneManager["Titlescreen"].conduc.bpm/60)
+                SceneManager["Titlescreen"].conduc.loopEnd = (endPos[0] + endPos[1]/4) *\
+                    (SceneManager["Titlescreen"].conduc.bpm/60)
                 SceneManager["Titlescreen"].conduc.isLoop = True
                 SceneManager["Titlescreen"].conduc.startAt(beginPos[0]*4 + beginPos[1])
             else:

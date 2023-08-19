@@ -2,8 +2,8 @@ import os
 import json
 import time
 import hashlib
-from src.termutil import term, print_at, set_reset_color, framerate, print_column,\
-    color_code_from_hex, print_box, reset_color
+from src.termutil import term, print_at, framerate, print_column,\
+    color_code_from_hex, print_box
 from src.conductor import Conductor, format_time
 from src.options import OptionsManager
 from src.scene_manager import SceneManager
@@ -11,6 +11,7 @@ from src.scenes.base_scene import BaseScene
 from src.scenes.results import scoreCalc
 from src.layout import LayoutManager
 from src.translate import Locale
+from src.scenes.game_objects.base_object import GameplayObject
 from src.scenes.game_objects.note import NoteObject
 from src.scenes.game_objects.text import TextObject
 from src.scenes.game_objects.bg_color import BackgroundColorObject
@@ -50,7 +51,7 @@ class Game(BaseScene):
         "q","s","d","f","g","h","j","k","l","m",
         "w","x","c","v","b","n",",",";",":","!"
     ]
-    notes = []
+    notes:list[GameplayObject] = []
 
     #Locale
     loc:Locale = Locale("en")
@@ -60,7 +61,7 @@ class Game(BaseScene):
 
     def set_background(self, background):
         colors[0] = background
-        set_reset_color(background)
+        self.reset_color = background
 
     def get_background(self, at_beat):
         out = term.normal
@@ -130,12 +131,12 @@ class Game(BaseScene):
         for i in range(len(self.notes)):
             note = self.notes[len(self.notes) - (i+1)] #It's inverted so that the ones with the lowest remaining_beats are rendered on top of the others.
             offseted_beat = self.conduc.current_beat - (self.conduc.offset/(60/self.conduc.bpm))
-            note.render(offseted_beat,self.dontDraw,self.conduc.cur_time_sec,self.outOfHere)
+            note.render(offseted_beat,self.dontDraw,self.conduc.cur_time_sec,self.reset_color,self.outOfHere)
                     
                 
         text_beat = "○ ○ ○ ○"
         text_beat = text_beat[:int(self.conduc.current_beat)%4 * 2] + "●" + text_beat[(int(self.conduc.current_beat)%4 * 2) + 1:]
-        print_at(int(term.width * 0.5)-3, 1, reset_color + text_beat)
+        print_at(int(term.width * 0.5)-3, 1, self.reset_color + text_beat)
         
     async def draw(self):
         # get background color
@@ -144,24 +145,32 @@ class Game(BaseScene):
         if not self.conduc.paused:
             timer_text = str(format_time(int(self.conduc.cur_time_sec))) + " / "\
                 + str(format_time(int(self.end_time)))
-            print_at(0,0, f"{reset_color}{term.center(timer_text)}")
-            print_at(0,0,reset_color + self.chart["metadata"]["artist"] + " - "\
+            print_at(0,0, f"{self.reset_color}{term.center(timer_text)}")
+            print_at(0,0,self.reset_color + self.chart["metadata"]["artist"] + " - "\
                      + self.chart["metadata"]["title"])
             print_at(term.width - (len(str(self.accuracy)) + 2), 0, str(self.accuracy) + "%")
             print_at(term.width - (len(str(int(self.score))) + 1), 1, str(int(self.score)))
 
             if self.auto:
-                print_at(0,1, f"{term.reverse}[AUTO ENABLED]{reset_color}")
+                print_at(0,1, f"{term.reverse}[AUTO ENABLED]{self.reset_color}")
 
             if self.lastHit:
                 print_at(15, 1, JUDGEMENT_NAMES[self.lastHit["judgement"]] + "   " +\
-                         reset_color + str(round(self.lastHit["offset"]*1000, 4)) + "ms")
+                         self.reset_color + str(round(self.lastHit["offset"]*1000, 4)) + "ms")
 
             # if PLAYFIELD_MODE == "scale":
             #     print_box(4,2,term.width-7,term.height-4,reset_color,1)
             # elif PLAYFIELD_MODE == "setSize":
             topleft = [int((term.width-default_size[0]) * 0.5)-1, int((term.height-default_size[1]) * 0.5)-1]
-            print_box(topleft[0],topleft[1],default_size[0]+2,default_size[1]+2,reset_color,1)
+            print_box(
+                topleft[0],
+                topleft[1],
+                default_size[0]+2,
+                default_size[1]+2,
+                self.reset_color,
+                1,
+                reset_color=self.reset_color
+            )
 
             self.actualKeysRendering()
         else:
@@ -170,24 +179,58 @@ class Game(BaseScene):
             text_resume = "Resume"
             text_retry  = "Retry"
             text_quit	= "Quit"
-            print_at(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) - 4, "*---" + text_paused + "---*")
-            print_at(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) + 2, "*---" + ("-"*len(text_paused)) + "---*")
-            print_column(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) - 3, 5, '|')
-            print_column(int((term.width+len(text_paused)) * 0.5) + 3, int(term.height*0.5) - 3, 5, '|')
+            print_box(
+                int((term.width-len(text_paused)) * 0.5) - 4,
+                int(term.height*0.5) - 4,
+                8+len(text_paused),
+                7,
+                self.reset_color,
+                2,
+                text_paused,
+                self.reset_color
+            )
+            # print_at(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) - 4, "*---" + text_paused + "---*")
+            # print_at(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) + 2, "*---" + ("-"*len(text_paused)) + "---*")
+            # print_column(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) - 3, 5, '|')
+            # print_column(int((term.width+len(text_paused)) * 0.5) + 3, int(term.height*0.5) - 3, 5, '|')
             if self.pause_option == 0:
-                print_at(int((term.width-len(text_resume)) * 0.5) - 1, int(term.height*0.5) - 2, reset_color+term.reverse+" "+text_resume+" "+reset_color)
+                print_at(
+                    int((term.width-len(text_resume)) * 0.5) - 1,
+                    int(term.height*0.5) - 2,
+                    self.reset_color+term.reverse+" "+text_resume+" "+self.reset_color
+                )
             else:
-                print_at(int((term.width-len(text_resume)) * 0.5) - 1, int(term.height*0.5) - 2, reset_color+" "+text_resume+" "+reset_color)
+                print_at(
+                    int((term.width-len(text_resume)) * 0.5) - 1,
+                    int(term.height*0.5) - 2,
+                    self.reset_color+" "+text_resume+" "+self.reset_color
+                )
 
             if self.pause_option == 1:
-                print_at(int((term.width-len(text_retry)) * 0.5) - 1, int(term.height*0.5) - 1, reset_color+term.reverse+" "+text_retry+" "+reset_color)
+                print_at(
+                    int((term.width-len(text_retry)) * 0.5) - 1,
+                    int(term.height*0.5) - 1,
+                    self.reset_color+term.reverse+" "+text_retry+" "+self.reset_color
+                )
             else:
-                print_at(int((term.width-len(text_retry)) * 0.5) - 1, int(term.height*0.5) - 1, reset_color+" "+text_retry+" "+reset_color)
+                print_at(
+                    int((term.width-len(text_retry)) * 0.5) - 1,
+                    int(term.height*0.5) - 1,
+                    self.reset_color+" "+text_retry+" "+self.reset_color
+                )
 
             if self.pause_option == 2:
-                print_at(int((term.width-len(text_quit)) * 0.5) - 1, int(term.height*0.5), reset_color+term.reverse+" "+text_quit+" "+reset_color)
+                print_at(
+                    int((term.width-len(text_quit)) * 0.5) - 1,
+                    int(term.height*0.5),
+                    self.reset_color+term.reverse+" "+text_quit+" "+self.reset_color
+                )
             else:
-                print_at(int((term.width-len(text_quit)) * 0.5) - 1, int(term.height*0.5), reset_color+" "+text_quit+" "+reset_color)
+                print_at(
+                    int((term.width-len(text_quit)) * 0.5) - 1,
+                    int(term.height*0.5),
+                    self.reset_color+" "+text_quit+" "+self.reset_color
+                )
             
         self.conduc.debugSound()
 

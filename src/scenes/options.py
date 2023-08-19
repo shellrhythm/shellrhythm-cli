@@ -1,4 +1,4 @@
-from src.termutil import print_at, print_lines_at, term, reset_color
+from src.termutil import print_at, print_lines_at, term
 from src.scenes.base_scene import BaseScene
 from src.layout import LayoutManager
 from src.translate import LocaleManager
@@ -95,11 +95,11 @@ class Options(BaseScene):
             #DisplayName
             if self.selectedItem == i and not self.isPickingOffset:
                 if int(self.conduc.current_beat) % 2 == 1:
-                    print_at(0,i*2 + 3, term.reverse + f"- {optn['displayName']}{' '*(maxLength-titleLen+1)}>" + reset_color)
+                    print_at(0,i*2 + 3, term.reverse + f"- {optn['displayName']}{' '*(maxLength-titleLen+1)}>" + self.reset_color)
                 else:
-                    print_at(0,i*2 + 3, reset_color  + f"- {optn['displayName']}{' '*(maxLength-titleLen+1)}>" + reset_color)
+                    print_at(0,i*2 + 3, self.reset_color  + f"- {optn['displayName']}{' '*(maxLength-titleLen+1)}>" + self.reset_color)
             else:
-                print_at(0,i*2 + 3, reset_color + f" {optn['displayName']}{' '*(maxLength-titleLen+1)}  ")
+                print_at(0,i*2 + 3, self.reset_color + f" {optn['displayName']}{' '*(maxLength-titleLen+1)}  ")
             if leType == "intField":
                 if self.selectedItem == i and optn["isOffset"]:
                     print_at(maxLength + 6, i*2+3, str(OptionsManager[leVar] * 1000) + (" "*int(term.width*0.2)) + self.loc("options.calibrationTip"))
@@ -112,7 +112,7 @@ class Options(BaseScene):
                 if self.enumInteracted == i:
                     print_at(maxLength + 6, i*2+3, term.reverse + "{ " + \
                              self.menuOptions[i]["displayedValues"][self.menuOptions[i]["populatedValues"].index(OptionsManager[leVar])] + " }" +\
-                                reset_color + (" "*6) + str(self.menuOptions[i]["displayedValues"]) + term.clear_eol)
+                                self.reset_color + (" "*6) + str(self.menuOptions[i]["displayedValues"]) + term.clear_eol)
                 else:
                     if self.selectedItem == i and self.menuOptions[i]["var"] == "layout":
                         print_at(maxLength + 6, i*2+3, "[" + OptionsManager[leVar] + "] ⌄" + (" "*int(term.width*0.2)) + self.loc("options.layoutTip"))
@@ -128,11 +128,11 @@ class Options(BaseScene):
             if leType == "strField":
                 if self.selectedItem == i:
                     if self.string_interacted == i:
-                        print_at(maxLength + 6, i*2+3, term.underline + self.current_input + reset_color)
+                        print_at(maxLength + 6, i*2+3, term.underline + self.current_input + self.reset_color)
                     else:
-                        print_at(maxLength + 6, i*2+3, term.reverse + OptionsManager[leVar] + reset_color)
+                        print_at(maxLength + 6, i*2+3, term.reverse + OptionsManager[leVar] + self.reset_color)
                 else:
-                    print_at(maxLength + 6, i*2+3, reset_color + OptionsManager[leVar])
+                    print_at(maxLength + 6, i*2+3, self.reset_color + OptionsManager[leVar])
 
         if self.menuOptions[self.selectedItem]["var"] == "layout":
             text = f"┌───{'┬───'*9}┐\n" + "".join(\
@@ -145,8 +145,8 @@ class Options(BaseScene):
         if self.isPickingOffset:
             text_offsetConfirm = f"Do you want to use the new following offset: {int(self.suggestedOffset*(10**3))}ms?"
             print_at(int((term.width - len(text_offsetConfirm)) * 0.5), int(term.height*0.5)-1, text_offsetConfirm)
-            print_at(int(term.width * 0.4)-3, int(term.height*0.5)+1, term.reverse+"Yes [Y]"+reset_color)
-            print_at(int(term.width * 0.6)-3, int(term.height*0.5)+1, term.reverse+"No [N] "+reset_color)
+            print_at(int(term.width * 0.4)-3, int(term.height*0.5)+1, term.reverse+"Yes [Y]"+self.reset_color)
+            print_at(int(term.width * 0.6)-3, int(term.height*0.5)+1, term.reverse+"No [N] "+self.reset_color)
 
     def enterPressed(self):
         self.populate_enum()

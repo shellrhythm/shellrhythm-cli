@@ -6,3 +6,4 @@ from src.scenes.credits import *
 from src.scenes.game import *
 from src.scenes.game_objects import *
 from src.scenes.options import *
+from src.scenes.layout_creator import *

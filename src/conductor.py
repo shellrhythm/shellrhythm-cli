@@ -143,7 +143,8 @@ class Conductor:
             self.paused = False
             self.bpm = self.previewChart["bpm"]
             self.skipped_time_with_pause = (time_ns() / 10**9) - self.pause_start_time
-            self.song.resume()
+            if self.song.is_paused:
+                self.song.resume()
 
     def update(self):
         if not self.paused and self.bpm > 0 and self.song.is_playing:
