@@ -81,13 +81,93 @@ default_size:Vector2i = Vector2i(80, 24)
 INPUT_FREQUENCY = 999
 
 hitWindows = [0.05, 0.1, 0.2, 0.3, 0.4]
+class Color:
+    r:int = 255
+    g:int = 255
+    b:int = 255
+
+    def __init__(self, hexcode:str) -> None:
+        val = int(hexcode, 16)
+        self.r = val//256**2
+        self.g = (val%256**2)//256
+        self.b = val%256
+
+    @property
+    def col(self):
+        return term.color_rgb(self.r, self.g, self.b)
+
+    @property
+    def on_col(self):
+        return term.on_color_rgb(self.r, self.g, self.b)
+
+
+# [
+#     Rank icon
+#     Minimum score
+#     Color
+#     Background color (Accuracy)
+#     Background color
+# ]
+
+RANKS = [
+    [
+        "@",
+        1000000,
+        Color("C500D5").col,
+        Color("8C0097").on_col,
+        Color("6D0077").on_col
+    ],	# @
+    [
+        "S",
+        950000,
+        Color("00FFFF").col,
+        Color("008F8F").on_col,
+        Color("006F6F").on_col,
+    ],	# #
+    [
+        "A",
+        825000,
+        Color("00FF1F").col,
+        Color("009F2F").on_col,
+        Color("006F00").on_col
+    ],	# $
+    [
+        "B",
+        700000,
+        Color("FFFF00").col,
+        Color("8F8F2F").on_col,
+        Color("6F6F3F").on_col
+    ],	# *
+    [
+        "C",
+        600000,
+        term.orange,
+        term.on_goldenrod4,
+        term.on_color_rgb(148, 77, 29)
+    ],	# ;
+    [
+        "D",
+        500000,
+        term.red,
+        term.on_darkred,
+        term.on_color_rgb(83, 14, 14)
+    ],	# /
+    [
+        "F",
+        0,
+        term.grey,
+        term.on_black,
+        term.on_color_rgb(0, 0, 0)
+    ],	# _
+]
 JUDGEMENT_NAMES = [
     f"{term.purple}MARV", 
     f"{term.aqua}PERF", 
     f"{term.green}EPIC", 
     f"{term.yellow}GOOD", 
     f"{term.orange} EH ", 
-    f"{term.red}MISS"]
+    f"{term.red}MISS"
+]
 
 JUDGEMENT_NAMES_SHORT = [
     f"{term.purple}@", 
@@ -97,17 +177,8 @@ JUDGEMENT_NAMES_SHORT = [
     f"{term.orange};", 
     f"{term.red}/"
 ]
-RANKS = [
-    ["@", 1000000, term.purple	,term.on_webpurple,		term.on_color_rgb(148, 29, 96)	],	# @
-    ["S",  950000, term.aqua	,term.on_cyan4,			term.on_color_rgb(29, 106, 148)	],	# #
-    ["A",  825000, term.green	,term.on_darkgreen,		term.on_color_rgb(36, 85, 36)	],	# $
-    ["B",  700000, term.yellow	,term.on_yellow4,		term.on_color_rgb(112, 110, 22)	],	# *
-    ["C",  600000, term.orange	,term.on_goldenrod4,	term.on_color_rgb(148, 77, 29)	],	# ;
-    ["D",  500000, term.red		,term.on_darkred,		term.on_color_rgb(83, 14, 14)	],	# /
-    ["F",       0, term.grey	,term.on_black,		],	# _
-]
 accMultiplier = [1, 0.95, 0.85, 0.75, 0.5, 0]
 
 MAX_SCORE = 1000000
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"

@@ -60,8 +60,8 @@ class Game(BaseScene):
     bypassSize = False
 
     def set_background(self, background):
-        colors[0] = background
-        self.reset_color = background
+        colors[0] = term.normal + background
+        self.reset_color = term.normal + background
 
     def get_background(self, at_beat):
         out = term.normal
@@ -129,15 +129,24 @@ class Game(BaseScene):
             while len(self.notes) >= len(self.judgements):
                 self.judgements.append({})
         for i in range(len(self.notes)):
-            note = self.notes[len(self.notes) - (i+1)] #It's inverted so that the ones with the lowest remaining_beats are rendered on top of the others.
+            #It's inverted so that the objects with the lowest remaining_beats 
+            # are rendered on top of the others.
+            note = self.notes[len(self.notes) - (i+1)]
             offseted_beat = self.conduc.current_beat - (self.conduc.offset/(60/self.conduc.bpm))
-            note.render(offseted_beat,self.dontDraw,self.conduc.cur_time_sec,self.reset_color,self.outOfHere)
-                    
-                
+            note.render(
+                offseted_beat,
+                self.dontDraw,
+                self.conduc.cur_time_sec,
+                self.reset_color,
+                self.outOfHere
+            )
+
+
         text_beat = "○ ○ ○ ○"
-        text_beat = text_beat[:int(self.conduc.current_beat)%4 * 2] + "●" + text_beat[(int(self.conduc.current_beat)%4 * 2) + 1:]
+        text_beat = text_beat[:int(self.conduc.current_beat)%4 * 2] \
+            + "●" + text_beat[(int(self.conduc.current_beat)%4 * 2) + 1:]
         print_at(int(term.width * 0.5)-3, 1, self.reset_color + text_beat)
-        
+
     async def draw(self):
         # get background color
         self.set_background(self.get_background(self.conduc.current_beat))
@@ -161,7 +170,10 @@ class Game(BaseScene):
             # if PLAYFIELD_MODE == "scale":
             #     print_box(4,2,term.width-7,term.height-4,reset_color,1)
             # elif PLAYFIELD_MODE == "setSize":
-            topleft = [int((term.width-default_size[0]) * 0.5)-1, int((term.height-default_size[1]) * 0.5)-1]
+            topleft = [
+                int((term.width-default_size[0]) * 0.5)-1,
+                int((term.height-default_size[1]) * 0.5)-1
+            ]
             print_box(
                 topleft[0],
                 topleft[1],
@@ -189,10 +201,6 @@ class Game(BaseScene):
                 text_paused,
                 self.reset_color
             )
-            # print_at(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) - 4, "*---" + text_paused + "---*")
-            # print_at(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) + 2, "*---" + ("-"*len(text_paused)) + "---*")
-            # print_column(int((term.width-len(text_paused)) * 0.5) - 4, int(term.height*0.5) - 3, 5, '|')
-            # print_column(int((term.width+len(text_paused)) * 0.5) + 3, int(term.height*0.5) - 3, 5, '|')
             if self.pause_option == 0:
                 print_at(
                     int((term.width-len(text_resume)) * 0.5) - 1,
@@ -231,8 +239,6 @@ class Game(BaseScene):
                     int(term.height*0.5),
                     self.reset_color+" "+text_quit+" "+self.reset_color
                 )
-            
-        self.conduc.debugSound()
 
     def retry(self):
         print(term.clear)
@@ -288,13 +294,13 @@ class Game(BaseScene):
                 #             pos = [x, y]
                 for (note_id, note) in enumerate(self.notes):
                     if isinstance(note, NoteObject):
-                        if note not in self.outOfHere:
-                            if note.key == val:
-                                hit_detected = note.checkJudgement(
-                                    self.conduc.cur_time_sec, 
-                                    wasnt_hit=False, 
-                                    auto=self.auto
-                                )
+                        if note.key == val:
+                            hit_detected = note.checkJudgement(
+                                self.conduc.cur_time_sec,
+                                wasnt_hit=False,
+                                auto=self.auto
+                            )
+                            if note not in self.outOfHere:
                                 if hit_detected is not None:
                                     self.score = scoreCalc(
                                         MAX_SCORE,
@@ -310,11 +316,11 @@ class Game(BaseScene):
             if self.auto and not self.conduc.paused:
                 for (note_id, note) in enumerate(self.notes):
                     if isinstance(note, NoteObject):
+                        hit_detected = note.checkJudgement(
+                            self.conduc.cur_time_sec,
+                            auto=self.auto
+                        )
                         if note not in self.outOfHere:
-                            hit_detected = note.checkJudgement(
-                                self.conduc.cur_time_sec,
-                                auto=self.auto
-                            )
                             if hit_detected is not None:
                                 self.score = scoreCalc(
                                     MAX_SCORE,
@@ -428,8 +434,3 @@ class Game(BaseScene):
         self.conduc.song.move2position_seconds(0)
         self.conduc.play()
         assert self.conduc.start_time != 0
-
-
-
-    def __init__(self) -> None:
-        print("Wow, look, nothing!")

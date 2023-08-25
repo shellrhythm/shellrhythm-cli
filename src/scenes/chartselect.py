@@ -117,12 +117,12 @@ class ChartSelect(BaseScene):
                 rank = getRank(score["score"])
                 if score["checkPassed"]:
                     text_date_format = prettydate(datetime.datetime.fromtimestamp(score["time"]), not OptionsManager["shortTimeFormat"])
+                    playername = score['playername'] if 'playername' in score else 'Unknown'
                     if i+offset == self.selected_score:
                         color = term.underline
                         if self.selected_tab == 1:
                             color = term.reverse
 
-                        playername = score['playername'] if 'playername' in score else 'Unknown'
                         if score["isOutdated"]:
                             print_at(23, 20+i, f"{term.grey}{color}{rank[0]} {playername} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + self.reset_color)
                         else:
@@ -165,10 +165,10 @@ class ChartSelect(BaseScene):
             # self.conduc.play()
         else:
             # print(term.clear)
-            SceneManager["ResultsScreen"].results_data = ChartManager.scores[\
+            SceneManager["Results"].results_data = ChartManager.scores[\
                 ChartManager.chart_data[self.selectedItem]["foldername"]]\
                     [self.selected_score]
-            SceneManager.change_scene("ResultsScreen")
+            SceneManager.change_scene("Results")
 
     def change_chart(self, new_chart_number):
         if self.chartsize == 0:

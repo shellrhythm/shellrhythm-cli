@@ -4,7 +4,7 @@ import webbrowser
 from src.constants import __version__
 from src.scene_manager import SceneManager
 from src.scenes.game import Game
-from src.termutil import print_at, print_lines_at, print_cropped, term
+from src.termutil import print_at, print_lines_at, print_cropped, term, color_text
 from src.conductor import Conductor
 from src.charts_manager import ChartManager
 from src.scenes.base_scene import BaseScene
@@ -67,7 +67,7 @@ class TitleScreen(BaseScene):
             self.turn_off = True
 
     async def draw(self):
-        print_lines_at(0,1,self.logo,True)
+        print_lines_at(0,1,color_text(self.logo,self.conduc.current_beat),True)
         print_at(int((term.width - len(self.bottom_text)) / 2), len(self.logo.splitlines()) + 2, self.bottom_text)
 
         for (i,optn) in enumerate(self.menuOptions):

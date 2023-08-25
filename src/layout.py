@@ -1,4 +1,6 @@
 import os
+import logging
+
 
 class LayoutManager:
     layouts:dict = {}
@@ -6,9 +8,11 @@ class LayoutManager:
 
     @staticmethod
     def setup():
+        LayoutManager.layouts = {}
+        LayoutManager.layoutNames = []
         layout_files = [f.name for f in os.scandir("./layout") if f.is_file()]
         for (i, file_name) in enumerate(layout_files):
-            print(f"Loading layout \"{file_name}\"... ({i+1}/{len(layout_files)})")
+            logging.info("Loading layout \"%s\"... (%d/%d)", file_name, i+1, len(layout_files))
             file = open("./layout/" + file_name, encoding="utf8")
             LayoutManager.layouts[file_name] = list(file.read().replace('\n', ''))
             LayoutManager.layoutNames.append(file_name)

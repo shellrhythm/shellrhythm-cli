@@ -7,3 +7,6 @@ __pycache__
 options.json
 /layout/custom
 /scores/*
+index.spec
+/build/*
+/dist/*

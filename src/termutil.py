@@ -4,11 +4,21 @@ import time
 import signal
 import platform
 import datetime
+import logging
 from blessed import Terminal
 from src.framebuffer import Framebuffer
 from src.translate import LocaleManager
 from term_image.image import from_file
 
+logging.basicConfig(
+    filename="logs/app.log",
+    filemode="w",
+    format="%(asctime)s | [%(levelname)s]: %(message)s",
+    level=logging.INFO
+)
+
+def log(message, level = 0):
+    logging.log(level, message)
 
 def strip_seqs(text):
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\([0-?]*[ -/]*[@-~])')
@@ -79,7 +89,13 @@ def color_text(text = "", beat = 0.0):
      - r				Flips foreground and background
      - k				Glitchifies text
     """
-    text = text.replace("\\{", "￼ø").replace("\\}", "ŧ￼").replace("{", "�{").replace("}", "}�")
+    text = text\
+        .replace("\\\\","￼[")\
+        .replace("\\{", "￼ø")\
+        .replace("\\}", "ŧ￼")\
+        .replace("{", "�{")\
+        .replace("}", "}�")\
+        .replace("￼[", "\\")
     #If you are using � or ￼ genuiunely, what the #### is wrong with you /gen
     data = text.split("�")
     rendered_text = ""
@@ -88,11 +104,11 @@ def color_text(text = "", beat = 0.0):
         if i.startswith("{") and i.endswith("}"):
             command = i.strip("{}")
             if command.startswith("cf"):
-                col = color_code_from_hex(command.replace("cf ", "", 1))
+                col = color_code_from_hex(command.replace("cf", "", 1).replace(" ", ""))
                 rendered_text += term.color_rgb(col[0], col[1], col[2])
                 continue
             if command.startswith("cb"):
-                col = color_code_from_hex(command.replace("cb ", "", 1))
+                col = color_code_from_hex(command.replace("cb", "", 1).replace(" ", ""))
                 rendered_text += term.on_color_rgb(col[0], col[1], col[2])
                 continue
             if command == "b":
@@ -152,7 +168,7 @@ def hexcode_from_color_code(code:list) -> str:
 previous_width = 0
 previous_height = 0
 just_resized = False
-minimum_width = 125
+minimum_width = 100
 minimum_height = 32
 
 def on_resize(_, _2):
@@ -224,7 +240,9 @@ def print_column(x, y, size, char):
 
 def print_cropped(x, y, maxsize, text, offset, color, is_wrap_around = True, reset_color = term.normal):
     if is_wrap_around:
-        print_at(x, y, color + (text*(3+int(maxsize/len(text))))[(offset%len(text))+len(text):maxsize+(offset%len(text))+len(text)] + reset_color)
+        print_at(x, y, color + (text*(3+int(maxsize/len(text))))[
+            (offset%len(text))+len(text):maxsize+(offset%len(text))+len(text)
+        ] + reset_color)
     else:
         actual_text = text[offset%len(text):maxsize+(offset%len(text))]
         print_at(x, y, color + actual_text + reset_color + (" "*(maxsize - len(actual_text))))

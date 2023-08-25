@@ -143,8 +143,8 @@ class Editor(BaseScene):
         return out
 
     def set_background(self, background):
-        colors[0] = background
-        self.reset_color = background
+        colors[0] = term.normal + background
+        self.reset_color = term.normal + background
 
     def autocomplete(self, command = ""):
         output = []

@@ -263,13 +263,12 @@ class Options(BaseScene):
                     self.goBack = True
                     self.selectedItem = 4
 
-                    result = False
                     custom_layout = ["╳" for _ in range(30)]
                     if "custom" in LayoutManager.layoutNames:
                         custom_layout = LayoutManager["custom"]
-                    while not result:
-                        SceneManager["LayoutEditor"].turn_off = False
-                        result, _ = SceneManager["LayoutEditor"].loop(custom_layout)
+                    SceneManager["LayoutEditor"].turn_off = False
+                    SceneManager["LayoutEditor"].layout = custom_layout
+                    SceneManager.change_scene("LayoutEditor")
 
 
             else:

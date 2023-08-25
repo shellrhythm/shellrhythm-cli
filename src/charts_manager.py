@@ -1,7 +1,7 @@
 import os, json
 from pybass3 import Song
 import hashlib
-from src.termutil import term
+from src.termutil import term, log, logging
 from src.constants import MAX_SCORE
 from src.scenes.results import scoreCalc
 from src.scenes.game import Game
@@ -27,25 +27,30 @@ class ChartManager:
         """Returns all scores of a given chart."""
         if not os.path.exists("./scores/"):
             os.mkdir("./scores/")
-        score_files = [f.name for f in os.scandir("./scores/") if f.is_file() and f.name.startswith(chart_name.replace("/", "_").replace("\\", "_")+"-")]
+        score_files = [
+            f.name for f in os.scandir("./scores/") \
+                if f.is_file() and f.name.startswith(
+                    chart_name.replace("/", "_").replace("\\", "_")+"-"
+                )
+            ]
         output = []
         for (i,file_name) in enumerate(score_files):
-            print(f"Loading scores for map {chart_name}: ({i+1}/{len(score_files)})")
+            log(f"Loading scores for map {chart_name}: ({i+1}/{len(score_files)})", logging.INFO)
             file = open("./scores/" + file_name, encoding="utf8")
             content = file.read()
             file.close()
             file_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
             file_json = json.loads(content)
             if file_hash != file_name[len(chart_name)+1:]:
-                print(term.yellow+"[WARNING] SHA256 check failed for score " + file_hash + term.normal)
+                log("SHA256 check failed for score " + file_hash, logging.WARN)
                 file_json["checkPassed"] = False
             else:
                 file_json["checkPassed"] = True
             if isinstance(file_json["version"], str):
-                print(term.yellow+f"[WARNING] Score {file_hash} was made on an outdated version! (on game.py pre-version 1)" + term.normal)
+                log(f"Score {file_hash} was made on an outdated version! (on game.py pre-version 1)", logging.WARN)
                 file_json["toRecalculate"] = True
             elif file_json["version"] < Game.version:
-                print(term.yellow+f"[WARNING] Score {file_hash} was made on an outdated version! (on game.py version {file_json['version']})" + term.normal)
+                log(f"Score {file_hash} was made on an outdated version! (on game.py version {file_json['version']})", logging.WARN)
                 file_json["toRecalculate"] = True
             else:
                 file_json["toRecalculate"] = False
@@ -57,10 +62,16 @@ class ChartManager:
                     if file_json["judgements"][i] != {}:
                         if file_json["judgements"][i]["judgement"] > 4:
                             miss_count += 1
-                file_json["score"] = scoreCalc(MAX_SCORE, file_json["judgements"], file_json["accuracy"], 0, chart)
+                file_json["score"] = scoreCalc(
+                    MAX_SCORE,
+                    file_json["judgements"],
+                    file_json["accuracy"],
+                    0,
+                    chart
+                )
 
             if file_json["checksum"] != chart_checksum:
-                print(term.yellow+"[WARNING] Score " + file_hash + " wasn't made on the current version of this chart!" + term.normal)
+                log("Score " + file_hash + " wasn't made on the current version of this chart!", logging.WARN)
                 file_json["isOutdated"] = True
             else:
                 file_json["isOutdated"] = False
@@ -110,7 +121,7 @@ class ChartManager:
 
         # fixing errors
         if output["sound"] == "" or output["sound"] is None:
-            print(f"{term.yellow}[WARN] {folder} has no song!{term.normal}")
+            logging.warning(f"{folder} has no song!")
 
         if output["foldername"] != folder: 
             output["foldername"] = folder
@@ -144,7 +155,7 @@ class ChartManager:
                         packjson["charts"].append(sub)
                     ChartManager.chart_packs.append(packjson)
                 else:
-                    print(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})")
+                    log(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})", logging.INFO)
                     chart_file_data = open("./charts/" + charts[i] + "/data.json", encoding="utf8")
                     data = chart_file_data.read()
                     chart_file_data.close()
@@ -162,6 +173,6 @@ class ChartManager:
                         json_content
                     )
                 i+=1
-            print("All charts loaded successfully!")
+            logging.info("All charts loaded successfully!")
         else:
-            print(f"{term.yellow}[WARN] Chart folder inexistant!{term.normal}")
+            logging.warning("Chart folder inexistant!")

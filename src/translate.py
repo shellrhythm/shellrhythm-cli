@@ -1,6 +1,7 @@
 """Language-related shenanigans"""
 import json
 import os
+import logging
 
 class Locale:
     name = "N/A" #N/A
@@ -29,7 +30,7 @@ class Locale:
 
     def __init__(self, lang:str, silent:bool = True) -> None:
         if not silent:
-            print(f"Loading locale \"{lang}\"...")
+            logging.info("Loading locale \"%s\"...", lang)
         file = open("./lang/" + lang + ".json", encoding="utf8")
         self.data = json.loads(file.read())
         self.name = lang

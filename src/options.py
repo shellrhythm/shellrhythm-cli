@@ -42,7 +42,6 @@ class OptionsManager:
             default_options_string = file2.read()
             default_options = json.loads(default_options_string)
             file2.close()
-            print(maybe_options)
             for k,val in default_options.items():
                 maybe_options.setdefault(k, val)
             OptionsManager.layout               = maybe_options["layout"]
@@ -84,11 +83,11 @@ class OptionsManager:
     @staticmethod
     def __class_getitem__(key):
         return getattr(OptionsManager, OptionsManager.OPTIONS_NAME[key])
-    
+
     @staticmethod
     def set(key, newvalue):
         setattr(OptionsManager, OptionsManager.OPTIONS_NAME[key], newvalue)
-    
+
     @staticmethod
     def __setitem__(key, newvalue):
         setattr(OptionsManager, OptionsManager.OPTIONS_NAME[key], newvalue)
@@ -96,7 +95,6 @@ class OptionsManager:
     @staticmethod
     def __init__():
         OptionsManager.load_from_file()
-        pass
 
 if __name__ == "__main__":
     OptionsManager.load_from_file()

@@ -1,7 +1,12 @@
 #This file is going to get called every time you need to import a chart through a link
 #For example, doing 'shellrhythm --import "zip_url.zip"' will import a zip file if it has valid structure
 
-import sys, os, requests, zipfile, io, json
+import sys
+import os
+import requests
+import zipfile
+import io
+import json
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
