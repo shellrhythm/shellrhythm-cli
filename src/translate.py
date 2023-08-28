@@ -47,14 +47,16 @@ class LocaleManager:
         if LocaleManager.selectedLocale not in LocaleManager.locales:
             load_locales()
         return LocaleManager.locales[LocaleManager.selectedLocale]
-    
+
     @staticmethod
     def change_locale(new_locale):
         if new_locale in LocaleManager.locale_names:
             LocaleManager.selectedLocale = new_locale
 
 def load_locales():
-    LocaleManager.locale_names = [f.name.split(".", 1)[0] for f in os.scandir("./lang") if f.is_file()]
+    LocaleManager.locale_names = [
+        f.name.split(".", 1)[0] for f in os.scandir("./lang") if f.is_file()
+    ]
     for (_,lang_code) in enumerate(LocaleManager.locale_names):
         new_locale = Locale(lang_code, False)
         LocaleManager.locales[lang_code] = new_locale

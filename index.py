@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import random
+import sys
 from blessed import Terminal
 
-from src.scenes import ChartSelect, TitleScreen, Options, Credits, Editor, ResultsScreen, LayoutCreator
+from src.scenes import ChartSelect, TitleScreen, Options, Credits, \
+    Editor, ResultsScreen, LayoutCreator
 from src.translate import load_locales, LocaleManager
 from src.options import OptionsManager
 from src.calibration import Calibration
@@ -29,23 +31,24 @@ if __name__ == "__main__":
     try:
         SceneManager.loadedMenus["ChartSelect"] = ChartSelect()
         SceneManager.loadedMenus["Titlescreen"] = TitleScreen()
-        SceneManager.loadedMenus["Options"] = Options() # Sixty-sixteen megabytes- by-bytes
-        SceneManager.loadedMenus["Credits"] = Credits() # Funding for this program was made possible by-by-by-by-by-
+        # Sixty-sixteen megabytes- by-bytes
+        SceneManager.loadedMenus["Options"] = Options()
+        # Funding for this program was made possible by-by-by-by-by-by-
+        SceneManager.loadedMenus["Credits"] = Credits()
         SceneManager.loadedMenus["Editor"] = Editor()
         SceneManager.loadedMenus["Calibration"] = Calibration("CalibrationGlobal")
         SceneManager.loadedMenus["LayoutEditor"] = LayoutCreator()
         SceneManager.loadedMenus["Game"] = game.Game()
         SceneManager.loadedMenus["Results"] = ResultsScreen()
 
-        songLoaded = 0
         if len(ChartManager.chart_data) != 0:
-            songLoaded = random.randint(0, len(ChartManager.chart_data)-1)
-            SceneManager["Titlescreen"].playing_num = songLoaded
-            if ChartManager.chart_data[songLoaded] is not None:
-                SceneManager["Titlescreen"].conduc.loadsong(ChartManager.chart_data[songLoaded])
-            if "previewLoop" in ChartManager.chart_data[songLoaded]:
-                beginPos = ChartManager.chart_data[songLoaded]["previewLoop"]["start"]
-                endPos = ChartManager.chart_data[songLoaded]["previewLoop"]["end"]
+            song_loaded = random.randint(0, len(ChartManager.chart_data)-1)
+            SceneManager["Titlescreen"].playing_num = song_loaded
+            if ChartManager.chart_data[song_loaded] is not None:
+                SceneManager["Titlescreen"].conduc.loadsong(ChartManager.chart_data[song_loaded])
+            if "previewLoop" in ChartManager.chart_data[song_loaded]:
+                beginPos = ChartManager.chart_data[song_loaded]["previewLoop"]["start"]
+                endPos = ChartManager.chart_data[song_loaded]["previewLoop"]["end"]
                 SceneManager["Titlescreen"].conduc.loopStart = (beginPos[0] + beginPos[1]/4) *\
                     (SceneManager["Titlescreen"].conduc.bpm/60)
                 SceneManager["Titlescreen"].conduc.loopEnd = (endPos[0] + endPos[1]/4) *\
@@ -55,15 +58,19 @@ if __name__ == "__main__":
             else:
                 SceneManager["Titlescreen"].conduc.isLoop = False
                 SceneManager["Titlescreen"].conduc.play()
+            SceneManager["ChartSelect"].selected_item = song_loaded
 
         SceneManager["ChartSelect"].conduc = SceneManager["Titlescreen"].conduc
         SceneManager["Options"].conduc = SceneManager["Titlescreen"].conduc
         SceneManager["Credits"].conduc = SceneManager["Titlescreen"].conduc
 
-        SceneManager["ChartSelect"].selectedItem = songLoaded
         SceneManager["Options"].populate_enum()
         SceneManager["Options"].volume(0, OptionsManager.song_volume)
         SceneManager["Options"].volume(1, OptionsManager.hit_sound_volume)
+
+        if len(sys.argv) > 1:
+            if sys.argv[1] == "editor":
+                SceneManager.change_scene("Editor")
 
         SceneManager.loop()
     except KeyboardInterrupt:

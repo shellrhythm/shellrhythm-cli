@@ -2,10 +2,19 @@
 
 from src.termutil import term
 
+class staticproperty(property):
+    def __get__(self, owner_self, owner_cls):         
+        return self.fget()
+
 class Vector2(object):
     """I needed this Vector2. I had enough of using arrays"""
     x:float = 0
     y:float = 0
+
+    @staticproperty
+    def zero(): #pylint: disable=no-method-argument
+        """The (0,0) vector"""
+        return Vector2(0,0)
 
     @staticmethod
     def from_list(input_list:list):
@@ -38,6 +47,11 @@ class Vector2i(Vector2):
     x:int = 0
     y:int = 0
 
+    @staticproperty
+    def zero(): #pylint: disable=no-method-argument
+        """The (0,0) vector"""
+        return Vector2i()
+
     def __add__(self, other):
         if isinstance(other, Vector2i):
             return Vector2i(
@@ -61,20 +75,6 @@ UP_RIGHT = 8
 ALIGN_LEFT = 0
 ALIGN_CENTER = 1
 ALIGN_RIGHT = 2
-
-colors = [
-    term.normal,
-    term.red,
-    term.orange,
-    term.yellow,
-    term.green,
-    term.cyan,
-    term.blue,
-    term.purple,
-    term.aqua,
-    term.magenta,
-    term.gray
-]
 
 default_size:Vector2i = Vector2i(80, 24)
 
@@ -109,6 +109,22 @@ class Color:
 #     Background color
 # ]
 
+colors = [
+    term.normal,
+    Color("fc220a").col, # term.red,
+    Color("fc9b0a").col, # term.orange,
+    Color("f4fc0a").col, # term.yellow,
+    Color("0efc0a").col, # term.green,
+    Color("0afcfc").col, # term.cyan,
+    Color("0a36fc").col, # term.blue,
+    Color("830afc").col, # term.purple
+    Color("0ab7fc").col, # term.aqua,
+    Color("fc0ab3").col, # term.magenta,
+    Color("72737c").col # term.gray
+]
+
+blockStates = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
+
 RANKS = [
     [
         "@",
@@ -141,41 +157,41 @@ RANKS = [
     [
         "C",
         600000,
-        term.orange,
-        term.on_goldenrod4,
-        term.on_color_rgb(148, 77, 29)
+        Color("fc9b0a").col,
+        Color("914712").on_col,
+        Color("944d1d").on_col
     ],	# ;
     [
         "D",
         500000,
-        term.red,
-        term.on_darkred,
-        term.on_color_rgb(83, 14, 14)
+        Color("fc2323").col,
+        Color("960101").on_col,
+        Color("530e0e").on_col
     ],	# /
     [
         "F",
         0,
-        term.grey,
-        term.on_black,
-        term.on_color_rgb(0, 0, 0)
+        Color("a1a6af").col,
+        Color("010101").on_col,
+        Color("000000").on_col
     ],	# _
 ]
 JUDGEMENT_NAMES = [
-    f"{term.purple}MARV", 
-    f"{term.aqua}PERF", 
-    f"{term.green}EPIC", 
-    f"{term.yellow}GOOD", 
-    f"{term.orange} EH ", 
-    f"{term.red}MISS"
+    f"{RANKS[0][2]}MARV", 
+    f"{RANKS[1][2]}PERF", 
+    f"{RANKS[2][2]}EPIC", 
+    f"{RANKS[3][2]}GOOD", 
+    f"{RANKS[4][2]} EH ", 
+    f"{RANKS[5][2]}MISS"
 ]
 
 JUDGEMENT_NAMES_SHORT = [
-    f"{term.purple}@", 
-    f"{term.aqua}#", 
-    f"{term.green}$", 
-    f"{term.yellow}*", 
-    f"{term.orange};", 
-    f"{term.red}/"
+    f"{RANKS[0][2]}@", 
+    f"{RANKS[1][2]}#", 
+    f"{RANKS[2][2]}$", 
+    f"{RANKS[3][2]}*", 
+    f"{RANKS[4][2]};", 
+    f"{RANKS[5][2]}/"
 ]
 accMultiplier = [1, 0.95, 0.85, 0.75, 0.5, 0]
 

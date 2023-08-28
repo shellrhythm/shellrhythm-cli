@@ -1,10 +1,16 @@
 import os
 import logging
+from src.options import OptionsManager
 
 
 class LayoutManager:
     layouts:dict = {}
     layoutNames:list = []
+
+    @staticmethod
+    def current_layout():
+        """Returns currently active layout based on OptionsManager.layout"""
+        return LayoutManager.layouts[OptionsManager.layout]
 
     @staticmethod
     def setup():

@@ -13,7 +13,7 @@ class TextObject(GameplayObject):
     offset = Vector2i()
     anchor = CENTER
     align = ALIGN_CENTER
-    renderOffset = Vector2i()
+    render_offset = Vector2i()
 
     def __init__(self, data, bpm_table) -> None:
         super().__init__()
@@ -82,6 +82,8 @@ class TextObject(GameplayObject):
             int((term.width-default_size[0]) * 0.5),
             int((term.height-default_size[1]) * 0.5)
         ]
+        topleft[0] += self.render_offset.x
+        topleft[1] += self.render_offset.y
 
         if clear:
             rendered_text = " "*len(term.strip_seqs(rendered_text))

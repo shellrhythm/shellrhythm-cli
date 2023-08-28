@@ -146,7 +146,7 @@ class Calibration:
                 print(term.clear)
                 while not self.turnOff:
                     if self.calibration_menu != "CalibrationSelect":
-                        deltatime = self.conduc.update()
+                        _ = self.conduc.update()
 
                     self.draw()
                     refresh()
@@ -155,7 +155,7 @@ class Calibration:
             print(term.clear)
             while not self.turnOff:
                 if self.calibration_menu != "CalibrationSelect":
-                    deltatime = self.conduc.update()
+                    _ = self.conduc.update()
 
                 self.draw()
                 refresh()

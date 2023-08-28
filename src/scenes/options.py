@@ -137,9 +137,9 @@ class Options(BaseScene):
         if self.menuOptions[self.selectedItem]["var"] == "layout":
             text = f"┌───{'┬───'*9}┐\n" + "".join(\
                 ["".join([
-                    f"│ {key} " for key in LayoutManager[OptionsManager["layout"]]
+                    f"│ {key} " for key in LayoutManager.current_layout()
                 ][10*i:10*(i+1)]) + f"│\n├───{'┼───'*9}┤\n" for i in range(2)]\
-            ) + "".join([f"│ {key} " for key in LayoutManager[OptionsManager["layout"]]][20:30]) + f"│\n└───{'┴───'*9}┘\n"
+            ) + "".join([f"│ {key} " for key in LayoutManager.current_layout()][20:30]) + f"│\n└───{'┴───'*9}┘\n"
             print_lines_at(int(term.width*0.5 - len(f"┌───{'┬───'*9}┐")/2), term.height-10, text)
 
         if self.isPickingOffset:

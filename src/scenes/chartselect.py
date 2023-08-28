@@ -6,7 +6,7 @@ from src.charts_manager import ChartManager
 from src.scene_manager import SceneManager
 from src.translate import LocaleManager
 from src.options import OptionsManager
-from src.scenes.game import Game
+from src.layout import LayoutManager
 from src.termutil import print_cropped, print_column, print_at, \
     print_lines_at, print_image, term, prettydate, \
     color_text, strip_seqs
@@ -15,7 +15,7 @@ from src.termutil import print_cropped, print_column, print_at, \
 class ChartSelect(BaseScene):
     turnOff = False
     chartsize = 0
-    selectedItem = 0
+    selected_item = 0
     selected_tab = 0
     selected_score = 0
     scoreScrolledBy = []
@@ -26,7 +26,7 @@ class ChartSelect(BaseScene):
 
     async def draw(self):
         for (i,val) in enumerate(ChartManager.chart_data):
-            if i == self.selectedItem:
+            if i == self.selected_item:
                 text = val["metadata"]["artist"] + " - " + val["metadata"]["title"] + " // "
                 print_cropped(0, i+1, 20, text, int(self.conduc.current_beat), term.reverse)
             else:
@@ -37,7 +37,7 @@ class ChartSelect(BaseScene):
         if len(ChartManager.chart_data) == 0:
             print_at(25,5, self.loc("chartSelect.no_charts"))
         else:
-            chart_in_question = ChartManager.chart_data[self.selectedItem]
+            chart_in_question = ChartManager.chart_data[self.selected_item]
             img_width = min(34, int(term.width*0.2))
             if chart_in_question["icon"]["img"] is not None:
                 file_exists = None
@@ -58,7 +58,11 @@ class ChartSelect(BaseScene):
                     split_lines = icon_text.split("\n")
                     width = len(strip_seqs(split_lines[0]))
                     height = len(split_lines)
-                    print_lines_at(23+((img_width-width)//2), 1+((img_width//2-height)//2), icon_text)
+                    print_lines_at(
+                        23+((img_width-width)//2),
+                        1+((img_width//2-height)//2),
+                        icon_text
+                    )
                     txt.close()
                 else:
                     print_at(23, 1, term.reverse("[NO ICON]"))
@@ -94,29 +98,47 @@ class ChartSelect(BaseScene):
             )
 
             #endregion
-            print_at(25 + img_width, 8, "┠" + ("─"*(term.width - (26 + img_width))))
-            print_at(28 + img_width, 8, 
+            width_of_desc_area = term.width - (26 + img_width)
+            desc = term.wrap(chart_in_question["metadata"]["description"],width=width_of_desc_area)
+            height_desc = min(max(img_width//2+2, 9+len(desc), 12), 19)
+
+            print_at(25 + img_width, 8, "┠" + ("─"*width_of_desc_area))
+            print_at(28 + img_width, 8,
                      term.reverse + self.loc("chartSelect.metadata.description") + self.reset_color
                     )
-            print_lines_at(26 + img_width, 9, chart_in_question["metadata"]["description"])
-            print_at(25 + img_width, 19, "┸" + ("─"*(term.width - (26 + img_width))))
-            print_at(20, 19, "┠" + ("─"*(4+img_width)))
+            print_lines_at(26 + img_width, 9, "\n".join(desc))
+            print_at(25 + img_width, height_desc, "┸" + ("─"*width_of_desc_area))
+            print_at(20, height_desc, "┠" + ("─"*(4+img_width)))
             text_auto = self.loc("chartSelect.auto")
             if SceneManager["Game"].auto:
-                print_at(23, 18,
+                print_at(23, img_width//2+1,
                     term.reverse(term.center(text_auto, img_width))
                 )
             else:
-                print_at(23, 18, self.reset_color+(" "*img_width))
+                print_at(23, img_width//2+1, self.reset_color+(" "*img_width))
 
             #Scores!
-            max_rendered_scores = min(len(ChartManager.scores[chart_in_question["foldername"]]), term.height-23)
-            offset = max(0, min(self.selected_score - max_rendered_scores + 1, len(ChartManager.scores[chart_in_question["foldername"]]) - max_rendered_scores))
+            scores_position = height_desc+1
+            max_rendered_scores = min(
+                len(ChartManager.scores[chart_in_question["foldername"]]),
+                term.height-(3+scores_position)
+            )
+            offset = max(
+                0,
+                min(
+                    self.selected_score - max_rendered_scores + 1,
+                    len(ChartManager.scores[chart_in_question["foldername"]])\
+                     - max_rendered_scores
+                )
+            )
             for i in range(max_rendered_scores):
                 score = ChartManager.scores[chart_in_question["foldername"]][i + offset]
                 rank = getRank(score["score"])
                 if score["checkPassed"]:
-                    text_date_format = prettydate(datetime.datetime.fromtimestamp(score["time"]), not OptionsManager["shortTimeFormat"])
+                    text_date_format = prettydate(
+                        datetime.datetime.fromtimestamp(score["time"]),
+                        not OptionsManager["shortTimeFormat"]
+                    )
                     playername = score['playername'] if 'playername' in score else 'Unknown'
                     if i+offset == self.selected_score:
                         color = term.underline
@@ -124,18 +146,44 @@ class ChartSelect(BaseScene):
                             color = term.reverse
 
                         if score["isOutdated"]:
-                            print_at(23, 20+i, f"{term.grey}{color}{rank[0]} {playername} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" + self.reset_color)
+                            print_at(
+                                23,
+                                scores_position+i,
+                            f"{term.grey}{color}{rank[0]} {playername} - {int(score['score'])} " +\
+                            f"({score['accuracy']}%)     [OUTDATED]" + self.reset_color
+                            )
                         else:
-                            print_at(23, 20+i, f"{color}{rank[2]}{rank[0]} {playername} - {int(score['score'])} ({score['accuracy']}%)" + self.reset_color)
-                        print_at(term.width - (len(text_date_format)+1), 20+i, term.reverse + text_date_format + self.reset_color)
+                            print_at(
+                                23,
+                                scores_position+i,
+                            f"{color}{rank[2]}{rank[0]} {playername} - {int(score['score'])} " +\
+                            f"({score['accuracy']}%)" + self.reset_color
+                            )
+                        print_at(
+                            term.width - (len(text_date_format)+1),
+                            scores_position+i,
+                            term.reverse + text_date_format + self.reset_color
+                        )
                     else:
                         if score["isOutdated"]:
-                            print_at(23, 20+i, f"{term.grey}{rank[0]} {playername} - {int(score['score'])} ({score['accuracy']}%)     [OUTDATED]" )
+                            print_at(
+                                23,
+                                scores_position+i,
+                                f"{term.grey}{rank[0]} {playername} - {int(score['score'])} " +\
+                                f"({score['accuracy']}%)     [OUTDATED]" )
                         else:
-                            print_at(23, 20+i, f"{rank[2]}{rank[0]}{self.reset_color} {playername} - {int(score['score'])} ({score['accuracy']}%)" )
-                        print_at(term.width - (len(text_date_format)+1), 20+i, text_date_format)
+                            print_at(
+                                23,
+                                scores_position+i,
+                                f"{rank[2]}{rank[0]}{self.reset_color} {playername} - "+\
+                                f"{int(score['score'])} ({score['accuracy']}%)"
+                            )
+                        print_at(
+                            term.width - (len(text_date_format)+1),
+                            scores_position+i, text_date_format
+                        )
                 else:
-                    print_at(25, 20+i, "[INVALID SCORE]")
+                    print_at(25, scores_position+i, "[INVALID SCORE]")
             if len(ChartManager.scores[chart_in_question["foldername"]]) == 0:
                 print_at(35, int((term.height-18)/2)+17, "No scores yet!")
         # Controls
@@ -154,7 +202,10 @@ class ChartSelect(BaseScene):
             self.conduc.song.stop()
             SceneManager["Game"].loc = self.loc
             SceneManager["Game"].playername = OptionsManager["displayName"]
-            SceneManager["Game"].play(ChartManager.chart_data[self.selectedItem], OptionsManager["layout"])
+            SceneManager["Game"].play(
+                ChartManager.chart_data[self.selected_item],
+                OptionsManager["layout"]
+            )
             SceneManager.change_scene("Game")
 
             # toBeCheckSumd = dict((i,ChartManager.chart_data[self.selectedItem][i]) \
@@ -166,20 +217,20 @@ class ChartSelect(BaseScene):
         else:
             # print(term.clear)
             SceneManager["Results"].results_data = ChartManager.scores[\
-                ChartManager.chart_data[self.selectedItem]["foldername"]]\
+                ChartManager.chart_data[self.selected_item]["foldername"]]\
                     [self.selected_score]
             SceneManager.change_scene("Results")
 
     def change_chart(self, new_chart_number):
         if self.chartsize == 0:
             return
-        self.selectedItem = new_chart_number
+        self.selected_item = new_chart_number
         self.conduc.stop()
         self.conduc.song.stop()
-        self.conduc.loadsong(ChartManager.chart_data[self.selectedItem])
-        if "previewLoop" in ChartManager.chart_data[self.selectedItem]:
-            begin_pos = ChartManager.chart_data[self.selectedItem]["previewLoop"]["start"]
-            end_pos = ChartManager.chart_data[self.selectedItem]["previewLoop"]["end"]
+        self.conduc.loadsong(ChartManager.chart_data[self.selected_item])
+        if "previewLoop" in ChartManager.chart_data[self.selected_item]:
+            begin_pos = ChartManager.chart_data[self.selected_item]["previewLoop"]["start"]
+            end_pos = ChartManager.chart_data[self.selected_item]["previewLoop"]["end"]
             self.conduc.loopStart = (begin_pos[0] + begin_pos[1]/4) * (self.conduc.bpm/60)
             self.conduc.loopEnd = (end_pos[0] + end_pos[1]/4) * (self.conduc.bpm/60)
             self.conduc.isLoop = True
@@ -187,7 +238,7 @@ class ChartSelect(BaseScene):
         else:
             self.conduc.isLoop = False
             self.conduc.play()
-        
+
         img_width = max(0, term.width-23)
         img_height = term.height-1
         clear_img = (" "*img_width + "\n")*img_height
@@ -195,6 +246,7 @@ class ChartSelect(BaseScene):
 
 
     async def handle_input(self):
+        folder = ChartManager.chart_data[self.selected_item]["foldername"]
         val = ''
         val = term.inkey(timeout=1/60, esc_delay=0)
 
@@ -203,19 +255,28 @@ class ChartSelect(BaseScene):
                 # Empty chart list (avoid division by zero)
                 if self.chartsize == 0:
                     return
-                self.change_chart((self.selectedItem + 1)%self.chartsize)
+                self.change_chart((self.selected_item + 1)%self.chartsize)
             else:
-                if len(ChartManager.scores[ChartManager.chart_data[self.selectedItem]["foldername"]]) != 0:
+                if len(ChartManager.scores[
+                    folder
+                    ]) != 0:
                     self.selected_score += 1
-                    self.selected_score = min(self.selected_score, len(ChartManager.scores[ChartManager.chart_data[self.selectedItem]["foldername"]])-1)
+                    self.selected_score = min(
+                        self.selected_score,
+                        len(ChartManager.scores[
+                            folder
+                        ])-1
+                    )
         if val.name == "KEY_UP" or val == "k":
             if self.selected_tab == 0:
                 # Empty chart list (avoid division by zero)
                 if self.chartsize == 0:
                     return
-                self.change_chart((self.selectedItem - 1)%self.chartsize)
+                self.change_chart((self.selected_item - 1)%self.chartsize)
             else:
-                if len(ChartManager.scores[ChartManager.chart_data[self.selectedItem]["foldername"]]) != 0:
+                if len(ChartManager.scores[
+                    folder
+                    ]) != 0:
                     self.selected_score -= 1
                     self.selected_score = max(self.selected_score, 0)
         if val.name == "KEY_LEFT" or val == "h":
@@ -224,7 +285,9 @@ class ChartSelect(BaseScene):
             if self.chartsize == 0:
                 return
 
-            if len(ChartManager.scores[ChartManager.chart_data[self.selectedItem]["foldername"]]) > 0:
+            if len(ChartManager.scores[
+                folder
+                ]) > 0:
                 self.selected_tab = min(self.selected_tab + 1, 1)
         if val == "a":
             SceneManager["Game"].auto = not SceneManager["Game"].auto
@@ -232,12 +295,12 @@ class ChartSelect(BaseScene):
             #load editor
             self.conduc.stop()
             self.conduc.song.stop()
-            SceneManager["Editor"].chart = ChartManager.chart_data[self.selectedItem]
+            SceneManager["Editor"].chart = ChartManager.chart_data[self.selected_item]
             SceneManager["Editor"].chart.pop("actualSong", None)
             SceneManager["Editor"].layoutname = OptionsManager["layout"]
-            SceneManager["Editor"].layout = Game.setupKeys(None, OptionsManager["layout"])
-            SceneManager["Editor"].localConduc.loadsong(ChartManager.chart_data[self.selectedItem])
-            SceneManager["Editor"].fileLocation = f"./charts/{ChartManager.chart_data[self.selectedItem]['foldername']}/data.json"
+            SceneManager["Editor"].layout = LayoutManager.current_layout()
+            SceneManager["Editor"].conduc.loadsong(ChartManager.chart_data[self.selected_item])
+            SceneManager["Editor"].fileLocation = f"./charts/{folder}/data.json"
             SceneManager.change_scene("Editor")
             self.turn_off = True
             # self.goBack = True

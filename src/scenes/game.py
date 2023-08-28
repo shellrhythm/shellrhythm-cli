@@ -2,8 +2,9 @@ import os
 import json
 import time
 import hashlib
-from src.termutil import term, print_at, framerate, print_column,\
+from src.termutil import term, print_at, framerate,\
     color_code_from_hex, print_box
+from src.constants import Vector2i
 from src.conductor import Conductor, format_time
 from src.options import OptionsManager
 from src.scene_manager import SceneManager
@@ -18,13 +19,10 @@ from src.scenes.game_objects.bg_color import BackgroundColorObject
 from src.scenes.game_objects.end_level import EndLevelObject
 
 from src.constants import colors, MAX_SCORE, accMultiplier, JUDGEMENT_NAMES,\
-    default_size, INPUT_FREQUENCY, hitWindows
-
-
-
+    default_size, INPUT_FREQUENCY, hitWindows, Color
 
 class Game(BaseScene):
-    version = 1.2
+    version = 1.3
 
     conduc:Conductor = Conductor()
     beat_sound_volume = 1.0
@@ -33,8 +31,8 @@ class Game(BaseScene):
     turnOff = False
     score = 0
     judgements = []
-    outOfHere = []
-    dontDraw = []
+    out_of_here = []
+    dont_draw = []
     end_time = 2**32
     accuracy = 100
     auto = False
@@ -51,6 +49,19 @@ class Game(BaseScene):
         "q","s","d","f","g","h","j","k","l","m",
         "w","x","c","v","b","n",",",";",":","!"
     ]
+    palette = [
+        term.normal,
+        Color("fc220a").col,
+        Color("fc9b0a").col,
+        Color("f4fc0a").col,
+        Color("0efc0a").col,
+        Color("0afcfc").col,
+        Color("0a36fc").col,
+        Color("830afc").col,
+        Color("0ab7fc").col,
+        Color("fc0ab3").col,
+        Color("72737c").col
+    ]
     notes:list[GameplayObject] = []
 
     #Locale
@@ -60,7 +71,7 @@ class Game(BaseScene):
     bypassSize = False
 
     def set_background(self, background):
-        colors[0] = term.normal + background
+        self.palette[0] = term.normal + background
         self.reset_color = term.normal + background
 
     def get_background(self, at_beat):
@@ -72,21 +83,32 @@ class Game(BaseScene):
                 break
         return out
 
-    def setupKeys(self, layout):
+    def setup_keys(self, layout):
         if self is not None:
             self.keys = LayoutManager[layout]
-        else:
-            return LayoutManager[layout]
-    
+        return LayoutManager[layout]
 
     def generate_results_file(self):
-        self.score = scoreCalc(MAX_SCORE, self.judgements, self.accuracy, self.misses_count, self.chart)
+        self.accuracy_update()
+        self.score = scoreCalc(
+            MAX_SCORE,
+            self.judgements,
+            self.accuracy,
+            self.misses_count,
+            self.chart
+        )
         checksum_checked_data = dict((i,self.chart[i]) for i in self.chart if i != "actualSong")
         output = {
             "accuracy": self.accuracy,
             "score": self.score,
             "judgements": self.judgements,
-            "checksum": hashlib.sha256(json.dumps(checksum_checked_data,skipkeys=True,ensure_ascii=False).encode("utf-8")).hexdigest(),
+            "checksum": hashlib.sha256(
+                json.dumps(
+                    checksum_checked_data,
+                    skipkeys=True,
+                    ensure_ascii=False
+                ).encode("utf-8")
+            ).hexdigest(),
             "version": self.version,
             "time": time.time(),
             "playername": self.playername,
@@ -94,25 +116,19 @@ class Game(BaseScene):
         }
         return output
 
-    def accuracyUpdate(self):
+    def accuracy_update(self):
+        """Updates self.accuracy and self.misses_count accurately."""
         judges = 1.0
         count = 1
+        misses_c = 0
         for i in self.judgements:
             if i != {}:
                 judges += accMultiplier[i["judgement"]]
                 count += 1
+                if i["judgement"] == 5:
+                    misses_c += 1
         self.accuracy = round((judges / count) * 100, 2)
-
-    # def getSongEndTime(self):
-    #     out = self.localConduc.getLength()
-    #     for note in self.chart["notes"]:
-    #         if note["type"] == "end":
-    #             ends_at_beat = note["beatpos"][0] * 4 + note["beatpos"][1]
-    #             out = ends_at_beat * (60/self.localConduc.bpm)
-    #             break
-
-    #     return out
-
+        self.misses_count = misses_c
 
     @staticmethod
     def calculate_position(screen_pos:list, x:int, y:int, width:int, height:int):
@@ -129,16 +145,16 @@ class Game(BaseScene):
             while len(self.notes) >= len(self.judgements):
                 self.judgements.append({})
         for i in range(len(self.notes)):
-            #It's inverted so that the objects with the lowest remaining_beats 
+            #It's inverted so that the objects with the lowest remaining_beats
             # are rendered on top of the others.
             note = self.notes[len(self.notes) - (i+1)]
             offseted_beat = self.conduc.current_beat - (self.conduc.offset/(60/self.conduc.bpm))
             note.render(
                 offseted_beat,
-                self.dontDraw,
+                self.dont_draw,
                 self.conduc.cur_time_sec,
                 self.reset_color,
-                self.outOfHere
+                self.out_of_here
             )
 
 
@@ -241,12 +257,12 @@ class Game(BaseScene):
                 )
 
     def retry(self):
-        print(term.clear)
+        """this is what happens when you press retry"""
         self.conduc.stop()
         self.conduc.song.move2position_seconds(0)
         self.judgements = []
-        self.outOfHere = []
-        self.dontDraw = []
+        self.out_of_here = []
+        self.dont_draw = []
         self.conduc.skipped_time_with_pause = 0
         self.conduc.play()
         self.conduc.bpm = self.conduc.previewChart["bpm"]
@@ -275,12 +291,12 @@ class Game(BaseScene):
                         file = open("./logs/results.json", "w", encoding="utf8")
                     file.write(json.dumps(result,indent=4))
                     file.close()
-                    f2 = open("./scores/"
+                    file2 = open("./scores/"
                             + self.chart["foldername"].replace("/", "_").replace("\\", "_")
                             + "-" + hashlib.sha256(json.dumps(result).encode("utf-8")).hexdigest(),
                             "x", encoding="utf8")
-                    f2.write(json.dumps(result))
-                    f2.close()
+                    file2.write(json.dumps(result))
+                    file2.close()
                 SceneManager["Results"].hit_windows = hitWindows
                 SceneManager["Results"].results_data = result
                 SceneManager["Results"].isEnabled = True
@@ -294,14 +310,15 @@ class Game(BaseScene):
                 #             pos = [x, y]
                 for (note_id, note) in enumerate(self.notes):
                     if isinstance(note, NoteObject):
-                        if note.key == val:
-                            hit_detected = note.checkJudgement(
-                                self.conduc.cur_time_sec,
-                                wasnt_hit=False,
-                                auto=self.auto
-                            )
-                            if note not in self.outOfHere:
+                        if note not in self.out_of_here:
+                            if note.key == val:
+                                hit_detected = note.checkJudgement(
+                                    self.conduc.cur_time_sec,
+                                    wasnt_hit=False,
+                                    auto=self.auto
+                                )
                                 if hit_detected is not None:
+                                    self.accuracy_update()
                                     self.score = scoreCalc(
                                         MAX_SCORE,
                                         self.judgements,
@@ -310,18 +327,20 @@ class Game(BaseScene):
                                         self.chart
                                     )
                                     self.judgements[note_id] = note.judgement
-                                    self.outOfHere.append(note)
+                                    self.out_of_here.append(note)
                                     break
 
             if self.auto and not self.conduc.paused:
                 for (note_id, note) in enumerate(self.notes):
                     if isinstance(note, NoteObject):
-                        hit_detected = note.checkJudgement(
-                            self.conduc.cur_time_sec,
-                            auto=self.auto
-                        )
-                        if note not in self.outOfHere:
+                        note.check_beat_sound_timing(self.conduc.cur_time_sec)
+                        if note not in self.out_of_here:
+                            hit_detected = note.checkJudgement(
+                                self.conduc.cur_time_sec,
+                                auto=self.auto
+                            )
                             if hit_detected is not None:
+                                self.accuracy_update()
                                 self.score = scoreCalc(
                                     MAX_SCORE,
                                     self.judgements,
@@ -330,7 +349,7 @@ class Game(BaseScene):
                                     self.chart
                                 )
                                 self.judgements[note_id] = note.judgement
-                                self.outOfHere.append(note)
+                                self.out_of_here.append(note)
                                 break
         else:
             val = ''
@@ -344,12 +363,12 @@ class Game(BaseScene):
                 self.pause_option = (self.pause_option + 2)%3
 
             if val.name == "KEY_ENTER":
-                if self.pause_option == 0:
+                if self.pause_option == 0: #Resume
                     self.conduc.resume()
-                if self.pause_option == 1:
+                if self.pause_option == 1: #Retry
                     self.retry()
-                if self.pause_option == 2:
-                    self.turn_off = True
+                if self.pause_option == 2: #Quit
+                    SceneManager.change_scene("ChartSelect")
                     self.conduc.resume()
 
     def on_close(self):
@@ -362,6 +381,10 @@ class Game(BaseScene):
 
     @staticmethod
     def load_bg_changes(notes):
+        """Returns an array containing background changes in a convenient tuple
+        The format of the tuple is (beatpos, color),
+        color being a string containing the change cursor color command.
+        """
         out = []
         for note in notes:
             if note["type"] == "bg_color":
@@ -386,19 +409,24 @@ class Game(BaseScene):
                 out.append([(note["beatpos"][0] * 4 + note["beatpos"][1]), color])
         return out
 
-    def setup_notes(self, notes):
+    @staticmethod
+    def get_bpm_map(chart):
+        """Quick way to get the bpm map of the chart"""
+        if len(chart["bpmChanges"]) == 0:
+            bpm_changes = [chart["bpm"]]
+        else:
+            bpm_changes = chart["bpmChanges"]
+        return bpm_changes
+
+    def setup_notes(self, notes, offset:Vector2i = Vector2i.zero):
         """Sets up notes in the self.notes variable"""
         self.notes = []
         self.background_changes = []
-        bpm_changes = []
-        if len(self.conduc.bpmChanges) == 0:
-            bpm_changes = [self.chart["bpm"]]
-        else:
-            bpm_changes = self.conduc.bpmChanges
+        bpm_changes = Game.get_bpm_map(self.chart)
         for note in notes:
             new_note = None
             if note["type"] == "hit_object": # setup note
-                new_note = NoteObject(note, bpm_changes, self.keys)
+                new_note = NoteObject(note, bpm_changes, self.keys, self.palette)
                 new_note.approach_rate = self.chart["approachRate"]
                 SceneManager["Options"].conduc.bass.SetChannelVolume(
                     new_note.hit_sound.handle, OptionsManager["hitSoundVolume"]
@@ -411,21 +439,38 @@ class Game(BaseScene):
             elif note["type"] == "end":
                 new_note = EndLevelObject(note, bpm_changes)
                 self.end_time = new_note.time_position
+            new_note.render_offset = offset
             self.notes.append(new_note)
+
+    @staticmethod
+    def setup_palette(palette:list) -> list:
+        """Builds the actually usable palette variable from an array of hexadecimal colors"""
+        out = [
+            term.normal
+        ]
+        for col in palette:
+            out.append(Color(col).col)
+        return out
 
 
     def play(self, chart, options, layout = "qwerty"):
+        """Set up the chart in the game player"""
+        if "palette" in chart:
+            self.palette = Game.setup_palette(chart["palette"])
+        else:
+            self.palette = colors
+
         self.chart = chart
         self.conduc.loadsong(self.chart)
         self.setup_notes(chart["notes"])
 
-        self.setupKeys(layout)
+        self.setup_keys(layout)
 
         # self.load_bg_changes(chart)
         self.options = options
         self.judgements = []
-        self.dontDraw = []
-        self.outOfHere = []
+        self.dont_draw = []
+        self.out_of_here = []
 
         SceneManager["Results"].auto = self.auto
         self.misses_count = 0
@@ -433,4 +478,3 @@ class Game(BaseScene):
 
         self.conduc.song.move2position_seconds(0)
         self.conduc.play()
-        assert self.conduc.start_time != 0

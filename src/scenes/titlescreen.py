@@ -1,6 +1,7 @@
 """Title screen"""
 import random
 import webbrowser
+import subprocess
 from src.constants import __version__
 from src.scene_manager import SceneManager
 from src.scenes.game import Game
@@ -13,7 +14,7 @@ from src.options import OptionsManager
 class TitleScreen(BaseScene):
     logo = ""
     turn_off = False
-    selectedItem = 0
+    selected_item = 0
     menuOptions = [
         "titlescreen.play",
         "titlescreen.edit",
@@ -30,49 +31,55 @@ class TitleScreen(BaseScene):
     options:dict = {}
     bottom_text_lines:list = []
     playing_num:int = 0
+    hash_version:str = ""
+    show_hash_version:bool = False
 
     def moveBy(self, x):
-        self.selectedItem = (self.selectedItem + x)%len(self.menuOptions)
+        self.selected_item = (self.selected_item + x)%len(self.menuOptions)
 
-    def enterPressed(self):
-        if self.selectedItem == 0:
+    def enter_pressed(self):
+        if self.selected_item == 0:
             # Play
             self.turn_off = True
             SceneManager.change_scene("ChartSelect")
             # print(term.clear)
 
-        if self.selectedItem == 1:
+        if self.selected_item == 1:
             # Edit
             self.conduc.stop()
             self.conduc.song.stop()
             # SceneManager["Editor"].options = self.options
             SceneManager["Editor"].layoutname = OptionsManager["layout"]
-            SceneManager["Editor"].layout = Game.setupKeys(None, OptionsManager["layout"])
+            SceneManager["Editor"].layout = Game.setup_keys(None, OptionsManager["layout"])
             SceneManager.change_scene("Editor")
 
-        if self.selectedItem == 2:
+        if self.selected_item == 2:
             SceneManager.change_scene("Options")
 
-        if self.selectedItem == 3:
+        if self.selected_item == 3:
             SceneManager.change_scene("Credits")
 
-        if self.selectedItem == 4:
+        if self.selected_item == 4:
             webbrowser.open(self.discordLink)
 
-        if self.selectedItem == 5:
+        if self.selected_item == 5:
             webbrowser.open(self.githubLink)
 
-        if self.selectedItem == 6:
+        if self.selected_item == 6:
             # Quit
             self.turn_off = True
 
     async def draw(self):
         print_lines_at(0,1,color_text(self.logo,self.conduc.current_beat),True)
-        print_at(int((term.width - len(self.bottom_text)) / 2), len(self.logo.splitlines()) + 2, self.bottom_text)
+        print_at(
+            int((term.width - len(self.bottom_text)) / 2),
+            len(self.logo.splitlines()) + 2,
+            self.bottom_text
+        )
 
         for (i,optn) in enumerate(self.menuOptions):
             text = self.loc(optn)
-            if self.selectedItem == i:
+            if self.selected_item == i:
                 if OptionsManager["nerdFont"]:
                     print_at(
                         0,
@@ -106,7 +113,10 @@ class TitleScreen(BaseScene):
         )
 
         text_copyright = "© #Guigui, 2022-2023"
-        text_version = "v"+__version__
+        if self.show_hash_version:
+            text_version = "Git version: " + self.hash_version
+        else:
+            text_version = "v"+__version__
         print_at(term.width-(len(text_version) + 1), term.height-3, text_version)
         print_at(term.width-(len(text_copyright) + 1), term.height-2, text_copyright)
 
@@ -128,10 +138,17 @@ class TitleScreen(BaseScene):
             self.moveBy(0)
 
         if val.name == "KEY_ENTER":
-            self.enterPressed()
+            self.enter_pressed()
+
+        if val.name == "KEY_TAB":
+            self.show_hash_version = not self.show_hash_version
+            if self.hash_version == "":
+                self.hash_version = bytes.decode(subprocess.check_output(
+                    ['git', 'rev-parse', 'HEAD']), "utf-8")[:7]
 
         if val == "t":
             self.conduc.metronome = not self.conduc.metronome
+
 
     def on_open(self):
         self.bottom_text = self.bottom_text_lines[random.randint(0, len(self.bottom_text_lines)-1)]
@@ -144,10 +161,6 @@ class TitleScreen(BaseScene):
         pass
 
     def __init__(self):
-        """
-        The base function, where everything happens. Call it to start the loop. It's never gonna stop. (unless you can somehow set `turnOff` to false)
-        """
-
         bottom_txt = open("./assets/bottom.txt", encoding="utf8")
         self.bottom_text_lines = bottom_txt.read().split("\n")
         bottom_txt.close()

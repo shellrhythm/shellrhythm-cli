@@ -151,7 +151,7 @@ class ResultsScreen(BaseScene):
 
     async def draw(self):
         if self.results_data:
-            print_box(4, 2, term.width-7, term.height-4, self.reset_color, 0)
+            print_box(4, 2, term.width-7, term.height-4, self.reset_color, 0, inside_full=False)
             rank = getRank(self.results_data["score"])
             print_lines_at(5,3, self.rank_image_images[rank[1]], color=rank[2])
             print_at(16, 4, f"{rank[2]}SCORE{self.reset_color}: " +\

@@ -64,7 +64,7 @@ class Framebuffer:
             self.FPSAvg = self.FPSManager()
 
         return int(self.FPSAvg)
-    
+
     def __init__(self):
         self.lastWidth = 0
         self.lastHeight = 0

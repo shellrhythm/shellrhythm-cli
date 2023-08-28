@@ -6,9 +6,12 @@ import platform
 import datetime
 import logging
 from blessed import Terminal
+from term_image.image import from_file
 from src.framebuffer import Framebuffer
 from src.translate import LocaleManager
-from term_image.image import from_file
+
+MINIMUM_WIDTH = 100
+MINIMUM_HEIGHT = 32
 
 logging.basicConfig(
     filename="logs/app.log",
@@ -73,9 +76,9 @@ term = Terminal()
 framebuffer = Framebuffer()
 
 
-def prng (beat = 0.0, seed = 0):
+def prng (beat = 0.0, seed = 0, upperlimit = 2**32) -> int:
     """quick pseudorandomness don't mind me"""
-    return int(beat * 210413 + 2531041 * (seed+1.3)/3.4) % 2**32
+    return int(beat * 216113 + 2531041 * (seed+1.3)/3.4) % upperlimit
 
 def color_text(text = "", beat = 0.0):
     """Here, replace something like {cf XXXXXX} with the corresponding terminal color
@@ -165,18 +168,12 @@ def hexcode_from_color_code(code:list) -> str:
     return output
 # toDraw = ""
 
-previous_width = 0
-previous_height = 0
-just_resized = False
-minimum_width = 100
-minimum_height = 32
+previous = [0, 0]
 
 def on_resize(_, _2):
     framebuffer.UpdateRes()
-    global previous_width, previous_height, just_resized
-    previous_width = framebuffer.width
-    previous_height = framebuffer.height
-    just_resized = True
+    previous[0] = framebuffer.width
+    previous[1] = framebuffer.height
     print(term.clear)
 
 if platform.system() != "Windows":
@@ -187,7 +184,7 @@ def framerate():
     return framebuffer.FPS()
 
 def check_term_size():
-    if previous_width != framebuffer.width or previous_height != framebuffer.height:
+    if previous[0] != framebuffer.width or previous[1] != framebuffer.height:
         on_resize(None, None)
 
 def print_at(x, y, text:str):
@@ -208,12 +205,13 @@ Pro tip: only call this at the end of a frame! Or else, this may reduce the fram
                      + term.move_xy(0,0))
 
 def debug_val(val):
+    """Logs a detailed version of val, a keypress from blessed."""
     if not val:
         pass
     elif val.is_sequence:
-        print_at(0,term.height-2,f"got sequence: {(str(val), val.name, val.code)}.")
+        log(f"got sequence: {(str(val), val.name, val.code)}.", logging.INFO)
     elif val:
-        print_at(0,term.height-2,f"got {val}.")
+        log(f"got {val}.", logging.INFO)
 
 def print_lines_at(x:int, y:int, text:str, center = False, color = None, reset_color = term.normal):
     if color is None:
@@ -221,7 +219,7 @@ def print_lines_at(x:int, y:int, text:str, center = False, color = None, reset_c
     lines = text.split("\n")
     for i,line in enumerate(lines):
         if center:
-            print_at(x, y + i, color + term.center(line) + reset_color)
+            print_at(x, y + i, color + term.center(line).replace(" ", term.move_right) + reset_color)
         else:
             print_at(x, y + i, color + line + reset_color)
 
@@ -247,7 +245,7 @@ def print_cropped(x, y, maxsize, text, offset, color, is_wrap_around = True, res
         actual_text = text[offset%len(text):maxsize+(offset%len(text))]
         print_at(x, y, color + actual_text + reset_color + (" "*(maxsize - len(actual_text))))
 
-def print_box(x,y,width, height, color = term.normal, style = 0, caption = "", reset_color = term.normal):
+def print_box(x,y,width, height, color = term.normal, style = 0, caption = "", reset_color = term.normal, inside_full = True):
     current_box_style = "????????"
     if isinstance(style, int):
         current_box_style = box_styles[style]
@@ -265,10 +263,13 @@ def print_box(x,y,width, height, color = term.normal, style = 0, caption = "", r
     print_at(x,y+height-1,
             color + current_box_style[5] + (current_box_style[6]*(width-2))
             + current_box_style[7] + reset_color)
-    print_column(x,y+1,height-2,color + current_box_style[3] + " "*(width-2) + current_box_style[4])
+    fill = " "*(width-2)
+    if not inside_full:
+        fill = term.move_right*(width-2)
+    print_column(x,y+1,height-2,color + current_box_style[3] + fill + current_box_style[4])
     # print_column(x+width-1,y+1,height-2,color + current_box_style[4])
 
 def too_small(bypass = False):
     """Checks if the screen size is smaller than what the game requires.
     Side note: having the bypass variable set to True will completely bypass this check"""
-    return (framebuffer.width < minimum_width or framebuffer.height < minimum_height) and not bypass
+    return (framebuffer.width < MINIMUM_WIDTH or framebuffer.height < MINIMUM_HEIGHT) and not bypass

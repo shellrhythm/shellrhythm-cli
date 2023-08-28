@@ -4,27 +4,27 @@ from pybass3 import Song
 from .base_object import GameplayObject
 from ...translate import LocaleManager
 from ...termutil import print_at, print_lines_at, term, color_code_from_hex
-from ...constants import colors, JUDGEMENT_NAMES, JUDGEMENT_NAMES_SHORT,\
+from ...constants import JUDGEMENT_NAMES, JUDGEMENT_NAMES_SHORT,\
     Vector2, Vector2i, default_size, hitWindows
 
 class NoteObject(GameplayObject):
     """Note object."""
     key:str = "?"
     position:Vector2 = Vector2() #0-1 on every axis
-    color:str = colors[0]
-    color_string:str = "NOTHING"
+    color:str = term.normal
+    color_string:str|int = "NOTHING"
     beat_position:float = 0.0
     time_position:float = 0.0
     approach_rate:float = 1.0
     judgement:dict = {}
     hit_sound:Song = Song("assets/clap.wav")
     played_sound:bool = False
-    render_offset:Vector2i = Vector2i()
+    render_offset:Vector2i = Vector2i.zero
     key_index:int = -1
     _keys:list = []
     _color:int|str = ""
 
-    def __init__(self, data:dict, bpm_table:list, keys:list) -> None:
+    def __init__(self, data:dict, bpm_table:list, keys:list, palette:list) -> None:
         self.beat_position = data["beatpos"][0] * 4 + data["beatpos"][1]
         self.time_position = GameplayObject.compute_time_position(self.beat_position, bpm_table)
         self._keys = keys
@@ -33,19 +33,31 @@ class NoteObject(GameplayObject):
         self.key = keys[data["key"]]
 
         if isinstance(data["color"], int):
-            self.color = colors[data["color"]]
+            self.color = palette[data["color"]]
         else:
             color_split = color_code_from_hex(data["color"])
             self.color = term.color_rgb(color_split[0], color_split[1], color_split[2])
+        self.color_string = str(data["color"])
         self.position = Vector2i(data["screenpos"][0], data["screenpos"][1])
+
+    def set_color_from_palette(self, palette_id:int, palette:list):
+        self._color = palette_id
+        self.color = palette[palette_id]
+        self.color_string = palette_id
+
+    def set_color_hex(self, new_color:str):
+        self._color = new_color
+        self.color_string = new_color
+        color_split = color_code_from_hex(new_color)
+        self.color = term.color_rgb(color_split[0], color_split[1], color_split[2])
 
     def serialize(self):
         return {
+            "type":     "hit_object",
             "key":      self.key_index,
             "color":    self._color,
             "beatpos":  [self.beat_position//4, self.beat_position%4],
-            "screenpos":[self.position.x, self.position.y],
-            "type":     "hit_object"
+            "screenpos":[self.position.x, self.position.y]
         }
 
     def calculate_position(self, playfield_size:Vector2i) -> Vector2i:
@@ -64,12 +76,17 @@ class NoteObject(GameplayObject):
         #     int(y*(f.height-9))+4]
         return calc_pos
 
-    def checkJudgement(self, current_time:float, wasnt_hit:bool = False, auto:bool = False) -> bool | None:
+    def check_beat_sound_timing(self, current_time:float):
         remaining_time = self.time_position - current_time
         if remaining_time <= 0.0 and not self.played_sound:
             self.played_sound = True
             self.hit_sound.move2position_seconds(0)
             self.hit_sound.play()
+
+
+    def checkJudgement(self, current_time:float, wasnt_hit:bool = False, \
+                       auto:bool = False) -> bool | None:
+        remaining_time = self.time_position - current_time
         if not auto:
             if -0.6 < remaining_time < 0.6:
                 judgement = 5
@@ -134,9 +151,10 @@ class NoteObject(GameplayObject):
         return None
 
     def editor_timeline_icon(self, reset_color:str, selected:bool = False):
-        output = self.color + self.key.upper() + reset_color
+        output = self.key.upper() + reset_color
         if selected:
             output = term.reverse + output
+        output = self.color + output
         return output
 
     def display_informations(self, reset_color:str, note_id:int = 0) -> str:

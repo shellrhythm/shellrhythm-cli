@@ -1,7 +1,7 @@
 import os, json
 from pybass3 import Song
 import hashlib
-from src.termutil import term, log, logging
+from src.termutil import log, logging
 from src.constants import MAX_SCORE
 from src.scenes.results import scoreCalc
 from src.scenes.game import Game
