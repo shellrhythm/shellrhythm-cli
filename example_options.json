@@ -6,5 +6,7 @@
     "textImages": true,
     "shortTimeFormat": false,
     "displayName": "Player",
-    "bypassSize": false
+    "bypassSize": false,
+    "songVolume": 1,
+    "hitSoundVolume": 1
 }

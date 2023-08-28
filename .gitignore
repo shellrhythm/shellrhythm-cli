@@ -1,5 +1,4 @@
-/__pycache__
-/*/__pycache__
+__pycache__
 /charts/*/
 !/charts/@official/
 /.vscode/
@@ -8,3 +7,6 @@
 options.json
 /layout/custom
 /scores/*
+index.spec
+/build/*
+/dist/*
