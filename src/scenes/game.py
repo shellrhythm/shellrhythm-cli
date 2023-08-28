@@ -303,13 +303,11 @@ class Game(BaseScene):
                 print(term.clear)
                 SceneManager.change_scene("Results")
 
-            if val in self.keys and not self.auto and not self.conduc.paused:
-                # for (y,row) in enumerate(self.keys):
-                #     for (x, key) in enumerate(row):
-                #         if key == val:
-                #             pos = [x, y]
-                for (note_id, note) in enumerate(self.notes):
-                    if isinstance(note, NoteObject):
+            for (note_id, note) in enumerate(self.notes):
+                if isinstance(note, NoteObject):
+                    hit_detected = None
+                    note.check_beat_sound_timing(self.conduc.cur_time_sec)
+                    if val in self.keys and not self.auto and not self.conduc.paused:
                         if note not in self.out_of_here:
                             if note.key == val:
                                 hit_detected = note.checkJudgement(
@@ -317,40 +315,24 @@ class Game(BaseScene):
                                     wasnt_hit=False,
                                     auto=self.auto
                                 )
-                                if hit_detected is not None:
-                                    self.accuracy_update()
-                                    self.score = scoreCalc(
-                                        MAX_SCORE,
-                                        self.judgements,
-                                        self.accuracy,
-                                        self.misses_count,
-                                        self.chart
-                                    )
-                                    self.judgements[note_id] = note.judgement
-                                    self.out_of_here.append(note)
-                                    break
-
-            if self.auto and not self.conduc.paused:
-                for (note_id, note) in enumerate(self.notes):
-                    if isinstance(note, NoteObject):
-                        note.check_beat_sound_timing(self.conduc.cur_time_sec)
+                    if self.auto and not self.conduc.paused:
                         if note not in self.out_of_here:
                             hit_detected = note.checkJudgement(
                                 self.conduc.cur_time_sec,
                                 auto=self.auto
                             )
-                            if hit_detected is not None:
-                                self.accuracy_update()
-                                self.score = scoreCalc(
-                                    MAX_SCORE,
-                                    self.judgements,
-                                    self.accuracy,
-                                    self.misses_count,
-                                    self.chart
-                                )
-                                self.judgements[note_id] = note.judgement
-                                self.out_of_here.append(note)
-                                break
+                    if hit_detected is not None:
+                        self.accuracy_update()
+                        self.score = scoreCalc(
+                                MAX_SCORE,
+                                self.judgements,
+                                self.accuracy,
+                                self.misses_count,
+                                self.chart
+                        )
+                        self.judgements[note_id] = note.judgement
+                        self.out_of_here.append(note)
+                        break
         else:
             val = ''
             val = term.inkey(timeout=1/INPUT_FREQUENCY, esc_delay=0)
@@ -412,11 +394,10 @@ class Game(BaseScene):
     @staticmethod
     def get_bpm_map(chart):
         """Quick way to get the bpm map of the chart"""
-        if len(chart["bpmChanges"]) == 0:
-            bpm_changes = [chart["bpm"]]
-        else:
-            bpm_changes = chart["bpmChanges"]
-        return bpm_changes
+        if "bpmChanges" in chart:
+            if len(chart["bpmChanges"]) != 0:
+                return chart["bpmChanges"]
+        return [chart["bpm"]]
 
     def setup_notes(self, notes, offset:Vector2i = Vector2i.zero):
         """Sets up notes in the self.notes variable"""
