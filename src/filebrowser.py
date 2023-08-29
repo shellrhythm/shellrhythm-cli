@@ -23,7 +23,10 @@ class FileBrowser:
 
     def load_folder(self, path):
         if os.path.exists(path):
-            self.curFilesInFolder = [file.name for file in os.scandir(path) if file.is_file() and re.search(self.fileExtFilter, file.name)]
+            self.curFilesInFolder = [
+                file.name for file in os.scandir(path) \
+                    if file.is_file() and re.search(self.fileExtFilter, file.name)
+            ]
             self.curSubFolders = [fold.name for fold in os.scandir(path) if fold.is_dir()]
             self.curSubFolders.sort()
             self.curSubFolders.insert(0, "..")
@@ -33,33 +36,44 @@ class FileBrowser:
             return FileNotFoundError()
 
     def draw(self):
-        print_at(0,0,str(self.selectedItem))
+        print_at(0,0,str(self.selectedItem) + " | " + str(self.offset))
 
         print_box(10,3,term.width-20, term.height-6, caption=self.caption)
-        print_cropped(11,4,term.width-22,self.curPath,max(len(self.curPath)-(term.width-22), 0), self.reset_color, False)
+        print_cropped(11,4,term.width-22,self.curPath,
+                      max(len(self.curPath)-(term.width-22), 0), 
+                      self.reset_color, False
+                    )
         print_at(11,5,"─"*(term.width-22))
 
         if self.selectFolderMode:
-            print_at(11,term.height-2, term.reverse + "[SPACE] Select folder" + self.reset_color + " " + term.reverse + "[n] New Folder")
+            print_at(11,term.height-2,
+                term.reverse + "[SPACE] Select folder" +\
+                    self.reset_color + " " + term.reverse + "[n] New Folder")
 
         if self.newFolderMode:
             print_at(11,term.height-3, term.reverse + self.newFolderName)
         y = 0
+        position = self.selectedItem-self.offset
         for i in range(self.offset, len(self.curSubFolders)):
             if y > term.height-11:
                 break
-            if self.selectedItem == y-self.offset:
-                print_at(12,6 + y, term.reverse + "\uea83 " + self.curSubFolders[i] + "/" + self.reset_color)
+            if position == y:
+                print_at(12,6 + y,
+                    term.reverse + "\uea83 " + self.curSubFolders[i] +\
+                        "/" \
+                         + f"[{y}, {position-y}]"+ self.reset_color
+                )
             else:
-                print_at(12,6 + y, "\uea83 " + self.curSubFolders[i] + "/")
+                print_at(12,6 + y, self.reset_color + "\uea83 " + self.curSubFolders[i] + "/"+ f"[{y}, {position-y}]")
             y+=1
         for i in range(max(self.offset - len(self.curSubFolders), 0), len(self.curFilesInFolder)):
             if y > term.height-11:
                 break
-            if self.selectedItem == y-self.offset:
+            if position == y:
                 print_at(14,6 + y, term.reverse + self.curFilesInFolder[i] + self.reset_color)
             else:
-                print_at(14,6 + y, self.curFilesInFolder[i])
+                print_at(14,6 + y, self.reset_color + self.curFilesInFolder[i] \
+                         + f"[{position-y}]")
             y+=1
 
     def handle_input(self):
@@ -70,16 +84,17 @@ class FileBrowser:
             if val.name == "KEY_UP":
                 self.selectedItem -= 1
                 self.selectedItem %= len(self.curFilesInFolder) + len(self.curSubFolders)
-                if self.selectedItem < self.offset + 1:
-                    self.offset -= 1
                 # print(term.clear)
             if val.name == "KEY_DOWN":
                 self.selectedItem += 1
                 self.selectedItem %= len(self.curFilesInFolder) + len(self.curSubFolders)
-
-                if self.selectedItem > self.offset + term.height-12:
-                    self.offset += 1
                 # print(term.clear)
+
+            if self.selectedItem < self.offset:
+                self.offset -= 1
+            if self.selectedItem > self.offset + term.height-12:
+                self.offset += 1
+
             if val == "J":
                 self.offset += 1
                 # print(term.clear)
@@ -114,7 +129,8 @@ class FileBrowser:
                 self.newFolderMode = False
                 # print(term.clear)
             elif val.name == "KEY_ENTER":
-                os.mkdir(self.curPath + "/" + self.newFolderName)
+                if not os.path.exists(self.curPath + "/" + self.newFolderName):
+                    os.mkdir(self.curPath + "/" + self.newFolderName)
                 self.load_folder(self.curPath)
                 self.selectedItem = 0
                 self.offset = 0

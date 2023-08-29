@@ -246,7 +246,7 @@ class NoteObject(GameplayObject):
         # print_at(calc_pos[0], calc_pos[1]+1, str(int(remaining_time)))
 
         if self not in dont_draw_list and (
-            (remaining_time <= -0.6) or (self.judgement and -0.2 > remaining_time)
+            (remaining_time <= -0.6) or (self.judgement and remaining_time < -0.2)
         ):
             if dont_check_judgement is not None:
                 if self not in dont_check_judgement:
@@ -257,4 +257,7 @@ class NoteObject(GameplayObject):
             print_at(calc_pos[0]-1, calc_pos[1],   f"{self.color}   ")
             print_at(calc_pos[0]-1, calc_pos[1]+1, f"{self.color}   ")
             dont_draw_list.append(self)
+
+        if self in dont_draw_list and remaining_time > 0.0:
+            dont_draw_list.remove(self)
         return (dont_draw_list, dont_check_judgement)

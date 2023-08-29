@@ -156,22 +156,26 @@ class ChartManager:
                     ChartManager.chart_packs.append(packjson)
                 else:
                     log(f"Loading chart \"{charts[i]}\"... ({i+1}/{len(charts)})", logging.INFO)
-                    chart_file_data = open("./charts/" + charts[i] + "/data.json", encoding="utf8")
-                    data = chart_file_data.read()
-                    chart_file_data.close()
-                    json_content = json.loads(data)
-                    check_la_sum = hashlib.sha256(json.dumps(json_content).encode("utf-8")).hexdigest()
-                    updated_json_thing = ChartManager.check_chart(json_content, charts[i])
-                    if updated_json_thing["sound"] is not None:
-                        updated_json_thing["actualSong"] = \
-                            Song("./charts/" + charts[i] + "/" + updated_json_thing["sound"])
-                    else:
-                        updated_json_thing["actualSong"] = Song("./assets/metronome.wav")
-                    ChartManager.chart_data.append(updated_json_thing)
-                    ChartManager.scores[charts[i]] = ChartManager.load_scores(charts[i],
-                        check_la_sum,
-                        json_content
-                    )
+                    try:
+                        chart_file_data = open("./charts/" + charts[i] + "/data.json", encoding="utf8")
+                        data = chart_file_data.read()
+                        chart_file_data.close()
+                        json_content = json.loads(data)
+                        check_la_sum = hashlib.sha256(json.dumps(json_content).encode("utf-8")).hexdigest()
+                        updated_json_thing = ChartManager.check_chart(json_content, charts[i])
+                        if updated_json_thing["sound"] not in (None, ""):
+                            updated_json_thing["actualSong"] = \
+                                Song("./charts/" + charts[i] + "/" + updated_json_thing["sound"])
+                        else:
+                            updated_json_thing["actualSong"] = Song("./assets/metronome.wav")
+                        ChartManager.chart_data.append(updated_json_thing)
+                        ChartManager.scores[charts[i]] = ChartManager.load_scores(charts[i],
+                            check_la_sum,
+                            json_content
+                        )
+                    except FileNotFoundError:
+                        log("Could not load chart! panic", logging.WARNING)
+                        
                 i+=1
             logging.info("All charts loaded successfully!")
         else:

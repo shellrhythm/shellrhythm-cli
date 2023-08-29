@@ -107,11 +107,11 @@ class EditorCommandLine:
                     shutil.copyfile(soundFileLocation, f"./charts/{editor.chart['foldername']}/{soundFileLocation.split('/')[-1]}")
                     editor.conduc.loadsong(editor.chart)
             else:
-                editor.fileBrwsr.fileExtFilter = "(?:\\.ogg$)|(?:\\.wav$)|(?:\\.mp3$)"
-                editor.fileBrwsr.load_folder(os.getcwd())
-                editor.fileBrwsr.caption = "Select a song"
-                editor.fileBrwsr.turnOff = False
-                soundFileLocation = editor.fileBrwsr.loop()
+                editor.file_browser.fileExtFilter = "(?:\\.ogg$)|(?:\\.wav$)|(?:\\.mp3$)"
+                editor.file_browser.load_folder(os.getcwd())
+                editor.file_browser.caption = "Select a song"
+                editor.file_browser.turnOff = False
+                soundFileLocation = editor.file_browser.loop()
                 if soundFileLocation != "?":
                     editor.chart["sound"] = soundFileLocation.split('/')[-1]
                     try:

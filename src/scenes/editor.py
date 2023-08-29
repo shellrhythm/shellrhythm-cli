@@ -191,7 +191,6 @@ class Editor(BaseScene):
             self.chart["formatVersion"] = 1
         self.chart["notes"] = self.recreate_note_data(self.notes)
         self.chart["palette"] = Editor.export_palette(self.palette)
-        output = json.dumps(self.chart, indent=4)
         if folder != "":
             self.chart["foldername"] = folder
             if not os.path.exists("./charts/"):
@@ -211,6 +210,7 @@ class Editor(BaseScene):
             folder_location = self.file_browser.loop()
 
             if folder_location != "?":
+                log(f"Check this out: {folder_location}", logging.INFO)
                 self.file_location = folder_location + "/data.json"
                 self.chart["foldername"] = folder_location.split("/")[-1]
             # return False, getFolderLocation
@@ -219,6 +219,7 @@ class Editor(BaseScene):
             file_data = open(self.file_location, "w", encoding="utf8")
         else:
             file_data = open(self.file_location, "x", encoding="utf8")
+        output = json.dumps(self.chart, indent=4)
         file_data.write(output)
         file_data.close()
 
@@ -289,6 +290,7 @@ class Editor(BaseScene):
                 self.keys,
                 self.palette
             )
+            note_obj.playfield = self.playfield
             self.notes.append(note_obj)
             self.notes = sorted(
                 self.notes,
@@ -319,6 +321,7 @@ class Editor(BaseScene):
             if "end" in [note["type"] for note in self.chart["notes"]]:
                 self.end_note = [note["type"] for note in self.chart["notes"]].index("end")
             note_obj = TextObject(new_text, self.conduc.bpmChanges)
+            note_obj.playfield = self.playfield
             self.notes.append(note_obj)
 
     del_confirm_enabled = False
@@ -414,6 +417,7 @@ class Editor(BaseScene):
             file_data.close()
 
             self.conduc.loadsong(self.chart)
+            self.on_open()
             return True
         else:
             return False
@@ -725,12 +729,10 @@ class Editor(BaseScene):
             for actual_note in self.notes:
                 if isinstance(actual_note, NoteObject):
                     remaining_beats = actual_note.beat_position - self.conduc.current_beat
-                    if actual_note not in self.dontBeat and remaining_beats <= 0:
-                        self.beatSound.move2position_seconds(0)
-                        self.beatSound.play()
-                        self.dontBeat.append(actual_note)
-                    if actual_note in self.dontBeat and remaining_beats > 0:
-                        self.dontBeat.remove(actual_note)
+                    if not actual_note.played_sound and remaining_beats <= 0:
+                        actual_note.check_beat_sound_timing(self.conduc.cur_time_sec)
+                    if actual_note.played_sound and remaining_beats > 0:
+                        actual_note.played_sound = False
 
         if self.metadata_menu_enabled:
             if not self.metadata_typing:
@@ -864,8 +866,8 @@ class Editor(BaseScene):
                     self.snap = self.snapPossible[self.selected_snap]
 
 
-                if self.chart["notes"] != []:
-                    actual_note:NoteObject|TextObject = self.notes[self.selected_note]
+                if len(self.notes) > 0:
+                    actual_note:GameplayObject = self.notes[self.selected_note]
                     json_note = self.chart["notes"][self.selected_note]
                     if val.name in ("KEY_DOWN", "KEY_SDOWN"):
                         multiplier = {"KEY_DOWN": 1, "KEY_SDOWN": 4}[val.name]
@@ -888,13 +890,13 @@ class Editor(BaseScene):
                         self.conduc.current_beat += (1/self.snap)*4
                         actual_note.beat_position = self.conduc.current_beat
 
-                    if val == "d" and json_note["type"] == "hit_object":
+                    if val == "d" and isinstance(actual_note, NoteObject):
                         self.selected_note = self.create_note(
                             actual_note.beat_position,
                             actual_note.key_index
                         )
                         self.chart["notes"][self.selected_note] = copy.deepcopy(json_note)
-                    if val == "d" and json_note["type"] == "text":
+                    if val == "d" and isinstance(actual_note, TextObject):
                         new_note = copy.deepcopy(json_note)
                         self.chart["notes"].append(new_note)
                         self.chart["notes"] = sorted(

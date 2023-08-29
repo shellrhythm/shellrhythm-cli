@@ -64,11 +64,12 @@ class EditorPauseMenu:
             editor.command_line.run_command(editor, "song") #uh yeah
         if option == 3:
             #change image
-            editor.fileBrwsr.fileExtFilter = "(?:\\.png$)|(?:\\.jpeg$)|(?:\\.webp$)|(?:\\.jpg$)|(?:\\.apng$)|(?:\\.gif$)"
-            editor.fileBrwsr.load_folder(os.getcwd())
-            editor.fileBrwsr.caption = "Select an image"
-            editor.fileBrwsr.turnOff = False
-            image_file_location = editor.fileBrwsr.loop()
+            editor.file_browser.fileExtFilter = \
+                "(?:\\.png$)|(?:\\.jpeg$)|(?:\\.webp$)|(?:\\.jpg$)|(?:\\.apng$)|(?:\\.gif$)"
+            editor.file_browser.load_folder(os.getcwd())
+            editor.file_browser.caption = "Select an image"
+            editor.file_browser.turnOff = False
+            image_file_location = editor.file_browser.loop()
             try:
                 shutil.copyfile(
                     image_file_location,
@@ -79,7 +80,7 @@ class EditorPauseMenu:
             editor.chart["icon"]["img"] = image_file_location.split("/")[-1]
         if option == 4:
             #metadata
-            editor.metadataMenuEnabled = True
+            editor.metadata_menu_enabled = True
             self.enabled = False
             print(term.clear)
         if option == 5:
