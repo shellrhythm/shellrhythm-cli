@@ -4,7 +4,8 @@ import time
 import hashlib
 from src.termutil import term, print_at, framerate,\
     color_code_from_hex, print_box
-from src.constants import Vector2i
+from src.constants import Vector2i, colors, MAX_SCORE, accMultiplier, JUDGEMENT_NAMES,\
+    INPUT_FREQUENCY, hitWindows, Color
 from src.conductor import Conductor, format_time
 from src.options import OptionsManager
 from src.scene_manager import SceneManager
@@ -17,9 +18,9 @@ from src.scenes.game_objects.note import NoteObject
 from src.scenes.game_objects.text import TextObject
 from src.scenes.game_objects.bg_color import BackgroundColorObject
 from src.scenes.game_objects.end_level import EndLevelObject
+from src.scenes.game_objects.playfield import Playfield
+# import easing_functions as easings
 
-from src.constants import colors, MAX_SCORE, accMultiplier, JUDGEMENT_NAMES,\
-    default_size, INPUT_FREQUENCY, hitWindows, Color
 
 class Game(BaseScene):
     version = 1.3
@@ -51,16 +52,16 @@ class Game(BaseScene):
     ]
     palette = [
         term.normal,
-        Color("fc220a").col,
-        Color("fc9b0a").col,
-        Color("f4fc0a").col,
-        Color("0efc0a").col,
-        Color("0afcfc").col,
-        Color("0a36fc").col,
-        Color("830afc").col,
-        Color("0ab7fc").col,
-        Color("fc0ab3").col,
-        Color("72737c").col
+        Color("fc220a"),
+        Color("fc9b0a"),
+        Color("f4fc0a"),
+        Color("0efc0a"),
+        Color("0afcfc"),
+        Color("0a36fc"),
+        Color("830afc"),
+        Color("0ab7fc"),
+        Color("fc0ab3"),
+        Color("72737c")
     ]
     notes:list[GameplayObject] = []
 
@@ -69,6 +70,8 @@ class Game(BaseScene):
 
     #Bypass size
     bypassSize = False
+
+    playfield:Playfield = Playfield()
 
     def set_background(self, background):
         self.palette[0] = term.normal + background
@@ -186,15 +189,13 @@ class Game(BaseScene):
             # if PLAYFIELD_MODE == "scale":
             #     print_box(4,2,term.width-7,term.height-4,reset_color,1)
             # elif PLAYFIELD_MODE == "setSize":
-            topleft = [
-                int((term.width-default_size[0]) * 0.5)-1,
-                int((term.height-default_size[1]) * 0.5)-1
-            ]
+            topleft = self.playfield.top_left()
+
             print_box(
-                topleft[0],
-                topleft[1],
-                default_size[0]+2,
-                default_size[1]+2,
+                topleft[0] - 1,
+                topleft[1] - 1,
+                self.playfield.size.x + 2,
+                self.playfield.size.y + 2,
                 self.reset_color,
                 1,
                 reset_color=self.reset_color
@@ -401,6 +402,8 @@ class Game(BaseScene):
 
     def setup_notes(self, notes, offset:Vector2i = Vector2i.zero):
         """Sets up notes in the self.notes variable"""
+        self.playfield = Playfield()
+        self.playfield.offset = offset
         self.notes = []
         self.background_changes = []
         bpm_changes = Game.get_bpm_map(self.chart)
@@ -420,7 +423,7 @@ class Game(BaseScene):
             elif note["type"] == "end":
                 new_note = EndLevelObject(note, bpm_changes)
                 self.end_time = new_note.time_position
-            new_note.render_offset = offset
+            new_note.playfield = self.playfield
             self.notes.append(new_note)
 
     @staticmethod
@@ -430,7 +433,7 @@ class Game(BaseScene):
             term.normal
         ]
         for col in palette:
-            out.append(Color(col).col)
+            out.append(Color(col))
         return out
 
 

@@ -300,7 +300,7 @@ class ChartSelect(BaseScene):
             SceneManager["Editor"].layoutname = OptionsManager["layout"]
             SceneManager["Editor"].layout = LayoutManager.current_layout()
             SceneManager["Editor"].conduc.loadsong(ChartManager.chart_data[self.selected_item])
-            SceneManager["Editor"].fileLocation = f"./charts/{folder}/data.json"
+            SceneManager["Editor"].file_location = f"./charts/{folder}/data.json"
             SceneManager.change_scene("Editor")
             self.turn_off = True
             # self.goBack = True

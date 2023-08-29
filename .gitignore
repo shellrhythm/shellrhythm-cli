@@ -10,3 +10,7 @@ options.json
 index.spec
 /build/*
 /dist/*
+/bin/*
+/lib/*
+pyvenv.cfg
+/lib64

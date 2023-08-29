@@ -2,7 +2,7 @@
 from src.termutil import term, print_box, print_at, color_code_from_hex,\
     hexcode_from_color_code
 from src.textbox import textbox_logic
-from src.constants import blockStates
+from src.constants import blockStates, Color
 from src.scenes.game_objects.note import NoteObject
 from src.scenes.game_objects.bg_color import BackgroundColorObject
 
@@ -13,7 +13,9 @@ class ColorPicker():
     field_content = "000000"
     field_cursor = 0
     selected_col = 0
-    note_selected:NoteObject|BackgroundColorObject
+    note_selected:NoteObject|BackgroundColorObject = None
+    palette_selected:int = -1
+    palette_edit_mode:bool = False
     reset_color = term.normal
 
     def draw(self):
@@ -62,7 +64,11 @@ class ColorPicker():
                 f" {self.field_content} "+self.reset_color
         )
 
-    def input(self, val):
+    def setup_color(self, hexcode:str):
+        self.field_content = hexcode
+        self.col = color_code_from_hex(hexcode)
+
+    def input(self, val, palette:list[Color] = None):
         if self.field_selected:
             if val.isdigit() \
             or val.lower() in ["a", "b", "c", "d", "e", "f"] \
@@ -92,7 +98,10 @@ class ColorPicker():
                 self.enabled = False
             if val.name == "KEY_ENTER" and self.selected_col == 3:
                 self.field_selected = True
-        if self.note_selected:
+        if self.palette_edit_mode and palette is not None and self.palette_selected >= 0:
+            if len(palette) > self.palette_selected:
+                palette[self.palette_selected].hex_value = self.field_content
+        elif self.note_selected:
             # if self.chart["notes"][self.note_selected]["type"] == "hit_object":
             #     self.chart["notes"][self.note_selected]["color"] = self.field_content
             # if self.chart["notes"][self.note_selected]["type"] == "bg_color":

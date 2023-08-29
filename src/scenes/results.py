@@ -8,8 +8,8 @@ from src.scene_manager import SceneManager
 def getRank(score):
     for (i,rank) in enumerate(RANKS):
         if score >= rank[1]:
-            return [rank[0], i, rank[2]]
-    return ["X", -1, term.darkred]
+            return [rank[0], i, rank[2].col]
+    return ["X", -1, term.color_rgb(255,0,255)]
 
 class Grid:
     x = 0
@@ -124,7 +124,9 @@ class ResultsScreen(BaseScene):
                 self.judgement_count[self.results_data["judgements"][i]["judgement"]] += 1
                 self.offsets.append(self.results_data["judgements"][i]["offset"])
                 self.grid.points_to_plot.append(-self.results_data["judgements"][i]["offset"])
-                self.grid.colors.append(RANKS[self.results_data["judgements"][i]["judgement"]][3])
+                self.grid.colors.append(
+                    RANKS[self.results_data["judgements"][i]["judgement"]][3].on_col
+                )
         self.render_accuracy_view()
 
     def draw_debug_info(self):
@@ -137,12 +139,17 @@ class ResultsScreen(BaseScene):
 
     def render_accuracy_view(self, cursor_pos = 0):
         for i in range(5):
-            print_at(5, self.centerRow+(i*2)+2, RANKS[i+1][3]+" "*(term.width-9)+ self.reset_color)
-            print_at(5, self.centerRow+(i*2)+1, RANKS[i+1][3]+" "*(term.width-9)+ self.reset_color)
-            print_at(5, self.centerRow-(i*2)-1, RANKS[i+1][3]+" "*(term.width-9)+ self.reset_color)
-            print_at(5, self.centerRow-(i*2)-2, RANKS[i+1][3]+" "*(term.width-9)+ self.reset_color)
+            print_at(5, self.centerRow+(i*2)+2,
+                RANKS[i+1][3].on_col+" "*(term.width-9)+ self.reset_color)
+            print_at(5, self.centerRow+(i*2)+1,
+                RANKS[i+1][3].on_col+" "*(term.width-9)+ self.reset_color)
+            print_at(5, self.centerRow-(i*2)-1,
+                RANKS[i+1][3].on_col+" "*(term.width-9)+ self.reset_color)
+            print_at(5, self.centerRow-(i*2)-2,
+                RANKS[i+1][3].on_col+" "*(term.width-9)+ self.reset_color)
         if self.results_data:
-            print_at(3, self.centerRow, f"{RANKS[0][2]+RANKS[0][3]}0" + \
+            print_at(3, self.centerRow,
+                     f"{RANKS[0][2].col+RANKS[0][3].on_col}0" + \
                      " "*(term.width-8)+ self.reset_color)
             print_at(3, self.centerRow-10, "+")
             print_at(3, self.centerRow+10, "-")
@@ -158,17 +165,17 @@ class ResultsScreen(BaseScene):
                      str(int(self.results_data['score'])))
             print_at(16, 6, f"{rank[2]}ACCURACY{self.reset_color}: " +\
                      str(int(self.results_data['accuracy'])) + "%")
-            print_at(31, 4, f"{RANKS[0][2]}Marvelous: {RANKS[0][4]}"+ \
+            print_at(31, 4, f"{RANKS[0][2].col}Marvelous: {RANKS[0][4].on_col}"+ \
                         f"{self.judgement_count[0]}{self.reset_color}")
-            print_at(31, 5, f"{RANKS[1][2]}Perfect:   {RANKS[1][4]}"+ \
+            print_at(31, 5, f"{RANKS[1][2].col}Perfect:   {RANKS[1][4].on_col}"+ \
                         f"{self.judgement_count[1]}{self.reset_color}")
-            print_at(31, 6, f"{RANKS[2][2]}Epic:      {RANKS[2][4]}"+ \
+            print_at(31, 6, f"{RANKS[2][2].col}Epic:      {RANKS[2][4].on_col}"+ \
                         f"{self.judgement_count[2]}{self.reset_color}")
-            print_at(31, 7, f"{RANKS[3][2]}Good:      {RANKS[3][4]}"+ \
+            print_at(31, 7, f"{RANKS[3][2].col}Good:      {RANKS[3][4].on_col}"+ \
                         f"{self.judgement_count[3]}{self.reset_color}")
-            print_at(31, 8, f"{RANKS[4][2]}Eh:        {RANKS[4][4]}"+ \
+            print_at(31, 8, f"{RANKS[4][2].col}Eh:        {RANKS[4][4].on_col}"+ \
                         f"{self.judgement_count[4]}{self.reset_color}")
-            print_at(31, 9, f"{RANKS[5][2]}Misses:    {RANKS[5][4]}"+ \
+            print_at(31, 9, f"{RANKS[5][2].col}Misses:    {RANKS[5][4].on_col}"+ \
                         f"{self.judgement_count[5]}{self.reset_color}")
             if self.auto:
                 print_at(16, 8, f"{term.reverse}[AUTO ENABLED]{self.reset_color}")

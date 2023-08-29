@@ -87,10 +87,7 @@ class Color:
     b:int = 255
 
     def __init__(self, hexcode:str) -> None:
-        val = int(hexcode, 16)
-        self.r = val//256**2
-        self.g = (val%256**2)//256
-        self.b = val%256
+        self.hex_value = hexcode
 
     @property
     def col(self):
@@ -100,6 +97,34 @@ class Color:
     def on_col(self):
         return term.on_color_rgb(self.r, self.g, self.b)
 
+    @property
+    def hex_value(self):
+        return hex(self.r * 256**2 + \
+                   self.g * 256 + \
+                   self.b)[2:]
+
+    @hex_value.setter
+    def hex_value(self, hexcode:str):
+        val = int(hexcode, 16)
+        self.r = val//256**2
+        self.g = (val%256**2)//256
+        self.b = val%256
+
+colors = [
+    term.normal,
+    Color("fc220a"), # term.red,
+    Color("fc9b0a"), # term.orange,
+    Color("f4fc0a"), # term.yellow,
+    Color("0efc0a"), # term.green,
+    Color("0afcfc"), # term.cyan,
+    Color("0a36fc"), # term.blue,
+    Color("830afc"), # term.purple
+    Color("0ab7fc"), # term.aqua,
+    Color("fc0ab3"), # term.magenta,
+    Color("72737c") # term.gray
+]
+
+blockStates = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
 
 # [
 #     Rank icon
@@ -108,90 +133,73 @@ class Color:
 #     Background color (Accuracy)
 #     Background color
 # ]
-
-colors = [
-    term.normal,
-    Color("fc220a").col, # term.red,
-    Color("fc9b0a").col, # term.orange,
-    Color("f4fc0a").col, # term.yellow,
-    Color("0efc0a").col, # term.green,
-    Color("0afcfc").col, # term.cyan,
-    Color("0a36fc").col, # term.blue,
-    Color("830afc").col, # term.purple
-    Color("0ab7fc").col, # term.aqua,
-    Color("fc0ab3").col, # term.magenta,
-    Color("72737c").col # term.gray
-]
-
-blockStates = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
-
 RANKS = [
     [
         "@",
         1000000,
-        Color("C500D5").col,
-        Color("8C0097").on_col,
-        Color("6D0077").on_col
+        Color("C500D5"),
+        Color("8C0097"),
+        Color("6D0077")
     ],	# @
     [
         "S",
         950000,
-        Color("00FFFF").col,
-        Color("008F8F").on_col,
-        Color("006F6F").on_col,
+        Color("00FFFF"),
+        Color("008F8F"),
+        Color("006F6F"),
     ],	# #
     [
         "A",
         825000,
-        Color("00FF1F").col,
-        Color("009F2F").on_col,
-        Color("006F00").on_col
+        Color("00FF1F"),
+        Color("009F2F"),
+        Color("006F00")
     ],	# $
     [
         "B",
         700000,
-        Color("FFFF00").col,
-        Color("8F8F2F").on_col,
-        Color("6F6F3F").on_col
+        Color("FFFF00"),
+        Color("8F8F2F"),
+        Color("6F6F3F")
     ],	# *
     [
         "C",
         600000,
-        Color("fc9b0a").col,
-        Color("914712").on_col,
-        Color("944d1d").on_col
+        Color("fc9b0a"),
+        Color("914712"),
+        Color("944d1d")
     ],	# ;
     [
         "D",
         500000,
-        Color("fc2323").col,
-        Color("960101").on_col,
-        Color("530e0e").on_col
+        Color("fc2323"),
+        Color("960101"),
+        Color("530e0e")
     ],	# /
     [
         "F",
         0,
-        Color("a1a6af").col,
-        Color("010101").on_col,
-        Color("000000").on_col
+        Color("a1a6af"),
+        Color("010101"),
+        Color("000000")
     ],	# _
 ]
 JUDGEMENT_NAMES = [
-    f"{RANKS[0][2]}MARV", 
-    f"{RANKS[1][2]}PERF", 
-    f"{RANKS[2][2]}EPIC", 
-    f"{RANKS[3][2]}GOOD", 
-    f"{RANKS[4][2]} EH ", 
-    f"{RANKS[5][2]}MISS"
+    f"{RANKS[0][2].col}MARV", 
+    f"{RANKS[1][2].col}PERF", 
+    f"{RANKS[2][2].col}EPIC", 
+    f"{RANKS[3][2].col}GOOD", 
+    f"{RANKS[4][2].col} EH ", 
+    f"{RANKS[5][2].col}MISS"
 ]
 
 JUDGEMENT_NAMES_SHORT = [
-    f"{RANKS[0][2]}@", 
-    f"{RANKS[1][2]}#", 
-    f"{RANKS[2][2]}$", 
-    f"{RANKS[3][2]}*", 
-    f"{RANKS[4][2]};", 
-    f"{RANKS[5][2]}/"
+    f"{RANKS[0][2].col}@", 
+    f"{RANKS[1][2].col}#", 
+    f"{RANKS[2][2].col}$", 
+    f"{RANKS[3][2].col}*", 
+    f"{RANKS[4][2].col};", 
+    f"{RANKS[5][2].col}/"
 ]
 accMultiplier = [1, 0.95, 0.85, 0.75, 0.5, 0]
 

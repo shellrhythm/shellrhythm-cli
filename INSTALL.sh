@@ -5,6 +5,8 @@ echo "Downloading shellrhythm to ~/.local/..."
 git clone https://github.com/HastagGuigui/shellrhythm.git
 cd ./shellrhythm
 echo "Installing required python dependencies... (there's like 3)"
+python -m venv ./
+source ./bin/activate
 pip install -r requirements.txt
 echo "Linking ~/.local/shellrhythm/shellrhythm to ~/.local/bin/shellrhythm..."
 ln -s ~/.local/shellrhythm/shellrhythm ~/.local/bin/shellrhythm

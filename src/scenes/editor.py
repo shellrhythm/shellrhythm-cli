@@ -7,7 +7,7 @@ from pybass3 import Song
 
 from src.scenes.game import Game
 from src.conductor import Conductor
-from src.constants import colors, ALIGN_CENTER, CENTER, default_size, Vector2i, Color
+from src.constants import colors, ALIGN_CENTER, CENTER, Vector2i, Color
 from src.termutil import term, print_at, print_box, framerate, log, logging
 from src.scenes.base_scene import BaseScene
 from src.translate import Locale
@@ -20,6 +20,7 @@ from src.scenes.game_objects.text import TextObject
 from src.scenes.game_objects.bg_color import BackgroundColorObject
 from src.scenes.game_objects.end_level import EndLevelObject
 from src.scenes.game_objects.base_object import GameplayObject
+from src.scenes.game_objects.playfield import Playfield
 from src.scenes.editor_tools.color_picker import ColorPicker
 from src.scenes.editor_tools.pause_menu import EditorPauseMenu
 from src.scenes.editor_tools.command_line import EditorCommandLine
@@ -40,6 +41,7 @@ class Editor(BaseScene):
     beatSound = Song("assets/clap.wav")
     dont_draw_list = []
     dontBeat = [] #Notes that have already got their beatsound played
+    playfield:Playfield = Playfield()
 
     #Saving
     needsSaving = False
@@ -94,7 +96,7 @@ class Editor(BaseScene):
     metadata_t_cur = 0
 
     #File Browser
-    fileBrwsr:FileBrowser = FileBrowser()
+    file_browser:FileBrowser = FileBrowser()
 
     #Calibration
     calib:Calibration = Calibration("CalibrationSong")
@@ -109,16 +111,16 @@ class Editor(BaseScene):
 
     palette = [
         term.normal,
-        Color("fc220a").col,
-        Color("fc9b0a").col,
-        Color("f4fc0a").col,
-        Color("0efc0a").col,
-        Color("0afcfc").col,
-        Color("0a36fc").col,
-        Color("830afc").col,
-        Color("0ab7fc").col,
-        Color("fc0ab3").col,
-        Color("72737c").col
+        Color("fc220a"),
+        Color("fc9b0a"),
+        Color("f4fc0a"),
+        Color("0efc0a"),
+        Color("0afcfc"),
+        Color("0a36fc"),
+        Color("830afc"),
+        Color("0ab7fc"),
+        Color("fc0ab3"),
+        Color("72737c")
     ]
 
     #Text edition
@@ -171,6 +173,54 @@ class Editor(BaseScene):
             # add in the files
             for file in file_paths:
                 zip_file.write("./charts/" + self.chart["foldername"] + "/" + file, file)
+
+    @staticmethod
+    def export_palette(palette:list[Color]) -> list[str]:
+        out = []
+        for pal in palette:
+            if isinstance(pal, Color):
+                out.append(pal.hex_value)
+        return out
+
+    def save(self, folder = "", filename = ""):
+        """
+        Call this when saving! The two arguments are optional and will
+        just use self.folder_location as saving location.
+        """
+        if self.chart["formatVersion"] != 1:
+            self.chart["formatVersion"] = 1
+        self.chart["notes"] = self.recreate_note_data(self.notes)
+        self.chart["palette"] = Editor.export_palette(self.palette)
+        output = json.dumps(self.chart, indent=4)
+        if folder != "":
+            self.chart["foldername"] = folder
+            if not os.path.exists("./charts/"):
+                os.mkdir("./charts")
+            if not os.path.exists(f"./charts/{folder}"):
+                os.mkdir(f"./charts/{folder}")
+            if filename == "":
+                self.file_location = f"./charts/{folder}/data.json"
+            else:
+                self.file_location = f"./charts/{folder}/{filename}.json"
+        if self.file_location == "" and folder == "":
+            self.file_browser.fileExtFilter = "(?:\\/$)"
+            self.file_browser.load_folder(os.getcwd())
+            self.file_browser.selectFolderMode = True
+            self.file_browser.caption = "Select a folder"
+            self.file_browser.turnOff = False
+            folder_location = self.file_browser.loop()
+
+            if folder_location != "?":
+                self.file_location = folder_location + "/data.json"
+                self.chart["foldername"] = folder_location.split("/")[-1]
+            # return False, getFolderLocation
+            # return False, self.loc("editor.commandResults.common.notEnoughArgs")
+        if os.path.exists(self.file_location):
+            file_data = open(self.file_location, "w", encoding="utf8")
+        else:
+            file_data = open(self.file_location, "x", encoding="utf8")
+        file_data.write(output)
+        file_data.close()
 
     def setup_map(self):
         """Sets up a default map for ease of use."""
@@ -291,7 +341,6 @@ class Editor(BaseScene):
     def set_end_note(self, at_pos):
         if self.end_note == -1:
             if EndLevelObject in [type(note) for note in self.notes]:
-            # if "end" in [note["type"] for note in self.chart["notes"]]:
                 self.end_note = [type(note) for note in self.notes].index(EndLevelObject)
             else:
                 new_note_data = {
@@ -301,8 +350,6 @@ class Editor(BaseScene):
                         round(at_pos%4, 5)
                     ]
                 }
-                # self.chart["notes"].append(new_note)
-                # self.endNote = len(self.chart["notes"])-1
 
                 new_note = EndLevelObject(new_note_data, Game.get_bpm_map(self.chart))
                 self.notes.append(new_note)
@@ -311,12 +358,11 @@ class Editor(BaseScene):
             self.chart["notes"][self.end_note]["beatpos"] = [int(at_pos//4), round(at_pos%4, 5)]
 
     def run_note_settings(self, note, note_id, option):
-        # if note["type"] == "hit_object":
         if isinstance(note, NoteObject):
             if option == 0:
                 self.key_panel_enabled = True
                 self.key_panel_selected = note_id
-                self.key_panel_key = note["key"]
+                self.key_panel_key = note.key_index
                 return True
             elif option == 1:
                 self.color_picker.enabled = not self.color_picker.enabled
@@ -324,11 +370,10 @@ class Editor(BaseScene):
             elif option == 2:
                 self.chart["notes"].remove(note)
                 return True
-        # elif note["type"] == "text":
         elif isinstance(note, TextObject):
             if option == 0:
                 self.is_text_editing = True
-                self.textEdit.textContent = note["text"]
+                self.textEdit.textContent = note.text
                 self.textobjectedited = note_id
                 return True
             elif option == 1:
@@ -336,8 +381,8 @@ class Editor(BaseScene):
                 # note["color"] %= len(colors)
                 return False
             elif option == 2:
-                note["anchor"] += 1
-                note["anchor"] %= 9
+                note.anchor += 1
+                note.anchor %= 9
             elif option == 3:
                 self.chart["notes"].remove(note)
                 return True
@@ -558,11 +603,14 @@ class Editor(BaseScene):
             self.selected_note %= len(self.notes)
             note = self.notes[self.selected_note]
 
-            topleft = [
-                int((term.width-default_size.x) * 0.5)-1,
-                int((term.height-default_size.y) * 0.5)-1
-            ]
-            print_box(topleft[0],topleft[1]-1,default_size.x+2,default_size.y+2,self.reset_color,1)
+            topleft = self.playfield.top_left()
+            print_box(
+                topleft[0]-1,
+                topleft[1]-1,
+                self.playfield.size.x+2,
+                self.playfield.size.y+2,
+                self.reset_color,1
+            )
             for i in range(len(self.notes)):
                 j = len(self.notes) - (i+1)
                 note = self.notes[j]
@@ -580,11 +628,13 @@ class Editor(BaseScene):
                     )
 
                 #PLAYFIELD
+                if isinstance(note, NoteObject):
+                    note.palette = self.palette
                 (self.dont_draw_list, _) = note.render(
                     self.conduc.current_beat,
                     self.dont_draw_list,
                     self.conduc.cur_time_sec,
-                    self.reset_color
+                    self.reset_color,
                 )
 
             #Current note info
@@ -730,7 +780,7 @@ class Editor(BaseScene):
 
         elif self.color_picker.enabled:
             self.color_picker.note_selected = self.notes[self.selected_note]
-            self.color_picker.input(val)
+            self.color_picker.input(val, self.palette)
 
         elif self.del_confirm_enabled:
             self.del_confirm_obj = self.selected_note
@@ -873,19 +923,19 @@ class Editor(BaseScene):
                         multiplier = (3 if direc in "hl" else 2) if val.isupper() else 1
                         if val in "hH":
                             actual_note.position.x = max(round(
-                                actual_note.position.x - multiplier/default_size[0], 4
+                                actual_note.position.x - multiplier/self.playfield.size.x, 4
                             ), 0)
                         if val in "jJ":
                             actual_note.position.y = min(round(
-                                actual_note.position.y + multiplier/default_size[1], 4
+                                actual_note.position.y + multiplier/self.playfield.size.y, 4
                             ), 1)
                         if val in "kK":
                             actual_note.position.y = max(round(
-                                actual_note.position.y - multiplier/default_size[1], 4
+                                actual_note.position.y - multiplier/self.playfield.size.y, 4
                             ), 0)
                         if val in "lL":
                             actual_note.position.x = min(round(
-                                actual_note.position.x + multiplier/default_size[0], 4
+                                actual_note.position.x + multiplier/self.playfield.size.x, 4
                             ), 1)
                         if val == "e":
                             self.run_note_settings(actual_note, self.selected_note, 0)
@@ -939,16 +989,11 @@ class Editor(BaseScene):
         if not self.chart:
             self.setup_map()
         else:
-            
             if "palette" in self.chart:
                 self.palette = Game.setup_palette(self.chart["palette"])
             else:
                 self.palette = colors
             Game.setup_notes(self, self.chart["notes"], Vector2i(0,-1))
-
-    # def loop(self):
-    #     super().loop()
-        # self.set_background(term.normal)
 
     def __init__(self) -> None:
         pass

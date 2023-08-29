@@ -84,11 +84,11 @@ class EditorPauseMenu:
             print(term.clear)
         if option == 5:
             #save
-            editor.command_line.run_command(editor, "w") #huge W
+            editor.save()
             self.enabled = False
         if option == 6:
             #export
-            editor.command_line.run_command(editor, "w") #huge W
+            editor.save()
             self.enabled = False
             editor.export()
             print(term.clear)

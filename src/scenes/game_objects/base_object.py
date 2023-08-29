@@ -1,8 +1,12 @@
 
 from ...conductor import Conductor
+from .playfield import Playfield
 
 class GameplayObject:
     """Base gameplay object class"""
+    playfield:Playfield = None
+
+
     @staticmethod
     def compute_time_position(beat_position, bpm_table) -> float:
         """Based on the beat position and a bpm table, returns the corresponding time."""

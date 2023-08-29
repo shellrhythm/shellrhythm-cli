@@ -1,5 +1,4 @@
 import os
-import json
 import shutil
 import copy
 from src.termutil import term, print_at
@@ -38,55 +37,16 @@ class EditorCommandLine:
 
         # :w - Write (Save) | 1 optional argument (where to save it)
         elif cmd_argv[0] == "w":
-            if editor.chart["formatVersion"] != 1:
-                editor.chart["formatVersion"] = 1
-            editor.chart["notes"] = editor.recreate_note_data(editor.notes)
-            output = json.dumps(editor.chart, indent=4)
-            if len(cmd_argv) > 1:
-                editor.chart["foldername"] = cmd_argv[1]
-            if len(cmd_argv) == 2:
-                editor.fileLocation = f"./charts/{cmd_argv[1]}/data.json"
-            elif len(cmd_argv) == 3:
-                editor.fileLocation = f"./charts/{cmd_argv[1]}/{cmd_argv[2]}.json"
-            elif editor.fileLocation == "" and len(cmd_argv) == 1:
-                editor.fileBrwsr.fileExtFilter = "(?:\\/$)"
-                editor.fileBrwsr.load_folder(os.getcwd())
-                editor.fileBrwsr.selectFolderMode = True
-                editor.fileBrwsr.caption = "Select a folder"
-                editor.fileBrwsr.turnOff = False
-                folder_location = editor.fileBrwsr.loop()
-
-                if folder_location != "?":
-                    editor.fileLocation = folder_location + "/data.json"
-                    editor.chart["foldername"] = folder_location.split("/")[-1]
-                # return False, getFolderLocation
-                # return False, self.loc("editor.commandResults.common.notEnoughArgs")
-            if os.path.exists(editor.fileLocation):
-                file_data = open(editor.fileLocation, "w", encoding="utf8")
-            else:
-                if not os.path.exists("./charts/"):
-                    os.mkdir("./charts")
-                if len(cmd_argv) > 1:
-                    if not os.path.exists(f"./charts/{cmd_argv[1]}"):
-                        os.mkdir(f"./charts/{cmd_argv[1]}")
-                file_data = open(editor.fileLocation, "x", encoding="utf8")
-            file_data.write(output)
-            file_data.close()
+            folder = cmd_argv[1] if len(cmd_argv) > 1 else ""
+            filename = cmd_argv[2] if len(cmd_argv) > 2 else ""
+            editor.save(folder, filename)
             return True, editor.loc("editor.commandResults.save")
 
         # :wq - Save and Quit | 1 optional argument (where to save it)
         elif cmd_argv[0] == "wq!" or (cmd_argv[0] == "wq" and not editor.needsSaving):
-            output = json.dumps(editor.chart, indent=4)
-            if len(cmd_argv) == 2:
-                editor.fileLocation = f"./charts/{cmd_argv[1]}/data.json"
-            elif len(cmd_argv) == 3:
-                editor.fileLocation = f"./charts/{cmd_argv[1]}/{cmd_argv[2]}.json"
-            if os.path.exists(editor.fileLocation):
-                file_data = open(editor.fileLocation, "w", encoding="utf8")
-            else:
-                file_data = open(editor.fileLocation, "x", encoding="utf8")
-            file_data.write(output)
-            file_data.close()
+            folder = cmd_argv[1] if len(cmd_argv) > 1 else ""
+            filename = cmd_argv[2] if len(cmd_argv) > 2 else ""
+            editor.save(folder, filename)
             editor.turn_off = True
             return True, editor.loc("editor.commandResults.save")
 
@@ -138,7 +98,7 @@ class EditorCommandLine:
 
         # :song - Change song
         elif cmd_argv[0] == "song":
-            if editor.fileLocation == "":
+            if editor.file_location == "":
                 return False, "You need to save this file first! To do that, type :w <some_chart_name>"
             if len(cmd_argv) > 1:
                 if os.path.exists(cmd_argv[1]) and cmd_argv[1].split(".")[-1] in ["ogg", "mp3", "wav"]:
@@ -275,14 +235,12 @@ class EditorCommandLine:
         elif cmd_argv[0] == "cp":
             if len(cmd_argv) == 3:
                 #XX-YY : Range of notes to copy
-                rangeToPick = cmd_argv[1].split("-")
-                if len(rangeToPick) >= 2:
-                    pass
-                else:
+                range_to_copy = cmd_argv[1].split("-")
+                if len(range_to_copy) < 2:
                     return False, editor.loc("editor.commandResults.common.notEnoughArgs")
 
                 notes_to_copy = [copy.deepcopy(editor.chart["notes"][i]) \
-                               for i in range(int(rangeToPick[0]), int(rangeToPick[1])+1)]
+                               for i in range(int(range_to_copy[0]), int(range_to_copy[1])+1)]
                 #BB : How many beats to offset it by?
 
                 for (_,note) in enumerate(notes_to_copy):
@@ -291,7 +249,7 @@ class EditorCommandLine:
                     note["beatpos"][1] %= 4
                     editor.chart["notes"].append(note)
                 editor.chart["notes"] = sorted(
-                    editor.chart["notes"], 
+                    editor.chart["notes"],
                     key=lambda d: d['beatpos'][0]*4+d['beatpos'][1]
                 )
                 if "end" in [note["type"] for note in editor.chart["notes"]]:
@@ -340,6 +298,14 @@ class EditorCommandLine:
                 editor.chart["notes"].append(new_note)
                 editor.background_changes = Game.load_bg_changes(editor.chart)
                 return True, "this is gonna crash the game isn't it"
+
+        elif cmd_argv[0] == "pal":
+            if len(cmd_argv) == 2:
+                if int(cmd_argv[1]) > 0:
+                    editor.color_picker.palette_edit_mode = True
+                    editor.color_picker.palette_selected = int(cmd_argv[1])
+                    editor.color_picker.enabled = True
+                    editor.color_picker.setup_color(editor.palette[int(cmd_argv[1])].hex_value)
 
         else:
             if len(cmd_argv[0]) > 128:

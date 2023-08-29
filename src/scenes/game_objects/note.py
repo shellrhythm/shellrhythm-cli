@@ -5,7 +5,7 @@ from .base_object import GameplayObject
 from ...translate import LocaleManager
 from ...termutil import print_at, print_lines_at, term, color_code_from_hex
 from ...constants import JUDGEMENT_NAMES, JUDGEMENT_NAMES_SHORT,\
-    Vector2, Vector2i, default_size, hitWindows
+    Vector2, Vector2i, hitWindows
 
 class NoteObject(GameplayObject):
     """Note object."""
@@ -19,58 +19,74 @@ class NoteObject(GameplayObject):
     judgement:dict = {}
     hit_sound:Song = Song("assets/clap.wav")
     played_sound:bool = False
-    render_offset:Vector2i = Vector2i.zero
-    key_index:int = -1
+    palette:list = None
+    _key_index:int = -1
     _keys:list = []
     _color:int|str = ""
+    _using_palette:bool = False
+    _palette_id:int = -1
+    _palette_color = None
 
     def __init__(self, data:dict, bpm_table:list, keys:list, palette:list) -> None:
         self.beat_position = data["beatpos"][0] * 4 + data["beatpos"][1]
         self.time_position = GameplayObject.compute_time_position(self.beat_position, bpm_table)
         self._keys = keys
-        self.key_index = data["key"]
+        self._key_index = data["key"]
         self._color = data["color"]
         self.key = keys[data["key"]]
 
         if isinstance(data["color"], int):
-            self.color = palette[data["color"]]
+            self.set_color_from_palette(data["color"], palette)
         else:
             color_split = color_code_from_hex(data["color"])
             self.color = term.color_rgb(color_split[0], color_split[1], color_split[2])
-        self.color_string = str(data["color"])
+            self.color_string = str(data["color"])
         self.position = Vector2i(data["screenpos"][0], data["screenpos"][1])
 
     def set_color_from_palette(self, palette_id:int, palette:list):
+        self._using_palette = True
         self._color = palette_id
-        self.color = palette[palette_id]
+        if palette_id != 0:
+            self._palette_id = palette_id
+            self._palette_color = palette[palette_id]
+            self.color = self._palette_color.col
+        else:
+            self.color = palette[palette_id]
         self.color_string = palette_id
 
     def set_color_hex(self, new_color:str):
+        self._using_palette = False
         self._color = new_color
         self.color_string = new_color
         color_split = color_code_from_hex(new_color)
         self.color = term.color_rgb(color_split[0], color_split[1], color_split[2])
 
+    @property
+    def key_index(self) -> int:
+        return self._key_index
+
+    @key_index.setter
+    def key_index(self, new_key:int):
+        self._key_index = new_key
+        self.key = self._keys[new_key]
+
     def serialize(self):
         return {
             "type":     "hit_object",
-            "key":      self.key_index,
+            "key":      self._key_index,
             "color":    self._color,
             "beatpos":  [self.beat_position//4, self.beat_position%4],
             "screenpos":[self.position.x, self.position.y]
         }
 
-    def calculate_position(self, playfield_size:Vector2i) -> Vector2i:
+    def calculate_position(self) -> Vector2i:
         """Converts position (normalized) into an actual onscreen position \
         based on the playfield size."""
         calc_pos = []
-        topleft = Vector2i(
-            int((term.width-playfield_size.x) * 0.5), 
-            int((term.height-playfield_size.y) * 0.5)
-        )
+        topleft = self.playfield.top_left()
         calc_pos = Vector2i(
-               int(self.position.x*(default_size.x))+topleft.x,
-               int(self.position.y*(default_size.y))+topleft.y)
+               int(self.position.x*(self.playfield.size.x))+topleft.x,
+               int(self.position.y*(self.playfield.size.y))+topleft.y)
         # calc_pos = [
         #     int(x*(f.width-12))+6,
         #     int(y*(f.height-9))+4]
@@ -105,7 +121,7 @@ class NoteObject(GameplayObject):
                 # self.accuracyUpdate()
                 # self.score = int(scoreCalc(MAX_SCORE, self.judgements, \
                 #                  self.accuracy, self.missesCount, self.chart))
-                calc_pos = self.calculate_position(default_size)
+                calc_pos = self.calculate_position()
                 print_at(calc_pos[0], calc_pos[1], JUDGEMENT_NAMES_SHORT[judgement])
 
                 # if judgement == 5:
@@ -120,7 +136,7 @@ class NoteObject(GameplayObject):
                     }
                     # self.lastHit = self.judgements[noteNum]
                     # self.accuracyUpdate()
-                    calc_pos = self.calculate_position(default_size)
+                    calc_pos = self.calculate_position()
                     print_at(calc_pos[0], calc_pos[1], JUDGEMENT_NAMES_SHORT[judgement])
                     print_at(10, 1, JUDGEMENT_NAMES[judgement])
                     # self.missesCount += 1
@@ -145,7 +161,7 @@ class NoteObject(GameplayObject):
                 #   self.missesCount,
                 #   self.chart
                 # ))
-                calc_pos = self.calculate_position(default_size)
+                calc_pos = self.calculate_position()
                 print_at(calc_pos[0], calc_pos[1], JUDGEMENT_NAMES_SHORT[judgement])
                 return True
         return None
@@ -167,7 +183,7 @@ class NoteObject(GameplayObject):
                 +f"{loc('editor.timelineInfos.beatpos')}: {self.beat_position}"
 
     def onscreen_print(self, reset_color:str, current_beat:float = 0.0) -> None:
-        onscreen_position = self.calculate_position(default_size) + self.render_offset
+        onscreen_position = self.calculate_position()
         to_print = "   \n   \n   \n"
         approached_beats = ((self.beat_position - current_beat) * self.approach_rate) + 1
         val = int(approached_beats*2)
@@ -217,7 +233,10 @@ class NoteObject(GameplayObject):
 
     def render(self, current_beat:float, dont_draw_list:list,
                current_time:float, reset_color:str, dont_check_judgement:list = None) -> tuple:
-        calc_pos = self.calculate_position(default_size) + self.render_offset
+        calc_pos = self.calculate_position()
+
+        if self.palette is not None:
+            self.set_color_from_palette(self._palette_id, self.palette)
 
         remaining_beats = self.beat_position - current_beat
         remaining_time = self.time_position - current_time
