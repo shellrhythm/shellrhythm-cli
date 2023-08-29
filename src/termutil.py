@@ -13,6 +13,10 @@ from src.translate import LocaleManager
 MINIMUM_WIDTH = 100
 MINIMUM_HEIGHT = 32
 
+
+if not os.path.exists("./logs/"):
+    os.mkdir("./logs")
+
 logging.basicConfig(
     filename="logs/app.log",
     filemode="w",
