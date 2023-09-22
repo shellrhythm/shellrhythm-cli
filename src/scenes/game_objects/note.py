@@ -46,11 +46,12 @@ class NoteObject(GameplayObject):
     def set_color_from_palette(self, palette_id:int, palette:list):
         self._using_palette = True
         self._color = palette_id
+        self._palette_id = palette_id
         if palette_id != 0:
-            self._palette_id = palette_id
             self._palette_color = palette[palette_id]
             self.color = self._palette_color.col
         else:
+            self._palette_color = None
             self.color = palette[palette_id]
         self.color_string = palette_id
 

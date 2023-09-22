@@ -36,7 +36,7 @@ class TextEditor:
     pickTheColor = [0, 0, 1]
     reset_color = term.normal
     
-    def draw(self):
+    async def draw(self):
         print_box(5,2, term.width-10, term.height-4)
         renText = self.textContent
         renText += " "

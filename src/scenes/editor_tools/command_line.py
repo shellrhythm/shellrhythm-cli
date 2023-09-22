@@ -4,6 +4,7 @@ import copy
 from src.termutil import term, print_at
 from src.textbox import textbox_logic
 from src.scenes.game import Game
+from src.scene_manager import SceneManager
 
 class EditorCommandLine:
 
@@ -25,6 +26,7 @@ class EditorCommandLine:
         # :q - Quit
         if cmd_argv[0] == "q!" or (cmd_argv[0] == "q" and not editor.needsSaving):
             editor.turn_off = True
+            SceneManager.change_scene("Titlescreen")
             return True, ""
 
         elif cmd_argv[0] == "loop" or cmd_argv[0] == "lp":

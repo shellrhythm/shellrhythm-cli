@@ -18,7 +18,7 @@ class ColorPicker():
     palette_edit_mode:bool = False
     reset_color = term.normal
 
-    def draw(self):
+    async def draw(self):
         col = term.color_rgb(
             self.col[0],
             self.col[1],

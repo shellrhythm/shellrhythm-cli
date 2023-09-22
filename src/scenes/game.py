@@ -143,23 +143,12 @@ class Game(BaseScene):
         """
         return [int(screen_pos[0]*width)+x, int(screen_pos[1]*height)+y]
 
-    def actualKeysRendering(self):
+    async def actualKeysRendering(self):
         if len(self.notes) >= len(self.judgements):
             while len(self.notes) >= len(self.judgements):
                 self.judgements.append({})
-        for i in range(len(self.notes)):
-            #It's inverted so that the objects with the lowest remaining_beats
-            # are rendered on top of the others.
-            note = self.notes[len(self.notes) - (i+1)]
-            offseted_beat = self.conduc.current_beat - (self.conduc.offset/(60/self.conduc.bpm))
-            note.render(
-                offseted_beat,
-                self.dont_draw,
-                self.conduc.cur_time_sec,
-                self.reset_color,
-                self.out_of_here
-            )
 
+        await self.playfield.draw(self, self.notes)
 
         text_beat = "○ ○ ○ ○"
         text_beat = text_beat[:int(self.conduc.current_beat)%4 * 2] \
@@ -186,22 +175,7 @@ class Game(BaseScene):
                 print_at(15, 1, JUDGEMENT_NAMES[self.lastHit["judgement"]] + "   " +\
                          self.reset_color + str(round(self.lastHit["offset"]*1000, 4)) + "ms")
 
-            # if PLAYFIELD_MODE == "scale":
-            #     print_box(4,2,term.width-7,term.height-4,reset_color,1)
-            # elif PLAYFIELD_MODE == "setSize":
-            topleft = self.playfield.top_left()
-
-            print_box(
-                topleft[0] - 1,
-                topleft[1] - 1,
-                self.playfield.size.x + 2,
-                self.playfield.size.y + 2,
-                self.reset_color,
-                1,
-                reset_color=self.reset_color
-            )
-
-            self.actualKeysRendering()
+            await self.actualKeysRendering()
         else:
             # global locales
             text_paused = "PAUSED"
@@ -273,7 +247,7 @@ class Game(BaseScene):
     async def handle_input(self):
         if not self.conduc.paused:
             val = ''
-            val = term.inkey(timeout=1/INPUT_FREQUENCY, esc_delay=0)
+            val = term.inkey(timeout=0, esc_delay=0)
 
             if val.name == "KEY_ESCAPE":
                 self.conduc.pause()

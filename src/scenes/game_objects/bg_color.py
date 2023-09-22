@@ -11,6 +11,8 @@ class BackgroundColorObject(GameplayObject):
     beat_position:float = 0.0
     time_position:float = 0.0
 
+    editor_tab = 1
+
     def display_informations(self, reset_color:str, note_id:int = 0) -> str:
         loc = LocaleManager.current_locale()
         return reset_color\

@@ -20,7 +20,7 @@ class EditorPauseMenu:
     reset_color = term.normal
     loc = LocaleManager.current_locale()
 
-    def draw(self):
+    async def draw(self):
         width = max(len(self.loc("editor.pause." + option)) for option in self.buttons)+4
         print_box(
             (term.width-width)//2 - 1,

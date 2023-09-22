@@ -15,6 +15,8 @@ class TextObject(GameplayObject):
     align = ALIGN_CENTER
     render_offset = Vector2i()
 
+    editor_tab = 1
+
     def __init__(self, data, bpm_table) -> None:
         super().__init__()
         self.text = data["text"]

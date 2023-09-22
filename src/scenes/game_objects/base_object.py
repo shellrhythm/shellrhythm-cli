@@ -7,6 +7,7 @@ class GameplayObject:
     playfield:Playfield = None
 
     animations:list = []
+    editor_tab:int = 0
 
 
     @staticmethod
