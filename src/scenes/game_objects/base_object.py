@@ -6,6 +6,8 @@ class GameplayObject:
     """Base gameplay object class"""
     playfield:Playfield = None
 
+    animations:list = []
+
 
     @staticmethod
     def compute_time_position(beat_position, bpm_table) -> float:

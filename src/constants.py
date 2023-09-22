@@ -78,7 +78,7 @@ ALIGN_RIGHT = 2
 
 default_size:Vector2i = Vector2i(80, 24)
 
-INPUT_FREQUENCY = 999
+INPUT_FREQUENCY = 9999
 
 hitWindows = [0.05, 0.1, 0.2, 0.3, 0.4]
 class Color:
