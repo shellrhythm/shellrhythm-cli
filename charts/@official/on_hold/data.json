@@ -6,231 +6,82 @@
         "img": "",
         "txt": ""
     },
-    "bpm": 118,
-    "bpmChanges": [],
+    "color_palette": [
+        "fc220a",
+        "fc9b0a",
+        "f4fc0a",
+        "0efc0a",
+        "0afcfc",
+        "0a36fc",
+        "830afc",
+        "0ab7fc",
+        "fc0ab3",
+        "72737c"
+    ],
+    "bpm": 120,
+    "bpmChanges": [
+        {
+            "atPosition": [
+                0,
+                0
+            ],
+            "toBPM": 118
+        },
+        {
+            "atPosition": [
+                0,
+                0
+            ],
+            "toBPM": 118
+        }
+    ],
     "offset": 0,
     "metadata": {
         "title": "On Hold",
         "artist": "NachoBIT",
         "author": "#Guigui",
-        "description": "Just a moment: your call is now first in line, and will be answered by the next available representative. Thank you for your patience."
+        "description": "Hello, just a moment! Your call is now first in line, and will be answered by the next available representative! Thank you for your patience."
     },
-    "previewLoop": {
-        "start": [
-            9,
-            0
-        ],
-        "end": [
-            17,
-            2
-        ]
-    },
-    "approachRate": 1.2,
-    "difficulty": "Voicemail",
+    "approachRate": 1.0,
+    "difficulty": 0,
     "notes": [
         {
-            "type": "text",
+            "type": "hit_object",
+            "key": 8,
+            "color": 0,
             "beatpos": [
-                4.0,
-                6.252776074688882e-13
+                9.0,
+                0.0
             ],
-            "length": 1.5,
-            "text": "{r}Hello,{n}",
-            "anchor": 0,
-            "align": 1,
-            "offset": [
-                -37,
-                11
+            "screenpos": [
+                0.7,
+                0.3749
             ]
         },
         {
-            "type": "text",
+            "type": "hit_object",
+            "key": 7,
+            "color": 0,
             "beatpos": [
-                4.0,
+                9.0,
+                0.75
+            ],
+            "screenpos": [
+                0.65,
+                0.3749
+            ]
+        },
+        {
+            "type": "hit_object",
+            "key": 3,
+            "color": 0,
+            "beatpos": [
+                9.0,
                 1.5
             ],
-            "length": 3.0,
-            "text": "{r}Hello, just a moment!{n}",
-            "anchor": 0,
-            "align": 1,
-            "offset": [
-                -30,
-                11
-            ]
-        },
-        {
-            "type": "text",
-            "beatpos": [
-                5.0,
-                0.5
-            ],
-            "length": 4.0,
-            "text": "{r}Your call is now first in line,{n}",
-            "anchor": 0,
-            "align": 1,
-            "offset": [
-                -25,
-                11
-            ]
-        },
-        {
-            "type": "text",
-            "beatpos": [
-                6.0,
-                0.5
-            ],
-            "length": 6.0,
-            "text": "{r}and will be answered by the next available representative.{n}",
-            "anchor": 0,
-            "align": 1,
-            "offset": [
-                -11,
-                11
-            ]
-        },
-        {
-            "type": "text",
-            "beatpos": [
-                7.0,
-                2.5
-            ],
-            "length": 5.5,
-            "text": "{r}Thank you for your patience.{n}",
-            "anchor": 0,
-            "align": 1,
-            "offset": [
-                -26,
-                11
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 5,
-            "color": 0,
-            "beatpos": [
-                9.0,
-                0.0
-            ],
             "screenpos": [
-                0.474,
-                0.332
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 4,
-            "color": 0,
-            "beatpos": [
-                9.0,
-                0.6666700000000034
-            ],
-            "screenpos": [
-                0.552,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 14,
-            "color": 0,
-            "beatpos": [
-                9.0,
-                1.499999999999993
-            ],
-            "screenpos": [
-                0.474,
-                0.542
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 15,
-            "color": 0,
-            "beatpos": [
-                9.0,
-                2.000003333333325
-            ],
-            "screenpos": [
-                0.591,
-                0.584
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 22,
-            "color": 0,
-            "beatpos": [
-                10.0,
-                3.0
-            ],
-            "screenpos": [
-                0.474,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 23,
-            "color": 0,
-            "beatpos": [
-                10.0,
-                3.25
-            ],
-            "screenpos": [
-                0.5,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 24,
-            "color": 0,
-            "beatpos": [
-                10.0,
-                3.5
-            ],
-            "screenpos": [
-                0.539,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 5,
-            "color": 0,
-            "beatpos": [
-                11.0,
-                0.0
-            ],
-            "screenpos": [
-                0.487,
-                0.374
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 4,
-            "color": 0,
-            "beatpos": [
-                11.0,
-                0.25
-            ],
-            "screenpos": [
-                0.5,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 5,
-            "color": 0,
-            "beatpos": [
-                11.0,
-                0.5
-            ],
-            "screenpos": [
-                0.526,
-                0.458
+                0.3625,
+                0.3749
             ]
         },
         {
@@ -238,12 +89,129 @@
             "key": 2,
             "color": 0,
             "beatpos": [
+                9.0,
+                2.0
+            ],
+            "screenpos": [
+                0.3125,
+                0.4166
+            ]
+        },
+        {
+            "type": "hit_object",
+            "key": 10,
+            "color": 0,
+            "beatpos": [
+                10.0,
+                3.0
+            ],
+            "screenpos": [
+                0.0875,
+                0.5834
+            ]
+        },
+        {
+            "type": "hit_object",
+            "key": 11,
+            "color": 0,
+            "beatpos": [
+                10.0,
+                3.25
+            ],
+            "screenpos": [
+                0.1375,
+                0.5417
+            ]
+        },
+        {
+            "type": "hit_object",
+            "key": 12,
+            "color": 0,
+            "beatpos": [
+                10.0,
+                3.5
+            ],
+            "screenpos": [
+                0.1875,
+                0.5
+            ]
+        },
+        {
+            "type": "hit_object",
+            "key": 8,
+            "color": 0,
+            "beatpos": [
+                11.0,
+                0.0
+            ],
+            "screenpos": [
+                0.6625,
+                0.3332
+            ]
+        },
+        {
+            "type": "catch_object",
+            "key": 8,
+            "color": 0,
+            "beatpos": [
+                11.0,
+                0.25
+            ],
+            "screenpos": [
+                0.6875,
+                0.3332
+            ]
+        },
+        {
+            "type": "catch_object",
+            "key": 8,
+            "color": 0,
+            "beatpos": [
+                11.0,
+                0.5
+            ],
+            "screenpos": [
+                0.7125,
+                0.3332
+            ]
+        },
+        {
+            "type": "hit_object",
+            "key": 4,
+            "color": 0,
+            "beatpos": [
                 11.0,
                 1.5
             ],
             "screenpos": [
-                0.435,
-                0.416
+                0.425,
+                0.3749
+            ]
+        },
+        {
+            "type": "hit_object",
+            "key": 14,
+            "color": 0,
+            "beatpos": [
+                11.0,
+                2.0
+            ],
+            "screenpos": [
+                0.425,
+                0.5
+            ]
+        },
+        {
+            "type": "hit_object",
+            "key": 12,
+            "color": 0,
+            "beatpos": [
+                12.0,
+                3.0
+            ],
+            "screenpos": [
+                0.4125,
+                0.7085
             ]
         },
         {
@@ -251,64 +219,38 @@
             "key": 13,
             "color": 0,
             "beatpos": [
-                11.0,
-                2.0
-            ],
-            "screenpos": [
-                0.578,
-                0.458
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 16,
-            "color": 0,
-            "beatpos": [
-                12.0,
-                3.0
-            ],
-            "screenpos": [
-                0.344,
-                0.584
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 17,
-            "color": 0,
-            "beatpos": [
                 12.0,
                 3.25
             ],
             "screenpos": [
-                0.344,
-                0.5
+                0.45,
+                0.7085
             ]
         },
         {
-            "type": "hit_object",
-            "key": 16,
+            "type": "catch_object",
+            "key": 12,
             "color": 0,
             "beatpos": [
                 12.0,
                 3.5
             ],
             "screenpos": [
-                0.383,
-                0.584
+                0.4125,
+                0.7919
             ]
         },
         {
-            "type": "hit_object",
-            "key": 17,
+            "type": "catch_object",
+            "key": 13,
             "color": 0,
             "beatpos": [
                 12.0,
                 3.75
             ],
             "screenpos": [
-                0.383,
-                0.5
+                0.45,
+                0.7919
             ]
         },
         {
@@ -320,8 +262,8 @@
                 0.0
             ],
             "screenpos": [
-                0.474,
-                0.458
+                0.65,
+                0.2915
             ]
         },
         {
@@ -330,11 +272,11 @@
             "color": 0,
             "beatpos": [
                 13.0,
-                0.6666700000000034
+                0.75
             ],
             "screenpos": [
-                0.538,
-                0.499
+                0.65,
+                0.4166
             ]
         },
         {
@@ -346,1270 +288,41 @@
                 1.5
             ],
             "screenpos": [
-                0.578,
+                0.65,
                 0.5
             ]
         },
         {
             "type": "hit_object",
-            "key": 27,
+            "key": 16,
             "color": 0,
             "beatpos": [
                 13.0,
                 2.0
             ],
             "screenpos": [
-                0.552,
-                0.626
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 29,
-            "color": 0,
-            "beatpos": [
-                14.0,
-                3.0
-            ],
-            "screenpos": [
-                0.747,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 28,
-            "color": 0,
-            "beatpos": [
-                14.0,
-                3.25
-            ],
-            "screenpos": [
-                0.708,
-                0.71
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 27,
-            "color": 0,
-            "beatpos": [
-                14.0,
-                3.5
-            ],
-            "screenpos": [
-                0.669,
-                0.668
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 15,
-            "color": 0,
-            "beatpos": [
-                15.0,
-                0.0
-            ],
-            "screenpos": [
-                0.5,
+                0.575,
                 0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 14,
-            "color": 0,
-            "beatpos": [
-                15.0,
-                0.7500033333333391
-            ],
-            "screenpos": [
-                0.474,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 13,
-            "color": 0,
-            "beatpos": [
-                15.0,
-                1.499996666666668
-            ],
-            "screenpos": [
-                0.435,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 23,
-            "color": 0,
-            "beatpos": [
-                15.0,
-                2.25
-            ],
-            "screenpos": [
-                0.448,
-                0.584
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 24,
-            "color": 0,
-            "beatpos": [
-                15.0,
-                3.000003333333332
-            ],
-            "screenpos": [
-                0.487,
-                0.584
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 25,
-            "color": 0,
-            "beatpos": [
-                15.0,
-                3.75
-            ],
-            "screenpos": [
-                0.513,
-                0.584
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 24,
-            "color": 0,
-            "beatpos": [
-                16.0,
-                0.5
-            ],
-            "screenpos": [
-                0.435,
-                0.794
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 24,
-            "color": 0,
-            "beatpos": [
-                16.0,
-                1.0
-            ],
-            "screenpos": [
-                0.487,
-                0.794
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 24,
-            "color": 0,
-            "beatpos": [
-                16.0,
-                1.5
-            ],
-            "screenpos": [
-                0.526,
-                0.794
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 24,
-            "color": 0,
-            "beatpos": [
-                16.0,
-                2.0
-            ],
-            "screenpos": [
-                0.578,
-                0.794
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 3,
-            "color": 0,
-            "beatpos": [
-                17.0,
-                0.0
-            ],
-            "screenpos": [
-                0.409,
-                0.416
-            ]
-        },
-        {
-            "type": "bg_color",
-            "beatpos": [
-                17.0,
-                0.0
-            ],
-            "color": "#005a28"
-        },
-        {
-            "type": "hit_object",
-            "key": 2,
-            "color": 0,
-            "beatpos": [
-                17.0,
-                0.0
-            ],
-            "screenpos": [
-                0.357,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 10,
-            "color": 0,
-            "beatpos": [
-                17.0,
-                0.6666699999999963
-            ],
-            "screenpos": [
-                0.253,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 11,
-            "color": 0,
-            "beatpos": [
-                17.0,
-                1.0
-            ],
-            "screenpos": [
-                0.305,
-                0.542
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 12,
-            "color": 0,
-            "beatpos": [
-                17.0,
-                1.3333333333333428
-            ],
-            "screenpos": [
-                0.344,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 13,
-            "color": 0,
-            "beatpos": [
-                17.0,
-                2.0
-            ],
-            "screenpos": [
-                0.409,
-                0.542
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 4,
-            "color": 0,
-            "beatpos": [
-                17.0,
-                3.0
-            ],
-            "screenpos": [
-                0.474,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 3,
-            "color": 0,
-            "beatpos": [
-                18.0,
-                0.0
-            ],
-            "screenpos": [
-                0.435,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 4,
-            "color": 0,
-            "beatpos": [
-                18.0,
-                1.0
-            ],
-            "screenpos": [
-                0.474,
-                0.374
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 14,
-            "color": 0,
-            "beatpos": [
-                18.0,
-                2.5
-            ],
-            "screenpos": [
-                0.487,
-                0.626
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 15,
-            "color": 0,
-            "beatpos": [
-                18.0,
-                3.0
-            ],
-            "screenpos": [
-                0.513,
-                0.626
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 5,
-            "color": 0,
-            "beatpos": [
-                19.0,
-                0.0
-            ],
-            "screenpos": [
-                0.539,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 4,
-            "color": 0,
-            "beatpos": [
-                19.0,
-                0.0
-            ],
-            "screenpos": [
-                0.5,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 13,
-            "color": 0,
-            "beatpos": [
-                19.0,
-                0.6666699999999963
-            ],
-            "screenpos": [
-                0.5,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 14,
-            "color": 0,
-            "beatpos": [
-                19.0,
-                1.0
-            ],
-            "screenpos": [
-                0.526,
-                0.542
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 15,
-            "color": 0,
-            "beatpos": [
-                19.0,
-                1.3333333333333428
-            ],
-            "screenpos": [
-                0.565,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 25,
-            "color": 0,
-            "beatpos": [
-                19.0,
-                2.0
-            ],
-            "screenpos": [
-                0.565,
-                0.626
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 20,
-            "color": 0,
-            "beatpos": [
-                19.0,
-                3.0
-            ],
-            "screenpos": [
-                0.279,
-                0.71
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 3,
-            "color": 0,
-            "beatpos": [
-                20.0,
-                0.0
-            ],
-            "screenpos": [
-                0.409,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 20,
-            "color": 0,
-            "beatpos": [
-                20.0,
-                1.0
-            ],
-            "screenpos": [
-                0.24,
-                0.71
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 10,
-            "color": 0,
-            "beatpos": [
-                20.0,
-                2.5
-            ],
-            "screenpos": [
-                0.123,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 11,
-            "color": 0,
-            "beatpos": [
-                20.0,
-                3.0
-            ],
-            "screenpos": [
-                0.162,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 2,
-            "color": 0,
-            "beatpos": [
-                21.0,
-                0.0
-            ],
-            "screenpos": [
-                0.409,
-                0.416
-            ]
-        },
-        {
-            "type": "bg_color",
-            "beatpos": [
-                21.0,
-                0.0
-            ],
-            "color": "#004b3e"
-        },
-        {
-            "type": "hit_object",
-            "key": 1,
-            "color": 0,
-            "beatpos": [
-                21.0,
-                0.0
-            ],
-            "screenpos": [
-                0.357,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 11,
-            "color": 0,
-            "beatpos": [
-                21.0,
-                0.6666699999999963
-            ],
-            "screenpos": [
-                0.331,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 12,
-            "color": 0,
-            "beatpos": [
-                21.0,
-                0.6666699999999963
-            ],
-            "screenpos": [
-                0.37,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 21,
-            "color": 0,
-            "beatpos": [
-                21.0,
-                1.0
-            ],
-            "screenpos": [
-                0.344,
-                0.626
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 22,
-            "color": 0,
-            "beatpos": [
-                21.0,
-                1.3333333333333428
-            ],
-            "screenpos": [
-                0.422,
-                0.626
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 23,
-            "color": 0,
-            "beatpos": [
-                21.0,
-                2.0
-            ],
-            "screenpos": [
-                0.487,
-                0.626
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 20,
-            "color": 0,
-            "beatpos": [
-                21.0,
-                3.0
-            ],
-            "screenpos": [
-                0.24,
-                0.71
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 16,
-            "color": 0,
-            "beatpos": [
-                22.0,
-                0.0
-            ],
-            "screenpos": [
-                0.604,
-                0.542
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 17,
-            "color": 0,
-            "beatpos": [
-                22.0,
-                1.5
-            ],
-            "screenpos": [
-                0.669,
-                0.542
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 26,
-            "color": 0,
-            "beatpos": [
-                22.0,
-                2.5
-            ],
-            "screenpos": [
-                0.656,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 27,
-            "color": 0,
-            "beatpos": [
-                22.0,
-                3.0
-            ],
-            "screenpos": [
-                0.695,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 5,
-            "color": 0,
-            "beatpos": [
-                23.0,
-                0.0
-            ],
-            "screenpos": [
-                0.63,
-                0.29
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 6,
-            "color": 0,
-            "beatpos": [
-                23.0,
-                0.0
-            ],
-            "screenpos": [
-                0.669,
-                0.29
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 14,
-            "color": 0,
-            "beatpos": [
-                23.0,
-                0.6666699999999963
-            ],
-            "screenpos": [
-                0.565,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 15,
-            "color": 0,
-            "beatpos": [
-                23.0,
-                1.3333333333333428
-            ],
-            "screenpos": [
-                0.656,
-                0.458
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 16,
-            "color": 0,
-            "beatpos": [
-                23.0,
-                2.0
-            ],
-            "screenpos": [
-                0.747,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 22,
-            "color": 0,
-            "beatpos": [
-                23.0,
-                3.25
-            ],
-            "screenpos": [
-                0.37,
-                0.836
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 23,
-            "color": 0,
-            "beatpos": [
-                24.0,
-                0.0
-            ],
-            "screenpos": [
-                0.409,
-                0.874
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 24,
-            "color": 0,
-            "beatpos": [
-                24.0,
-                0.75
-            ],
-            "screenpos": [
-                0.448,
-                0.836
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 10,
-            "color": 0,
-            "beatpos": [
-                24.0,
-                1.5833333333333428
-            ],
-            "screenpos": [
-                0.305,
-                0.668
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 12,
-            "color": 0,
-            "beatpos": [
-                24.0,
-                2.5
-            ],
-            "screenpos": [
-                0.37,
-                0.584
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 13,
-            "color": 0,
-            "beatpos": [
-                24.0,
-                3.0
-            ],
-            "screenpos": [
-                0.422,
-                0.584
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 3,
-            "color": 0,
-            "beatpos": [
-                25.0,
-                0.0
-            ],
-            "screenpos": [
-                0.435,
-                0.374
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 4,
-            "color": 0,
-            "beatpos": [
-                25.0,
-                0.0
-            ],
-            "screenpos": [
-                0.487,
-                0.374
-            ]
-        },
-        {
-            "type": "bg_color",
-            "beatpos": [
-                25.0,
-                0.0
-            ],
-            "color": "#3b0045"
-        },
-        {
-            "type": "hit_object",
-            "key": 15,
-            "color": 0,
-            "beatpos": [
-                25.0,
-                0.6666699999999963
-            ],
-            "screenpos": [
-                0.513,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 16,
-            "color": 0,
-            "beatpos": [
-                25.0,
-                1.0
-            ],
-            "screenpos": [
-                0.552,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 17,
-            "color": 0,
-            "beatpos": [
-                25.0,
-                1.5
-            ],
-            "screenpos": [
-                0.591,
-                0.458
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 26,
-            "color": 0,
-            "beatpos": [
-                25.0,
-                2.0
-            ],
-            "screenpos": [
-                0.539,
-                0.626
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 12,
-            "color": 0,
-            "beatpos": [
-                25.0,
-                3.0
-            ],
-            "screenpos": [
-                0.305,
-                0.458
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 23,
-            "color": 0,
-            "beatpos": [
-                26.0,
-                0.3333333333333428
-            ],
-            "screenpos": [
-                0.409,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 23,
-            "color": 0,
-            "beatpos": [
-                26.0,
-                1.5
-            ],
-            "screenpos": [
-                0.448,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 24,
-            "color": 0,
-            "beatpos": [
-                26.0,
-                2.5
-            ],
-            "screenpos": [
-                0.5,
-                0.794
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 5,
-            "color": 0,
-            "beatpos": [
-                26.0,
-                3.0
-            ],
-            "screenpos": [
-                0.539,
-                0.29
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 6,
-            "color": 0,
-            "beatpos": [
-                26.0,
-                3.250000000000014
-            ],
-            "screenpos": [
-                0.604,
-                0.332
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 7,
-            "color": 0,
-            "beatpos": [
-                26.0,
-                3.75
-            ],
-            "screenpos": [
-                0.695,
-                0.374
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 24,
-            "color": 0,
-            "beatpos": [
-                28.0,
-                0.5
-            ],
-            "screenpos": [
-                0.5,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 25,
-            "color": 0,
-            "beatpos": [
-                28.0,
-                0.75
-            ],
-            "screenpos": [
-                0.552,
-                0.71
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 26,
-            "color": 0,
-            "beatpos": [
-                28.0,
-                1.5
-            ],
-            "screenpos": [
-                0.63,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 27,
-            "color": 0,
-            "beatpos": [
-                28.0,
-                1.75
-            ],
-            "screenpos": [
-                0.682,
-                0.71
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 22,
-            "color": 0,
-            "beatpos": [
-                28.0,
-                2.5
-            ],
-            "screenpos": [
-                0.344,
-                0.626
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 12,
-            "color": 0,
-            "beatpos": [
-                28.0,
-                3.0
-            ],
-            "screenpos": [
-                0.357,
-                0.458
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 13,
-            "color": 0,
-            "beatpos": [
-                28.0,
-                3.5
-            ],
-            "screenpos": [
-                0.448,
-                0.374
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 4,
-            "color": 0,
-            "beatpos": [
-                29.0,
-                0.0
-            ],
-            "screenpos": [
-                0.474,
-                0.29
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 5,
-            "color": 0,
-            "beatpos": [
-                29.0,
-                0.0
-            ],
-            "screenpos": [
-                0.526,
-                0.29
-            ]
-        },
-        {
-            "type": "bg_color",
-            "beatpos": [
-                29.0,
-                5.684341886080802e-14
-            ],
-            "color": "#00706a"
-        },
-        {
-            "type": "hit_object",
-            "key": 4,
-            "color": 0,
-            "beatpos": [
-                29.0,
-                0.6666699999999963
-            ],
-            "screenpos": [
-                0.5,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 5,
-            "color": 0,
-            "beatpos": [
-                29.0,
-                0.6666699999999963
-            ],
-            "screenpos": [
-                0.539,
-                0.416
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 4,
-            "color": 0,
-            "beatpos": [
-                29.0,
-                1.3333300000000037
-            ],
-            "screenpos": [
-                0.513,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 5,
-            "color": 0,
-            "beatpos": [
-                29.0,
-                2.0
-            ],
-            "screenpos": [
-                0.552,
-                0.5
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 15,
-            "color": 0,
-            "beatpos": [
-                29.0,
-                3.0
-            ],
-            "screenpos": [
-                0.539,
-                0.584
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 10,
-            "color": 0,
-            "beatpos": [
-                30.0,
-                0.0
-            ],
-            "screenpos": [
-                0.084,
-                0.626
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 11,
-            "color": 0,
-            "beatpos": [
-                30.0,
-                0.25
-            ],
-            "screenpos": [
-                0.123,
-                0.626
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 12,
-            "color": 0,
-            "beatpos": [
-                30.0,
-                0.5
-            ],
-            "screenpos": [
-                0.162,
-                0.626
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 11,
-            "color": 0,
-            "beatpos": [
-                30.0,
-                1.5
-            ],
-            "screenpos": [
-                0.084,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 12,
-            "color": 0,
-            "beatpos": [
-                30.0,
-                1.75
-            ],
-            "screenpos": [
-                0.123,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 13,
-            "color": 0,
-            "beatpos": [
-                30.0,
-                2.0
-            ],
-            "screenpos": [
-                0.162,
-                0.752
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 2,
-            "color": 0,
-            "beatpos": [
-                30.0,
-                2.5
-            ],
-            "screenpos": [
-                0.162,
-                0.374
-            ]
-        },
-        {
-            "type": "hit_object",
-            "key": 2,
-            "color": 0,
-            "beatpos": [
-                30.0,
-                3.0
-            ],
-            "screenpos": [
-                0.201,
-                0.374
             ]
         },
         {
             "type": "end",
             "beatpos": [
-                50.0,
-                3.0
+                17.0,
+                0.0
             ]
         }
+    ],
+    "palette": [
+        "fc220a",
+        "fc9b0a",
+        "f4fc0a",
+        "efc0a",
+        "afcfc",
+        "a36fc",
+        "830afc",
+        "ab7fc",
+        "fc0ab3",
+        "72737c"
     ]
 }

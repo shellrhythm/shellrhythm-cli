@@ -53,20 +53,21 @@ class EditorTimeline():
                     )
 
         #Current note info
-        selected_obj:GameplayObject = editor.notes[editor.selected_note]
-        print_at(0, term.height-7, selected_obj.display_informations(
-            editor.reset_color, editor.selected_note))
+        if len(editor.notes) > 0:
+            selected_obj:GameplayObject = editor.notes[editor.selected_note]
+            print_at(0, term.height-7, selected_obj.display_informations(
+                editor.reset_color, editor.selected_note))
 
-        #Render selected note on top in the timeline
-        obj_remaining_beats = selected_obj.beat_position - editor.conduc.current_beat
-        if obj_remaining_beats*8+(term.width*0.1) >= 0:
-            rendered_string = selected_obj.editor_timeline_icon(
-                editor.reset_color + self.backcolor.on_col, True)
-            print_at(
-                int(obj_remaining_beats*8+(term.width*0.1)),
-                term.height-4,
-                rendered_string
-            )
+            #Render selected note on top in the timeline
+            obj_remaining_beats = selected_obj.beat_position - editor.conduc.current_beat
+            if obj_remaining_beats*8+(term.width*0.1) >= 0:
+                rendered_string = selected_obj.editor_timeline_icon(
+                    editor.reset_color + self.backcolor.on_col, True)
+                print_at(
+                    int(obj_remaining_beats*8+(term.width*0.1)),
+                    term.height-4,
+                    rendered_string
+                )
 
     async def input(self, editor, val):
 

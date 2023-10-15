@@ -42,7 +42,7 @@ class EditorMetadata():
                 )
             if val.name == "KEY_ENTER":
                 self.typing = True
-                self.typed_string = self.chart["metadata"][
+                self.typed_string = editor.chart["metadata"][
                     self.sections[self.selected]]
         else:
             if val.name == "KEY_ESCAPE":

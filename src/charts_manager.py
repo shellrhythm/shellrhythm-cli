@@ -40,17 +40,21 @@ class ChartManager:
             content = file.read()
             file.close()
             file_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+            short_hash = file_hash[:6]
             file_json = json.loads(content)
             if file_hash != file_name[len(chart_name)+1:]:
-                log("SHA256 check failed for score " + file_hash, logging.WARN)
+                log("SHA256 check failed for score " + short_hash + \
+                    "/" + file_name[len(chart_name)+1:], logging.WARN)
                 file_json["checkPassed"] = False
             else:
                 file_json["checkPassed"] = True
             if isinstance(file_json["version"], str):
-                log(f"Score {file_hash} was made on an outdated version! (on game.py pre-version 1)", logging.WARN)
+                log(f"Score {short_hash} was made on an outdated " +\
+                    "version! (on game.py pre-version 1)", logging.WARN)
                 file_json["toRecalculate"] = True
             elif file_json["version"] < Game.version:
-                log(f"Score {file_hash} was made on an outdated version! (on game.py version {file_json['version']})", logging.WARN)
+                log(f"Score {short_hash} was made on an outdated version! "+\
+                    f"(on game.py version {file_json['version']})", logging.WARN)
                 file_json["toRecalculate"] = True
             else:
                 file_json["toRecalculate"] = False
@@ -71,13 +75,16 @@ class ChartManager:
                 )
 
             if file_json["checksum"] != chart_checksum:
-                log("Score " + file_hash + " wasn't made on the current version of this chart!", logging.WARN)
+                log("Score " + short_hash + \
+                    " wasn't made on the current version of this chart! " + \
+                    file_json["checksum"][:6] + "/" + chart_checksum[:6], logging.WARN)
                 file_json["isOutdated"] = True
             else:
                 file_json["isOutdated"] = False
             output.append(file_json)
 
-        output.sort(key=lambda score:-score["score"] + (10**8 if score["isOutdated"] or not score["checkPassed"] else 0))
+        output.sort(key=lambda score:-score["score"] + 
+                    (10**8 if score["isOutdated"] or not score["checkPassed"] else 0))
 
         return output
 

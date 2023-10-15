@@ -186,8 +186,8 @@ class NoteObject(GameplayObject):
     def onscreen_print(self, reset_color:str, current_beat:float = 0.0) -> None:
         onscreen_position = self.calculate_position()
         to_print = "   \n   \n   \n"
-        approached_beats = ((self.beat_position - current_beat) * self.approach_rate) + 1
-        val = int(approached_beats*2)
+        approached_beats = (self.beat_position - current_beat) * self.approach_rate
+        val = int(approached_beats * 2) + 2
         if val == 8:
             to_print = f"{reset_color}{self.color} ═ \n" \
                      + f"{reset_color}{self.color}   \n" \
@@ -242,7 +242,7 @@ class NoteObject(GameplayObject):
         remaining_beats = self.beat_position - current_beat
         remaining_time = self.time_position - current_time
         approached_beats = (remaining_beats * self.approach_rate) + 1
-        if 4 > approached_beats > -0.1 and self not in dont_draw_list:
+        if 8 > approached_beats > -0.1 and self not in dont_draw_list:
             self.onscreen_print(reset_color, current_beat)
         # print_at(calc_pos[0], calc_pos[1]+1, str(int(remaining_time)))
 

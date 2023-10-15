@@ -15,6 +15,7 @@ from src.layout import LayoutManager
 from src.translate import Locale
 from src.scenes.game_objects.base_object import GameplayObject
 from src.scenes.game_objects.note import NoteObject
+from src.scenes.game_objects.catch import CatchObject
 from src.scenes.game_objects.text import TextObject
 from src.scenes.game_objects.bg_color import BackgroundColorObject
 from src.scenes.game_objects.end_level import EndLevelObject
@@ -23,7 +24,7 @@ from src.scenes.game_objects.playfield import Playfield
 
 
 class Game(BaseScene):
-    version = 1.3
+    version = 1.4
 
     conduc:Conductor = Conductor()
     beat_sound_volume = 1.0
@@ -279,7 +280,7 @@ class Game(BaseScene):
                 SceneManager.change_scene("Results")
 
             for (note_id, note) in enumerate(self.notes):
-                if isinstance(note, NoteObject):
+                if isinstance(note, (NoteObject, CatchObject)):
                     hit_detected = None
                     note.check_beat_sound_timing(self.conduc.cur_time_sec)
                     if val in self.keys and not self.auto and not self.conduc.paused:
@@ -385,6 +386,12 @@ class Game(BaseScene):
             new_note = None
             if note["type"] == "hit_object": # setup note
                 new_note = NoteObject(note, bpm_changes, self.keys, self.palette)
+                new_note.approach_rate = self.chart["approachRate"]
+                SceneManager["Options"].conduc.bass.SetChannelVolume(
+                    new_note.hit_sound.handle, OptionsManager["hitSoundVolume"]
+                )
+            elif note["type"] == "catch_object":
+                new_note = CatchObject(note, bpm_changes, self.keys, self.palette)
                 new_note.approach_rate = self.chart["approachRate"]
                 SceneManager["Options"].conduc.bass.SetChannelVolume(
                     new_note.hit_sound.handle, OptionsManager["hitSoundVolume"]

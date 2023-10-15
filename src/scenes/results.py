@@ -43,27 +43,28 @@ class Grid:
                 ]
 
     def draw(self, cursorPos = 0):
-        for i in range(
-            max(0, (cursorPos*2)-len(self.points_to_plot)), 
-            min(len(self.points_to_plot), (cursorPos + self.width)*2),
-            2
-        ):
-            point1 = min(max(self.points_to_plot[i],   self.gridrange[0]), self.gridrange[1])
-            firstpos = (
-                (point1 / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]
-                ) * self.height*4 + self.offset
-            if i+1 < len(self.points_to_plot):
-                point2 = min(max(self.points_to_plot[i+1], self.gridrange[0]), self.gridrange[1])
-                secpos   = (
-                    (point2 / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]
-                ) * self.height*4 + self.offset
-            else:
-                secpos = -2**32
-            points = self.processPoints(firstpos, secpos)
-            for (j,point) in enumerate(points):
-                atpos = ((self.points_to_plot[i+j] / (self.gridrange[1] - self.gridrange[0]))\
-                         - self.gridrange[0]) * self.height + (self.offset/4)
-                print_at(self.x + (i//2), self.y + int(atpos), self.colors[i+j] + point)
+        print_at(self.x + cursorPos, self.y, "this needs to be redone so bad")
+        # for i in range(
+        #     max(0, (cursorPos*2)-len(self.points_to_plot)),
+        #     min(len(self.points_to_plot), (cursorPos + self.width)*2),
+        #     2
+        # ):
+        #     point1 = min(max(self.points_to_plot[i],   self.gridrange[0]), self.gridrange[1])
+        #     firstpos = (
+        #         (point1 / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]
+        #         ) * self.height*4 + self.offset
+        #     if i+1 < len(self.points_to_plot):
+        #         point2 = min(max(self.points_to_plot[i+1], self.gridrange[0]), self.gridrange[1])
+        #         secpos   = (
+        #             (point2 / (self.gridrange[1] - self.gridrange[0])) - self.gridrange[0]
+        #         ) * self.height*4 + self.offset
+        #     else:
+        #         secpos = -2**32
+        #     points = self.processPoints(firstpos, secpos)
+        #     for (j,point) in enumerate(points):
+        #         atpos = ((self.points_to_plot[i+j] / (self.gridrange[1] - self.gridrange[0]))\
+        #                  - self.gridrange[0]) * self.height + (self.offset/4)
+        #         print_at(self.x + (i//2), self.y + int(atpos), self.colors[i+j] + point)
 
     def __init__(self, x, y, width, height) -> None:
         self.x = x
@@ -78,7 +79,7 @@ def scoreCalc(maxScore, judgements, accuracy, missesCount, chart):
         if i != {}:
             filteredJudgementCount += 1
     for i in chart["notes"]:
-        if i["type"] == "hit_object":
+        if i["type"] in ["hit_object", "catch_object"]:
             totalNotes += 1
 
     #TO ANYONE CHECKING THIS OUT: Here are the following ways score is calculated
@@ -92,7 +93,7 @@ def scoreCalc(maxScore, judgements, accuracy, missesCount, chart):
         accuracy_score = (accuracy/100) * (maxScore*0.8)
         miss_weight_on_score = filteredJudgementCount/(filteredJudgementCount+missesCount)
         combo_score = miss_weight_on_score * (maxScore*0.2)
-        position_in_song = filteredJudgementCount/totalNotes
+        position_in_song = filteredJudgementCount/max(totalNotes, 1)
 
         result = (accuracy_score + combo_score) * position_in_song
         return result
@@ -133,7 +134,7 @@ class ResultsScreen(BaseScene):
         print_at(60, 4, "Scored at date: " + \
                  datetime.datetime.fromtimestamp(self.results_data["time"])\
                     .strftime('%d %b %y, %H:%M:%S'))
-        print_at(60, 5, "Chart SHA256: " + term.underline + \
+        print_at(60, 5, "Chart SHA256:   " + term.underline + \
                  self.results_data["checksum"][:6] + self.reset_color + \
                     self.results_data["checksum"][6:])
 

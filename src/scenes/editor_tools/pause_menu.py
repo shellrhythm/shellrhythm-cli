@@ -80,7 +80,7 @@ class EditorPauseMenu:
             editor.chart["icon"]["img"] = image_file_location.split("/")[-1]
         if option == 4:
             #metadata
-            editor.metadata_menu_enabled = True
+            editor.metadata.enabled = True
             self.enabled = False
             print(term.clear)
         if option == 5:

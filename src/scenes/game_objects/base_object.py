@@ -13,7 +13,7 @@ class GameplayObject:
     @staticmethod
     def compute_time_position(beat_position, bpm_table) -> float:
         """Based on the beat position and a bpm table, returns the corresponding time."""
-        if len(bpm_table) == 1 and isinstance(bpm_table[0],float):
+        if len(bpm_table) == 1 and isinstance(bpm_table[0],(float, int)):
             return beat_position * (60/bpm_table[0])
         else:
             return Conductor.calculate_time_sec_from_bpm_table(beat_position, bpm_table)

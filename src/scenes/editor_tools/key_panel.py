@@ -5,6 +5,7 @@ class KeyPanel():
     enabled = False
     key = -1
     selected = -1 #Note: use -1 when creating a new note
+    catch = False
 
     async def draw(self, editor, toptext = None, current_key = 0):
         width = max(len(toptext) + 2, 40)
@@ -30,8 +31,12 @@ class KeyPanel():
         elif val.name == "KEY_ENTER":
             if self.key != -1:
                 if self.selected == -1:
-                    editor.selected_note = editor.create_note(
-                        editor.conduc.current_beat, self.key)
+                    if self.catch:
+                        editor.selected_note = editor.create_catch(
+                            editor.conduc.current_beat, self.key)
+                    else:
+                        editor.selected_note = editor.create_note(
+                            editor.conduc.current_beat, self.key)
                 else:
                     editor.notes[self.selected].key_index = self.key
                 self.enabled = False

@@ -5,7 +5,7 @@ from .base_object import GameplayObject
 from ...translate import LocaleManager
 from ...termutil import print_at, print_lines_at, term, color_code_from_hex
 from ...constants import JUDGEMENT_NAMES, JUDGEMENT_NAMES_SHORT,\
-    Vector2, Vector2i, hitWindows
+    Vector2, Vector2i
 
 class CatchObject(GameplayObject):
     """Catch object."""
@@ -72,7 +72,7 @@ class CatchObject(GameplayObject):
 
     def serialize(self):
         return {
-            "type":     "hit_object",
+            "type":     "catch_object",
             "key":      self._key_index,
             "color":    self._color,
             "beatpos":  [self.beat_position//4, self.beat_position%4],
@@ -104,23 +104,14 @@ class CatchObject(GameplayObject):
                        auto:bool = False) -> bool | None:
         remaining_time = self.time_position - current_time
         if not auto:
-            if -0.6 < remaining_time < hitWindows[0]:
-                # if noteNum >= len(self.judgements):
-                #     while noteNum >= len(self.judgements):
-                #         self.judgements.append({})
+            if -0.6 < remaining_time <= 0:
                 self.judgement = {
                     "offset": remaining_time,
                     "judgement": 0
                 }
-                # self.lastHit = self.judgements[noteNum]
-                # self.accuracyUpdate()
-                # self.score = int(scoreCalc(MAX_SCORE, self.judgements, \
-                #                  self.accuracy, self.missesCount, self.chart))
                 calc_pos = self.calculate_position()
                 print_at(calc_pos[0], calc_pos[1], JUDGEMENT_NAMES_SHORT[0])
 
-                # if judgement == 5:
-                #     self.missesCount += 1
                 return True
             else:
                 if remaining_time <= -0.6 and wasnt_hit:
@@ -163,8 +154,8 @@ class CatchObject(GameplayObject):
     def onscreen_print(self, reset_color:str, current_beat:float = 0.0) -> None:
         onscreen_position = self.calculate_position()
         to_print = "   \n   \n   \n"
-        approached_beats = ((self.beat_position - current_beat) * self.approach_rate) + 1
-        val = int(approached_beats*2)
+        approached_beats = (self.beat_position - current_beat) * self.approach_rate
+        val = int(approached_beats * 2) + 2
         if val == 8:
             to_print = f"{reset_color}{self.color} - \n" \
                      + f"{reset_color}{self.color}   \n" \
@@ -219,7 +210,7 @@ class CatchObject(GameplayObject):
         remaining_beats = self.beat_position - current_beat
         remaining_time = self.time_position - current_time
         approached_beats = (remaining_beats * self.approach_rate) + 1
-        if 4 > approached_beats > -0.1 and self not in dont_draw_list:
+        if 8 > approached_beats > -0.1 and self not in dont_draw_list:
             self.onscreen_print(reset_color, current_beat)
         # print_at(calc_pos[0], calc_pos[1]+1, str(int(remaining_time)))
 

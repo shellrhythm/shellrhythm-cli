@@ -16,6 +16,7 @@ from src.filebrowser import FileBrowser
 from src.calibration import Calibration
 from src.layout import LayoutManager
 from src.scenes.game_objects.note import NoteObject
+from src.scenes.game_objects.catch import CatchObject
 from src.scenes.game_objects.text import TextObject
 from src.scenes.game_objects.bg_color import BackgroundColorObject
 from src.scenes.game_objects.end_level import EndLevelObject
@@ -296,6 +297,43 @@ class Editor(BaseScene):
             )
             return self.chart["notes"].index(new_note)
 
+    def create_catch(self, at_pos, key):
+        print(term.clear)
+        if "notes" in self.chart:
+            new_note = {
+                "type": "catch_object",
+                "beatpos": [
+                    int(at_pos//4),
+                    round(at_pos%4, 5)
+                ],
+                "key": key,
+                "screenpos": [
+                    0.5,
+                    0.5
+                ],
+                "color": 0
+            }
+            self.chart["notes"].append(new_note)
+            self.chart["notes"] = sorted(
+                self.chart["notes"],
+                key=lambda d: d['beatpos'][0]*4+d['beatpos'][1]
+            )
+            if "end" in [note["type"] for note in self.chart["notes"]]:
+                self.end_note = [note["type"] for note in self.chart["notes"]].index("end")
+            note_obj = CatchObject(
+                new_note,
+                Game.get_bpm_map(self.chart),
+                self.keys,
+                self.palette
+            )
+            note_obj.playfield = self.playfield
+            self.notes.append(note_obj)
+            self.notes = sorted(
+                self.notes,
+                key=lambda d: d.beat_position
+            )
+            return self.chart["notes"].index(new_note)
+
     def create_text(self, at_pos = 0, lasts = 1, text = "", anchor = CENTER, align = ALIGN_CENTER):
         print(term.clear)
         if "notes" in self.chart:
@@ -333,6 +371,7 @@ class Editor(BaseScene):
 
     def input_confirmDeletion(self, val):
         if val == "y" or val.name == "KEY_ENTER":
+            self.notes.remove(self.notes[self.del_confirm_obj])
             self.chart["notes"].remove(self.chart["notes"][self.del_confirm_obj])
             self.del_confirm_enabled = False
         elif val == "n" or val.name == "KEY_ESCAPE":
@@ -359,7 +398,7 @@ class Editor(BaseScene):
             self.chart["notes"][self.end_note]["beatpos"] = [int(at_pos//4), round(at_pos%4, 5)]
 
     def run_note_settings(self, note, note_id, option):
-        if isinstance(note, NoteObject):
+        if isinstance(note, NoteObject) or isinstance(note, CatchObject):
             if option == 0:
                 self.key_panel.enabled = True
                 self.key_panel.selected = note_id
@@ -624,7 +663,7 @@ class Editor(BaseScene):
 
         if self.playtest:
             for actual_note in self.notes:
-                if isinstance(actual_note, NoteObject):
+                if isinstance(actual_note, (NoteObject, CatchObject)):
                     remaining_beats = actual_note.beat_position - self.conduc.current_beat
                     if not actual_note.played_sound and remaining_beats <= 0:
                         actual_note.check_beat_sound_timing(self.conduc.cur_time_sec)
@@ -636,7 +675,7 @@ class Editor(BaseScene):
             return
 
         if self.metadata.enabled:
-            self.metadata.handle_input(editor, val)
+            self.metadata.handle_input(self, val)
             return
 
         if self.is_text_editing:
@@ -697,9 +736,16 @@ class Editor(BaseScene):
             self.pause_menu.enabled = True
         if val == "z":
             self.key_panel.enabled = True
+            self.key_panel.catch = False
             self.key_panel.selected = -1
             self.key_panel.key = 0
             print_at(0,int(term.height*0.4), term.clear_eol)
+        if val == "c":
+            self.key_panel.enabled = True
+            self.key_panel.catch = True
+            self.key_panel.selected = -1
+            self.key_panel.key = 0
+
         if val == "Z":
             self.set_end_note(self.conduc.current_beat)
         if val == "t":
@@ -800,6 +846,41 @@ class Editor(BaseScene):
 
                 if val == "c":
                     self.run_note_settings(actual_note, self.selected_note, 2)
+            if isinstance(actual_note, CatchObject) and val:
+                # calculate new x/y position
+                direc = val.lower()
+                multiplier = (3 if direc in "hl" else 2) if val.isupper() else 1
+                if val in "hH":
+                    actual_note.position.x = max(round(
+                        actual_note.position.x - multiplier/self.playfield.size.x, 4
+                    ), 0)
+                if val in "jJ":
+                    actual_note.position.y = min(round(
+                        actual_note.position.y + multiplier/self.playfield.size.y, 4
+                    ), 1)
+                if val in "kK":
+                    actual_note.position.y = max(round(
+                        actual_note.position.y - multiplier/self.playfield.size.y, 4
+                    ), 0)
+                if val in "lL":
+                    actual_note.position.x = min(round(
+                        actual_note.position.x + multiplier/self.playfield.size.x, 4
+                    ), 1)
+                if val == "e":
+                    self.run_note_settings(actual_note, self.selected_note, 0)
+                if val == "E":
+                    self.color_picker.enabled = not self.color_picker.enabled
+                if val in ("x", "X"):
+                    if isinstance(actual_note.color_string, int):
+                        actual_note.set_color_from_palette(
+                            (actual_note.color_string+{"x":1, "X":-1}[val])\
+                                %len(self.palette),
+                            self.palette
+                        )
+                    else:
+                        actual_note.set_color_from_palette(
+                            {"x":0, "X":len(self.palette)-1}[val], self.palette
+                        )
             if isinstance(actual_note, BackgroundColorObject) and val:
                 if val == "e":
                     self.color_picker.enabled = not self.color_picker.enabled

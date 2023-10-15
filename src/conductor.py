@@ -55,6 +55,8 @@ class Conductor:
     @staticmethod
     def get_bpm_at_time_from_bpm_table(time_pos:float, bpm_table:list) -> float:
         result:float = 100.0
+        last_bpm_change = [0, 0, bpm_table[0]["toBPM"]] #Beat to change at, corresponding time, bpm to go to
+        #Note: this assumes that the first bpm event is set at beat 0.0. If it isn't, you're weird.
         for change in bpm_table[1:]:
             next_beat = change["atPosition"][0] + (change["atPosition"][1]/4)
             bpm = change["toBPM"]
@@ -69,7 +71,7 @@ class Conductor:
     @staticmethod
     def calculate_time_sec_from_bpm_table(beat_pos:float, bpm_table:list) -> float:
         """bruh i most likely have to redo this from scratch i can't do it in reverse :("""
-        last_bpm_change = [0, 0, bpm_table[0]] #Beat to change at, corresponding time, bpm to go to
+        last_bpm_change = [0, 0, bpm_table[0]["toBPM"]] #Beat to change at, corresponding time, bpm to go to
         #Note: this assumes that the first bpm event is set at beat 0.0. If it isn't, you're weird.
         bpm = bpm_table[0]
         for change in bpm_table[1:]:
@@ -84,7 +86,7 @@ class Conductor:
 
     @staticmethod
     def calculate_beat_from_bpm_table(time_pos:float, bpm_table:list) -> float:
-        last_bpm_change = [0, 0, bpm_table[0]] #Beat to change at, corresponding time, bpm to go to
+        last_bpm_change = [0, 0, bpm_table[0]["toBPM"]] #Beat to change at, corresponding time, bpm to go to
         #Note: this assumes that the first bpm event is set at beat 0.0. If it isn't, you're weird.
         for change in bpm_table[1:]:
             next_beat = change["atPosition"][0] + (change["atPosition"][1]/4)
