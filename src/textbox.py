@@ -1,5 +1,6 @@
 import colorsys
 from src.termutil import term, print_at, print_box, print_lines_at, refresh, color_text, hexcode_from_color_code
+from src.constants import ALIGN_CENTER, ALIGN_LEFT, ALIGN_RIGHT
 
 def textbox_logic(curText, cursorPos, val, autocomplete = None):
     if val.name == "KEY_BACKSPACE":
@@ -27,7 +28,43 @@ def textbox_logic(curText, cursorPos, val, autocomplete = None):
                 curText = curText[:len(curText)-cursorPos] + str(val) + curText[len(curText)-cursorPos:]
     
     return curText, cursorPos
-    
+
+class Textbox:
+    x = 0
+    y = 0
+    width = 40
+    hidden = False
+    align = ALIGN_LEFT
+    text = ""
+    cursor = 0
+    focused = False
+    _just_focused = False
+    def focus(self):
+        self.focused = True
+        self._just_focused = True
+    async def draw(self):
+        out = ""
+        txt = self.text if not self.hidden else "*"*len(self.text)
+        if self.align == ALIGN_LEFT:
+            out = term.ljust(txt, self.width)
+        if self.align == ALIGN_CENTER:
+            out = term.center(txt, self.width)
+        if self.align == ALIGN_RIGHT:
+            out = term.rjust(txt, self.width)
+        out = term.reverse(out)
+        print_at(self.x, self.y, out)
+    async def clear_box(self):
+        self.text = ""
+        self.cursor = 0
+    async def handle_input(self, val) -> bool:
+        if self._just_focused:
+            self._just_focused = False
+            return False
+        if val.name in ("KEY_ENTER", "KEY_ESCAPE"):
+            return True
+        self.text, self.cursor = textbox_logic(self.text, self.cursor, val)
+        return False
+
 class TextEditor:
     textContent = "it's funny"
     textCursor = 0

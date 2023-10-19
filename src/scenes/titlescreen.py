@@ -17,6 +17,7 @@ class TitleScreen(BaseScene):
     selected_item = 0
     menuOptions = [
         "titlescreen.play",
+        "titlescreen.online",
         "titlescreen.edit",
         "titlescreen.options",
         "titlescreen.credits",
@@ -45,6 +46,9 @@ class TitleScreen(BaseScene):
             # print(term.clear)
 
         if self.selected_item == 1:
+            SceneManager.change_scene("Server")
+
+        if self.selected_item == 2:
             # Edit
             self.conduc.stop()
             self.conduc.song.stop()
@@ -53,19 +57,19 @@ class TitleScreen(BaseScene):
             SceneManager["Editor"].layout = Game.setup_keys(None, OptionsManager["layout"])
             SceneManager.change_scene("Editor")
 
-        if self.selected_item == 2:
+        if self.selected_item == 3:
             SceneManager.change_scene("Options")
 
-        if self.selected_item == 3:
+        if self.selected_item == 4:
             SceneManager.change_scene("Credits")
 
-        if self.selected_item == 4:
+        if self.selected_item == 5:
             webbrowser.open(self.discordLink)
 
-        if self.selected_item == 5:
+        if self.selected_item == 6:
             webbrowser.open(self.githubLink)
 
-        if self.selected_item == 6:
+        if self.selected_item == 7:
             # Quit
             self.turn_off = True
 

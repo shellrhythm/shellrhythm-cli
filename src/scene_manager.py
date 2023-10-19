@@ -15,6 +15,7 @@ class SceneManager:
         "LayoutEditor": None,
         "Results": None,
         "Game": None,
+        "Server": None
     }
     turn_off:bool = False
 

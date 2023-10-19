@@ -2,3 +2,4 @@ blessed==1.20.0
 term_image==0.7.0
 easing-functions==1.0.4
 git+https://github.com/HastagGuigui/pybass3@master
+websockets==11.0.3

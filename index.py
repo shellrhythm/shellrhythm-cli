@@ -5,7 +5,7 @@ import sys
 from blessed import Terminal
 
 from src.scenes import ChartSelect, TitleScreen, Options, Credits, \
-    Editor, ResultsScreen, LayoutCreator
+    Editor, ResultsScreen, LayoutCreator, ServerAuthentication
 from src.translate import load_locales, LocaleManager
 from src.options import OptionsManager
 from src.calibration import Calibration
@@ -40,6 +40,7 @@ if __name__ == "__main__":
         SceneManager.loadedMenus["LayoutEditor"] = LayoutCreator()
         SceneManager.loadedMenus["Game"] = game.Game()
         SceneManager.loadedMenus["Results"] = ResultsScreen()
+        SceneManager.loadedMenus["Server"] = ServerAuthentication()
 
         if len(ChartManager.chart_data) != 0:
             song_loaded = random.randint(0, len(ChartManager.chart_data)-1)
