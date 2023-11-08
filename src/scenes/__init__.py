@@ -7,4 +7,4 @@ from src.scenes.game import *
 from src.scenes.game_objects import *
 from src.scenes.options import *
 from src.scenes.layout_creator import *
-from src.scenes.server import *
+from src.scenes.serverauth import *
