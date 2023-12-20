@@ -311,6 +311,36 @@
                 17.0,
                 0.0
             ]
+        },
+        {
+            "type": "text",
+            "beatpos": [
+                4.0,
+                0.0
+            ],
+            "length": 1.5,
+            "text": "Hello,",
+            "anchor": 0,
+            "align": 1,
+            "offset": [
+                0,
+                0
+            ]
+        },
+        {
+            "type": "text",
+            "beatpos": [
+                4.0,
+                1.5
+            ],
+            "length": 2.5,
+            "text": "Hello, just a moment!",
+            "anchor": 0,
+            "align": 1,
+            "offset": [
+                0,
+                0
+            ]
         }
     ],
     "palette": [

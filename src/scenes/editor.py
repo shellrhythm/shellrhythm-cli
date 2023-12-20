@@ -356,9 +356,16 @@ class Editor(BaseScene):
             )
             if "end" in [note["type"] for note in self.chart["notes"]]:
                 self.end_note = [note["type"] for note in self.chart["notes"]].index("end")
-            note_obj = TextObject(new_text, self.conduc.bpmChanges)
+            note_obj = TextObject(new_text, 
+                Game.get_bpm_map(self.chart),
+            )
             note_obj.playfield = self.playfield
             self.notes.append(note_obj)
+            self.notes = sorted(
+                self.notes,
+                key=lambda d: d.beat_position
+            )
+            return self.chart["notes"].index(new_note)
 
     del_confirm_enabled = False
     del_confirm_obj = -1

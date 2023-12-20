@@ -53,7 +53,7 @@ class EditorTimeline():
                     )
 
         #Current note info
-        if len(editor.notes) > 0:
+        if len(editor.notes) > editor.selected_note:
             selected_obj:GameplayObject = editor.notes[editor.selected_note]
             print_at(0, term.height-7, selected_obj.display_informations(
                 editor.reset_color, editor.selected_note))
