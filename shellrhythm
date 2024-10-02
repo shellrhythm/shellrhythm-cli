@@ -1,30 +1,50 @@
-#!/usr/bin/bash
+#!/usr/bin/env sh
 
-#Hi! If you're curious, this is a bash file. It's made to be run on bash, the "shell" (the thing that turns command lines into machine instructions) of Linux.
-#If you're on Windows, try running "run.bat" instead.
-#So yeah, I'm sorry, --import is a linux exclusive... though you can run "python ./src/import.py <url>" as an alternative.
+# Hi! If you're curious, this is a bash file. It's made to be run on bash, the
+# "shell" of Linux (i.e. the program that turns command lines into machine
+# instructions).
+# If you're on Windows, try running "run.bat" instead.
+# So yeah, I'm sorry, import is a Linux exclusive... though you can run
+#     python3 ./src/import.py <url>
+# as an alternative.
 
 cd "$(dirname "$(realpath "$0")")"
 
-if [ $# -eq 0 ]
-  then
-    python ./index.py
-elif [ "$1" == "--import" ]
-  then
-    echo "Attempting to import $2..."
-    python ./src/import.py $2
-elif [ "$1" == "update" ]
-  then
-    read -p "Do you want to update shellrhythm? [Y/n]: " yn
-    case $yn in
-        [Yy]*) git pull origin main ;;  
-        [Nn]*) echo "Update aborted." ;;
-    esac
-elif [ "$1" == "help" ]
-  then
-    echo "Welcome to shellrhythm!"
-    echo ""
-    echo "   shellrhythm            Starts the game."
-    echo "   shellrhythm --import   Imports an online chart."
-    echo "   shellrhythm update     Checks for updates, then updates the game."
+if [ $# -eq 0 ]; then
+    python3 ./index.py
+    exit 0
 fi
+
+# Normalize arguments by removing the "--" prefix if it is present
+ARG_PREFIX="$(echo "$1" | cut -c-2)"
+if [ "$ARG_PREFIX" = "--" ]; then
+    ARG="$(echo "$1" | cut -c3-)"
+else
+    ARG="$1"
+fi
+
+case "$ARG" in
+    "import")
+        echo "Attempting to import $2..."
+        python3 ./src/import.py $2 ;;
+    "update")
+        read -p "Do you want to update shellrhythm? [Y/n]: " yn
+        case $yn in
+            [Yy]*) git pull origin main ;;
+            [Nn]*) echo "Update aborted." ;;
+        esac ;;
+    "help")
+        cat <<EOF
+Usage: shellrhythm [options]
+A rhythm game, in the terminal!
+
+Running without a command starts the game.
+
+    import url      Imports an online chart.
+    update          Checks for updates, then updates the game.
+EOF
+        ;;
+    *)
+       echo "Error: unknown command '$ARG'"
+       exit 1 ;;
+esac
