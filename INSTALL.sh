@@ -8,8 +8,8 @@ else
   RESET=""
 fi
 
-function error() {
-  echo -e "${RED}Error: $1${RESET}"
+error() {
+  echo "${RED}Error: $1${RESET}"
   echo "Please report this at \
 https://github.com/shellrhythm/shellrhythm-cli/issues if necessary."
   exit 1
