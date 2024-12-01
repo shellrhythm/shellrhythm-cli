@@ -28,7 +28,7 @@ class Locale:
 
 	def __init__(self, lang:str) -> None:
 		print(f"Loading locale \"{lang}\"...")
-		f = open("./lang/" + lang + ".json")
+		f = open("./lang/" + lang + ".json", 'r', encoding='utf-8')
 		self.data = json.loads(f.read())
 		self.name = lang
 		f.close()
